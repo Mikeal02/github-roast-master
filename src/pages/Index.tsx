@@ -7,13 +7,23 @@ import { ProfileCard } from '@/components/ProfileCard';
 import { ScoreCard } from '@/components/ScoreCard';
 import { LanguageChart } from '@/components/LanguageChart';
 import { RoastTerminal } from '@/components/RoastTerminal';
+import { RecruiterTerminal } from '@/components/RecruiterTerminal';
 import { StatsGrid } from '@/components/StatsGrid';
 import { ActivityBadge } from '@/components/ActivityBadge';
 import { LoadingState } from '@/components/LoadingState';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
+import { ModeToggle } from '@/components/ModeToggle';
+import { RecruiterMetric } from '@/components/RecruiterMetric';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { fetchGitHubUser, fetchUserRepos } from '@/lib/githubApi';
-import { analyzeProfile, calculateScores, generateRoasts } from '@/lib/roastGenerator';
+import { 
+  analyzeProfile, 
+  calculateScores, 
+  generateRoasts, 
+  getScoreExplanations, 
+  getDeveloperArchetype,
+  generateRecruiterInsights 
+} from '@/lib/roastGenerator';
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +32,11 @@ const Index = () => {
   const [analysis, setAnalysis] = useState(null);
   const [scores, setScores] = useState(null);
   const [roasts, setRoasts] = useState([]);
+  const [recruiterInsights, setRecruiterInsights] = useState([]);
+  const [explanations, setExplanations] = useState(null);
+  const [archetype, setArchetype] = useState(null);
   const [searchedUsername, setSearchedUsername] = useState('');
+  const [isRecruiterMode, setIsRecruiterMode] = useState(false);
   
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
 
@@ -33,6 +47,9 @@ const Index = () => {
     setAnalysis(null);
     setScores(null);
     setRoasts([]);
+    setRecruiterInsights([]);
+    setExplanations(null);
+    setArchetype(null);
     setSearchedUsername(username);
 
     try {
@@ -44,11 +61,17 @@ const Index = () => {
       const profileAnalysis = analyzeProfile(user, repos);
       const profileScores = calculateScores(user, profileAnalysis);
       const generatedRoasts = generateRoasts(user, profileAnalysis, profileScores);
+      const scoreExplanations = getScoreExplanations(user, profileAnalysis, profileScores);
+      const developerArchetype = getDeveloperArchetype(user, profileAnalysis, profileScores);
+      const insights = generateRecruiterInsights(user, profileAnalysis, profileScores);
 
       setUserData(user);
       setAnalysis(profileAnalysis);
       setScores(profileScores);
       setRoasts(generatedRoasts);
+      setRecruiterInsights(insights);
+      setExplanations(scoreExplanations);
+      setArchetype(developerArchetype);
       addToHistory(username);
     } catch (err) {
       setError(err.message || 'An unexpected error occurred');
@@ -60,7 +83,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background cyber-grid">
       <div className="container mx-auto px-4 py-12 max-w-5xl">
-        <Header />
+        <Header isRecruiterMode={isRecruiterMode} />
+        
+        <ModeToggle isRecruiterMode={isRecruiterMode} onToggle={setIsRecruiterMode} />
         
         <SearchBar onSearch={handleSearch} isLoading={isLoading} />
         
@@ -82,60 +107,82 @@ const Index = () => {
             <div className="space-y-6 animate-[fadeIn_0.5s_ease-out]">
               <ProfileCard user={userData} />
               
-              <ActivityBadge status={scores.activityStatus} finalScore={scores.finalScore} />
+              <ActivityBadge 
+                status={scores.activityStatus} 
+                finalScore={scores.finalScore} 
+                archetype={archetype}
+                isRecruiterMode={isRecruiterMode}
+              />
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <ScoreCard
                   title="Activity"
                   score={scores.activityScore}
                   icon={<Activity className="w-4 h-4" />}
+                  explanation={explanations?.activity}
                   delay={0}
                 />
                 <ScoreCard
                   title="Documentation"
                   score={scores.documentationScore}
                   icon={<FileText className="w-4 h-4" />}
+                  explanation={explanations?.documentation}
                   delay={100}
                 />
                 <ScoreCard
                   title="Popularity"
                   score={scores.popularityScore}
                   icon={<Star className="w-4 h-4" />}
+                  explanation={explanations?.popularity}
                   delay={200}
                 />
                 <ScoreCard
                   title="Diversity"
                   score={scores.diversityScore}
                   icon={<Code2 className="w-4 h-4" />}
+                  explanation={explanations?.diversity}
                   delay={300}
                 />
               </div>
               
+              {isRecruiterMode && <RecruiterMetric analysis={analysis} />}
+              
               <div className="grid md:grid-cols-2 gap-6">
                 <LanguageChart languages={analysis.languages} />
-                <StatsGrid analysis={analysis} />
+                <StatsGrid analysis={analysis} isRecruiterMode={isRecruiterMode} />
               </div>
               
-              <RoastTerminal roasts={roasts} username={userData.login} />
+              {isRecruiterMode ? (
+                <RecruiterTerminal 
+                  insights={recruiterInsights} 
+                  username={userData.login}
+                  scores={scores}
+                />
+              ) : (
+                <RoastTerminal roasts={roasts} username={userData.login} />
+              )}
             </div>
           )}
           
           {!userData && !isLoading && !error && (
             <div className="terminal-box text-center py-16">
-              <div className="text-6xl mb-4">🔥</div>
+              <div className="text-6xl mb-4">{isRecruiterMode ? '💼' : '🔥'}</div>
               <h3 className="text-xl font-bold text-foreground mb-2">
-                Ready to Roast
+                {isRecruiterMode ? 'Ready to Analyze' : 'Ready to Roast'}
               </h3>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Enter a GitHub username above to analyze their profile and generate a personalized roast based on their coding habits.
+                {isRecruiterMode 
+                  ? 'Enter a GitHub username above to generate a professional assessment of their developer profile.'
+                  : 'Enter a GitHub username above to analyze their profile and generate a personalized roast based on their coding habits.'
+                }
               </p>
             </div>
           )}
         </div>
         
         <footer className="mt-16 text-center text-xs text-muted-foreground">
-          <p>Made with 🔥 and questionable humor</p>
-          <p className="mt-1">Using GitHub Public API • No AI APIs • Pure rule-based roasting</p>
+          <p>Made with {isRecruiterMode ? '💼' : '🔥'} and {isRecruiterMode ? 'professionalism' : 'questionable humor'}</p>
+          <p className="mt-1">Using GitHub Public API • No AI APIs • Pure rule-based {isRecruiterMode ? 'analysis' : 'roasting'}</p>
         </footer>
       </div>
     </div>
