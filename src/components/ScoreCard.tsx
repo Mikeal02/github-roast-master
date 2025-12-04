@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import { getSeverityLabel } from '@/lib/roastGenerator';
 
-export function ScoreCard({ title, score, icon, delay = 0 }: { title: string; score: number; icon: React.ReactNode; delay?: number }) {
+export function ScoreCard({ title, score, icon, explanation = '', delay = 0 }) {
   const [animatedScore, setAnimatedScore] = useState(0);
   
   useEffect(() => {
@@ -40,18 +41,27 @@ export function ScoreCard({ title, score, icon, delay = 0 }: { title: string; sc
     return 'bg-terminal-red';
   };
 
+  const severity = getSeverityLabel(score);
+
   return (
     <div className="score-card">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-primary">{icon}</span>
           <span className="text-sm font-medium text-muted-foreground">{title}</span>
         </div>
-        <span className={`text-2xl font-bold font-mono ${getScoreColor(animatedScore)}`}>
-          {animatedScore}
-        </span>
+        <div className="text-right">
+          <span className={`text-2xl font-bold font-mono ${getScoreColor(animatedScore)}`}>
+            {animatedScore}
+          </span>
+        </div>
       </div>
-      <div className="progress-bar">
+      
+      <div className={`text-xs font-semibold mb-2 ${severity.color}`}>
+        {severity.label}
+      </div>
+      
+      <div className="progress-bar mb-2">
         <div 
           className={`progress-bar-fill ${getBarColor(score)}`}
           style={{ 
@@ -61,6 +71,12 @@ export function ScoreCard({ title, score, icon, delay = 0 }: { title: string; sc
           }}
         />
       </div>
+      
+      {explanation && (
+        <div className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border/50">
+          {explanation}
+        </div>
+      )}
     </div>
   );
 }
