@@ -4,7 +4,20 @@ Put your ego aside and see what your code really says about you.
 
 View Live Demo:https://roastmygit.netlify.app/
 
-![landing page screenshot](./public/roastmygit.netlify.app_)
+Landing Page
+![landing page screenshot](./public/roastmygit.netlify.app.png_)
+
+GIthub Search Profile page
+![Search Profile page screenshot](./public/roastmygit.netlify.app(1).png_)
+
+Roast Page
+![Roast page screenshot](./public/roastmygit.netlify.app(2).png_)
+
+Digital Personality Page
+![Personality page screenshot](./public/roastmygit.netlify.app(3).png_)
+
+
+
 
 ✨ Features
 🔍 Deep Profile Analysis: Scans public repositories, commit history, and language breakdown.
