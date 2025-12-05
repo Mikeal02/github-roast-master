@@ -158,7 +158,7 @@ const Index = () => {
                 <StatsGrid 
                   analysis={{
                     totalRepos: userData.public_repos,
-                    totalStars: Object.values(aiAnalysis.languages || {}).reduce((a: number, b: any) => a + b, 0),
+                    totalStars: (Object.values(aiAnalysis.languages || {}) as number[]).reduce((a, b) => a + b, 0),
                     totalForks: 0,
                     daysSinceLastUpdate: aiAnalysis.activityStatus?.daysSinceUpdate || 0,
                     languages: aiAnalysis.languages || {},
