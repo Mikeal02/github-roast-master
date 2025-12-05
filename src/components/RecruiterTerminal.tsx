@@ -27,7 +27,8 @@ export function RecruiterTerminal({ insights, username, scores }) {
     return { label: 'Entry Level', color: 'text-terminal-red' };
   };
 
-  const readiness = getHiringReadiness(scores.finalScore);
+  const finalScore = scores?.overall?.score || scores?.finalScore || 0;
+  const readiness = getHiringReadiness(finalScore);
 
   return (
     <div className="score-card">
@@ -40,7 +41,7 @@ export function RecruiterTerminal({ insights, username, scores }) {
       <div className="mb-4 p-3 bg-muted/50 rounded-lg">
         <div className="text-xs text-muted-foreground mb-1">Hiring Readiness</div>
         <div className={`text-lg font-bold ${readiness.color}`}>{readiness.label}</div>
-        <div className="text-xs text-muted-foreground">Based on overall score of {scores.finalScore}/100</div>
+        <div className="text-xs text-muted-foreground">Based on overall score of {finalScore}/100</div>
       </div>
       
       <div className="space-y-3 min-h-[150px]">
