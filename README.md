@@ -1,48 +1,88 @@
+Roast My Git is a fun, AI-powered tool that analyzes your GitHub profile and delivers a brutal (but hilarious) roast of your coding habits, commit messages, and repository chaos.
 
+Put your ego aside and see what your code really says about you.
 
-**Use your preferred IDE**
+View Live Demo:https://roastmygit.netlify.app/
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+✨ Features
+🔍 Deep Profile Analysis: Scans public repositories, commit history, and language breakdown.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+🤖 AI-Powered Roasts: Uses advanced LLMs to generate unique, witty, and personalized roasts based on your actual data.
 
-Follow these steps:
+📊 Developer Stereotypes: Identifies if you're a "Spaghetti Code Chef," a "Copy-Paste Stack Overflow Engineer," or a "README Neglecter."
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+⚡ Fast & Responsive: Built for speed with a clean, modern UI.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+🛠️ Tech Stack
+The following technologies were used to build this project:
 
-# Step 3: Install the necessary dependencies.
-npm i
+Frontend: React.js, typescript / HTML5 & CSS3 
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+API: GitHub REST API
 
-**Edit a file directly in GitHub**
+AI Engine:  Gemini API 
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Deployment: Netlify
 
-**Use GitHub Codespaces**
+🚀 Getting Started
+To run this project locally, follow these steps:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Prerequisites
+Node.js (v16 or higher)
 
-## What technologies are used for this project?
+npm or yarn
 
-This project is built with:
+An API Key for the AI service (e.g., OpenAI/Gemini)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Installation
+Clone the repository
 
+Bash
+
+git clone https://github.com/yourusername/roast-my-git.git
+cd roast-my-git
+Install dependencies
+
+Bash
+
+npm install
+# or
+yarn install
+Set up Environment Variables Create a .env file in the root directory and add your API keys:
+
+Code snippet
+
+REACT_APP_GITHUB_TOKEN=your_github_token_here
+REACT_APP_AI_API_KEY=your_ai_api_key_here
+Run the application
+
+Bash
+
+npm start
+🎮 Usage
+Enter a valid GitHub Username in the search bar.
+
+Click the "Roast Me" button.
+
+Wait for the AI to analyze the profile.
+
+Read your roast and share it with friends!
+
+🤝 Contributing
+Contributions are always welcome! If you have ideas for new insults, better metrics, or UI improvements:
+
+Fork the project.
+
+Create your feature branch (git checkout -b feature/AmazingFeature).
+
+Commit your changes (git commit -m 'Add some AmazingFeature').
+
+Push to the branch (git push origin feature/AmazingFeature).
+
+Open a Pull Request.
+
+📄 License
+Distributed under the MIT License. See LICENSE for more information.
+
+📬 Contact
+Project Link: https://github.com/Mikeal02/github-roast-master
