@@ -1,31 +1,69 @@
 import { Star, GitFork, Code2, Clock, FileText, Archive } from 'lucide-react';
-import { getActivityTimeLabel } from '@/lib/roastGenerator';
 
-export function StatsGrid({ analysis, isRecruiterMode = false }) {
-  const activityLabel = getActivityTimeLabel(analysis.daysSinceLastUpdate);
+interface StatsGridProps {
+  analysis: {
+    totalRepos?: number;
+    totalStars?: number;
+    totalForks?: number;
+    daysSinceLastUpdate?: number;
+    languages?: Record<string, number>;
+    reposWithDescription?: number;
+    originalRepos?: number;
+    forkedRepos?: number;
+    inactiveRepos?: number;
+    avgStars?: number;
+    mostUsedLanguage?: string;
+  };
+  isRecruiterMode?: boolean;
+}
+
+const getActivityTimeLabel = (days: number): string => {
+  if (days <= 7) return 'Active within last 7 days';
+  if (days <= 30) return 'Active within last month';
+  if (days <= 90) return 'No activity in 3 months';
+  if (days <= 180) return 'No activity in 6 months';
+  return 'No activity in 6+ months';
+};
+
+export function StatsGrid({ analysis, isRecruiterMode = false }: StatsGridProps) {
+  const daysSinceLastUpdate = analysis.daysSinceLastUpdate || 0;
+  const activityLabel = getActivityTimeLabel(daysSinceLastUpdate);
+  
+  // Calculate derived values safely
+  const totalRepos = analysis.totalRepos || 0;
+  const totalStars = analysis.totalStars || 0;
+  const totalForks = analysis.totalForks || 0;
+  const avgStars = totalRepos > 0 ? (totalStars / totalRepos) : 0;
+  
+  // Get most used language from languages object
+  const languages = analysis.languages || {};
+  const languageEntries = Object.entries(languages);
+  const mostUsedLanguage = languageEntries.length > 0 
+    ? languageEntries.sort((a, b) => b[1] - a[1])[0][0] 
+    : 'N/A';
   
   const stats = [
     {
       label: 'Total Stars',
-      value: analysis.totalStars,
+      value: totalStars,
       icon: <Star className="w-4 h-4" />,
       color: 'text-terminal-yellow',
     },
     {
       label: 'Total Forks',
-      value: analysis.totalForks,
+      value: totalForks,
       icon: <GitFork className="w-4 h-4" />,
       color: 'text-terminal-cyan',
     },
     {
       label: 'Avg Stars/Repo',
-      value: analysis.avgStars.toFixed(1),
+      value: avgStars.toFixed(1),
       icon: <Star className="w-4 h-4" />,
       color: 'text-terminal-purple',
     },
     {
       label: 'Top Language',
-      value: analysis.mostUsedLanguage,
+      value: mostUsedLanguage,
       icon: <Code2 className="w-4 h-4" />,
       color: 'text-primary',
     },
@@ -33,25 +71,25 @@ export function StatsGrid({ analysis, isRecruiterMode = false }) {
       label: 'Activity Status',
       value: activityLabel,
       icon: <Clock className="w-4 h-4" />,
-      color: analysis.daysSinceLastUpdate <= 30 ? 'text-terminal-green' : 'text-terminal-red',
+      color: daysSinceLastUpdate <= 30 ? 'text-terminal-green' : 'text-terminal-red',
       isLong: true,
     },
     {
-      label: 'Inactive Repos',
-      value: analysis.inactiveRepos,
-      icon: <Archive className="w-4 h-4" />,
-      color: 'text-terminal-red',
+      label: 'Languages Used',
+      value: languageEntries.length,
+      icon: <Code2 className="w-4 h-4" />,
+      color: 'text-terminal-purple',
     },
     {
       label: isRecruiterMode ? 'Documented Repos' : 'With Descriptions',
-      value: `${analysis.reposWithDescription}/${analysis.totalRepos}`,
+      value: `${analysis.reposWithDescription || 0}/${totalRepos}`,
       icon: <FileText className="w-4 h-4" />,
       color: 'text-secondary',
     },
     {
-      label: 'Original vs Forked',
-      value: `${analysis.originalRepos}/${analysis.forkedRepos}`,
-      icon: <GitFork className="w-4 h-4" />,
+      label: 'Total Repos',
+      value: totalRepos,
+      icon: <Archive className="w-4 h-4" />,
       color: 'text-muted-foreground',
     },
   ];

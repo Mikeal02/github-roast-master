@@ -1,4 +1,4 @@
-const languageColors = {
+const languageColors: Record<string, string> = {
   JavaScript: '#f7df1e',
   TypeScript: '#3178c6',
   Python: '#3776ab',
@@ -20,20 +20,32 @@ const languageColors = {
   Svelte: '#FF3E00',
 };
 
-export function LanguageChart({ languages }) {
-  const total = languages.reduce((sum, [_, count]) => sum + count, 0);
+interface LanguageChartProps {
+  languages: Record<string, number> | Array<[string, number]>;
+}
+
+export function LanguageChart({ languages }: LanguageChartProps) {
+  // Convert to array format if it's an object
+  const languageArray: Array<[string, number]> = Array.isArray(languages) 
+    ? languages 
+    : Object.entries(languages || {});
   
-  const getColor = (lang) => {
-    return languageColors[lang] || `hsl(${Math.random() * 360}, 70%, 50%)`;
+  const total = languageArray.reduce((sum, [_, count]) => sum + count, 0);
+  
+  const getColor = (lang: string) => {
+    return languageColors[lang] || `hsl(${Math.abs(lang.charCodeAt(0) * 10) % 360}, 70%, 50%)`;
   };
 
-  if (languages.length === 0) {
+  if (languageArray.length === 0 || total === 0) {
     return (
       <div className="score-card text-center py-8">
         <p className="text-muted-foreground">No language data available</p>
       </div>
     );
   }
+
+  // Sort by count descending
+  const sortedLanguages = [...languageArray].sort((a, b) => b[1] - a[1]);
 
   return (
     <div className="score-card">
@@ -42,7 +54,7 @@ export function LanguageChart({ languages }) {
       </h3>
       
       <div className="flex h-4 rounded-full overflow-hidden bg-muted mb-4">
-        {languages.map(([lang, count], index) => (
+        {sortedLanguages.map(([lang, count], index) => (
           <div
             key={lang}
             className="h-full transition-all duration-500"
@@ -57,7 +69,7 @@ export function LanguageChart({ languages }) {
       </div>
       
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        {languages.slice(0, 6).map(([lang, count]) => (
+        {sortedLanguages.slice(0, 6).map(([lang, count]) => (
           <div key={lang} className="flex items-center gap-2 text-xs">
             <div 
               className="w-3 h-3 rounded-full"
