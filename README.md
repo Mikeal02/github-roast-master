@@ -8,13 +8,13 @@ Landing Page
 ![landing page screenshot](public/roastmygit.netlify.app_.png)
 
 GIthub Search Profile page
-![Search Profile page screenshot](public/roastmygit.netlify.app_(1).png)
+![Search Profile page screenshot](public/roastmygit.netlify.app_ (1).png)
 
 Roast Page
-![Roast page screenshot](public/roastmygit.netlify.app_(2).png)
+![Roast page screenshot](public/roastmygit.netlify.app_ (2).png)
 
 Digital Personality Page
-![Personality page screenshot](public/roastmygit.netlify.app_(3).png)
+![Personality page screenshot](public/roastmygit.netlify.app_ (3).png)
 
 
 
