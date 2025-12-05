@@ -4,6 +4,8 @@ Put your ego aside and see what your code really says about you.
 
 View Live Demo:https://roastmygit.netlify.app/
 
+![landing page screenshot](./public/roastmygit.netlify.app_)
+
 ✨ Features
 🔍 Deep Profile Analysis: Scans public repositories, commit history, and language breakdown.
 
@@ -38,27 +40,31 @@ Installation
 Clone the repository
 
 Bash
-
-git clone https://github.com/yourusername/roast-my-git.git
-cd roast-my-git
+```bash
+git clone https://github.com/yourusername/github-roast-master.git
+cd github-roast-master
+```
 Install dependencies
 
 Bash
-
+```bash
 npm install
 # or
 yarn install
+```
 Set up Environment Variables Create a .env file in the root directory and add your API keys:
 
 Code snippet
-
+```bash
 REACT_APP_GITHUB_TOKEN=your_github_token_here
 REACT_APP_AI_API_KEY=your_ai_api_key_here
+```
 Run the application
 
 Bash
-
+```bash
 npm start
+```
 🎮 Usage
 Enter a valid GitHub Username in the search bar.
 
@@ -73,11 +79,11 @@ Contributions are always welcome! If you have ideas for new insults, better metr
 
 Fork the project.
 
-Create your feature branch (git checkout -b feature/AmazingFeature).
+Create your feature branch `(git checkout -b feature/AmazingFeature)`.
 
-Commit your changes (git commit -m 'Add some AmazingFeature').
+Commit your changes `(git commit -m 'Add some AmazingFeature')`.
 
-Push to the branch (git push origin feature/AmazingFeature).
+Push to the branch `(git push origin feature/AmazingFeature)`.
 
 Open a Pull Request.
 
