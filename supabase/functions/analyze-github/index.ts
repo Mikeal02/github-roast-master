@@ -40,7 +40,7 @@ serve(async (req) => {
     
     const mostRecentUpdate = repoActivity.length > 0 ? Math.min(...repoActivity.map((r: any) => r.daysSince)) : 999;
     const inactiveRepos = repoActivity.filter((r: any) => r.daysSince > 180).length;
-
+     // added ai api keys
     const githubSummary = {
       username: user.login,
       name: user.name || user.login,
