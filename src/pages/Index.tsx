@@ -14,6 +14,7 @@ import { LoadingState } from '@/components/LoadingState';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ModeToggle } from '@/components/ModeToggle';
 import { RecruiterMetric } from '@/components/RecruiterMetric';
+import { PersonalityProfile } from '@/components/PersonalityProfile';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { fetchGitHubUser, fetchUserRepos } from '@/lib/githubApi';
 import { 
@@ -24,17 +25,20 @@ import {
   getDeveloperArchetype,
   generateRecruiterInsights 
 } from '@/lib/roastGenerator';
+import { analyzePersonality } from '@/lib/personalityProfiler';
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState(null);
+  const [repos, setRepos] = useState<any[]>([]);
   const [analysis, setAnalysis] = useState(null);
   const [scores, setScores] = useState(null);
   const [roasts, setRoasts] = useState([]);
   const [recruiterInsights, setRecruiterInsights] = useState([]);
   const [explanations, setExplanations] = useState(null);
   const [archetype, setArchetype] = useState(null);
+  const [personalityProfile, setPersonalityProfile] = useState(null);
   const [searchedUsername, setSearchedUsername] = useState('');
   const [isRecruiterMode, setIsRecruiterMode] = useState(false);
   
@@ -44,34 +48,39 @@ const Index = () => {
     setIsLoading(true);
     setError(null);
     setUserData(null);
+    setRepos([]);
     setAnalysis(null);
     setScores(null);
     setRoasts([]);
     setRecruiterInsights([]);
     setExplanations(null);
     setArchetype(null);
+    setPersonalityProfile(null);
     setSearchedUsername(username);
 
     try {
-      const [user, repos] = await Promise.all([
+      const [user, fetchedRepos] = await Promise.all([
         fetchGitHubUser(username),
         fetchUserRepos(username, 30),
       ]);
 
-      const profileAnalysis = analyzeProfile(user, repos);
+      const profileAnalysis = analyzeProfile(user, fetchedRepos);
       const profileScores = calculateScores(user, profileAnalysis);
       const generatedRoasts = generateRoasts(user, profileAnalysis, profileScores);
       const scoreExplanations = getScoreExplanations(user, profileAnalysis, profileScores);
       const developerArchetype = getDeveloperArchetype(user, profileAnalysis, profileScores);
       const insights = generateRecruiterInsights(user, profileAnalysis, profileScores);
+      const personality = analyzePersonality(user, fetchedRepos, profileAnalysis, profileScores);
 
       setUserData(user);
+      setRepos(fetchedRepos);
       setAnalysis(profileAnalysis);
       setScores(profileScores);
       setRoasts(generatedRoasts);
       setRecruiterInsights(insights);
       setExplanations(scoreExplanations);
       setArchetype(developerArchetype);
+      setPersonalityProfile(personality);
       addToHistory(username);
     } catch (err) {
       setError(err.message || 'An unexpected error occurred');
@@ -160,6 +169,11 @@ const Index = () => {
                 />
               ) : (
                 <RoastTerminal roasts={roasts} username={userData.login} />
+              )}
+              
+              {/* Personality Profile Section */}
+              {personalityProfile && (
+                <PersonalityProfile profile={personalityProfile} />
               )}
             </div>
           )}
