@@ -1,4 +1,4 @@
-import { Brain, Zap, AlertTriangle, BookOpen, Lightbulb, Sparkles, Target, TrendingUp } from 'lucide-react';
+import { Brain, Zap, AlertTriangle, BookOpen, Lightbulb, Sparkles, Target } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const getRiskColor = (value: number) => {
@@ -13,7 +13,30 @@ const getProgressColor = (value: number) => {
   return 'bg-terminal-red';
 };
 
-export function PersonalityProfile({ profile }: { profile: any }) {
+interface PersonalityProfileProps {
+  profile: {
+    focusType: string;
+    procrastinationTendency: number;
+    burnoutRisk: number;
+    learningStyle: string;
+    personalityType: {
+      type: string;
+      emoji: string;
+      description: string;
+    };
+    peakActivityDay: string;
+    metrics: {
+      consistency: number;
+      exploration: number;
+      collaboration: number;
+      documentation: number;
+    };
+    funInsights: string[];
+    suggestions: string[];
+  };
+}
+
+export function PersonalityProfile({ profile }: PersonalityProfileProps) {
   return (
     <div className="space-y-6">
       <div className="terminal-box">
@@ -26,10 +49,10 @@ export function PersonalityProfile({ profile }: { profile: any }) {
         {/* Personality Type Banner */}
         <div className="bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 rounded-lg p-4 mb-6 border border-primary/20">
           <div className="flex items-center gap-4">
-            <span className="text-4xl">{profile.personalityType.emoji}</span>
+            <span className="text-4xl">{profile.personalityType?.emoji || '🧠'}</span>
             <div>
-              <h4 className="text-xl font-bold text-foreground">{profile.personalityType.type}</h4>
-              <p className="text-sm text-muted-foreground">{profile.personalityType.description}</p>
+              <h4 className="text-xl font-bold text-foreground">{profile.personalityType?.type || 'Coder'}</h4>
+              <p className="text-sm text-muted-foreground">{profile.personalityType?.description || ''}</p>
             </div>
           </div>
         </div>
@@ -47,13 +70,13 @@ export function PersonalityProfile({ profile }: { profile: any }) {
               <MetricCard
                 icon={<Zap className="w-4 h-4" />}
                 label="Focus Type"
-                value={profile.focusType}
-                subtext={`Peak activity: ${profile.peakActivityDay}s`}
+                value={profile.focusType || 'Unknown'}
+                subtext={`Peak activity: ${profile.peakActivityDay || 'N/A'}s`}
               />
               <MetricCard
                 icon={<BookOpen className="w-4 h-4" />}
                 label="Learning Style"
-                value={profile.learningStyle}
+                value={profile.learningStyle || 'Unknown'}
                 subtext="Based on project patterns"
               />
             </div>
@@ -62,29 +85,31 @@ export function PersonalityProfile({ profile }: { profile: any }) {
             <div className="grid grid-cols-2 gap-4">
               <RiskMeter
                 label="Procrastination Tendency"
-                value={profile.procrastinationTendency}
+                value={profile.procrastinationTendency || 0}
                 icon={<Target className="w-4 h-4" />}
               />
               <RiskMeter
                 label="Burnout Risk"
-                value={profile.burnoutRisk}
+                value={profile.burnoutRisk || 0}
                 icon={<AlertTriangle className="w-4 h-4" />}
               />
             </div>
 
             {/* Progress Bars */}
-            <div className="space-y-3 pt-2">
-              <h4 className="text-xs text-muted-foreground uppercase tracking-wide">Behavioral Metrics</h4>
-              <ProgressMetric label="Consistency" value={profile.metrics.consistency} />
-              <ProgressMetric label="Exploration" value={profile.metrics.exploration} />
-              <ProgressMetric label="Collaboration" value={profile.metrics.collaboration} />
-              <ProgressMetric label="Documentation" value={profile.metrics.documentation} />
-            </div>
+            {profile.metrics && (
+              <div className="space-y-3 pt-2">
+                <h4 className="text-xs text-muted-foreground uppercase tracking-wide">Behavioral Metrics</h4>
+                <ProgressMetric label="Consistency" value={profile.metrics.consistency || 0} />
+                <ProgressMetric label="Exploration" value={profile.metrics.exploration || 0} />
+                <ProgressMetric label="Collaboration" value={profile.metrics.collaboration || 0} />
+                <ProgressMetric label="Documentation" value={profile.metrics.documentation || 0} />
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="insights" className="mt-4">
             <div className="space-y-3">
-              {profile.funInsights.map((insight: string, index: number) => (
+              {(profile.funInsights || []).map((insight: string, index: number) => (
                 <div
                   key={index}
                   className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg border border-border/50"
@@ -98,7 +123,7 @@ export function PersonalityProfile({ profile }: { profile: any }) {
 
           <TabsContent value="suggestions" className="mt-4">
             <div className="space-y-3">
-              {profile.suggestions.map((suggestion: string, index: number) => (
+              {(profile.suggestions || []).map((suggestion: string, index: number) => (
                 <div
                   key={index}
                   className="flex items-start gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20"

@@ -42,12 +42,12 @@ export function Header({ isRecruiterMode = false }) {
           Real GitHub API
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-terminal-cyan" />
-          {isRecruiterMode ? 'Data-Driven' : 'Rule-Based'}
+          <span className="w-2 h-2 rounded-full bg-terminal-cyan animate-pulse" />
+          AI-Powered
         </span>
         <span className="flex items-center gap-1">
           <span className="w-2 h-2 rounded-full bg-terminal-yellow" />
-          {isRecruiterMode ? 'Professional Insights' : 'Developer Scores'}
+          {isRecruiterMode ? 'Professional Insights' : 'Developer Roasts'}
         </span>
       </div>
     </header>
