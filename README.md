@@ -1,107 +1,134 @@
-Roast My Git is a fun, AI-powered tool that analyzes your GitHub profile and delivers a brutal (but hilarious) roast of your coding habits, commit messages, and repository chaos.
+# Roast My Git
 
+**Roast My Git** is a fun, AI-powered tool that analyzes your GitHub profile and delivers a brutal (but hilarious) roast of your coding habits, commit messages, and repository chaos.  
 Put your ego aside and see what your code really says about you.
 
-View Live Demo:https://roastmygit.netlify.app/
+**Live Demo:** [https://roastmygit.netlify.app/](https://roastmygit.netlify.app/)
 
-Landing Page
-![landing page screenshot](public/roastmygit.netlify.app_.png)
+---
 
-GIthub Search Profile page
-![Search Profile page screenshot](public/SearchProfile.png)
+## 📌 Overview
 
-Roast Page
-![Roast page screenshot](public/Roast.png)
+Roast My Git scans public GitHub profiles and provides:
 
-Digital Personality Page
-![Personality page screenshot](public/Personality.png)
+- Insightful analysis of repositories, commits, and languages.
+- Personalized, AI-generated roasts based on actual coding behavior.
+- Identification of developer stereotypes like “Spaghetti Code Chef” or “README Neglecter.”
 
+It’s built to be fast, responsive, and fun while offering a peek into your coding personality.
 
+---
 
+## 🖼️ Screenshots
 
-✨ Features
-🔍 Deep Profile Analysis: Scans public repositories, commit history, and language breakdown.
+**Landing Page** 
 
-🤖 AI-Powered Roasts: Uses advanced LLMs to generate unique, witty, and personalized roasts based on your actual data.
+![Landing Page](public/roastmygit.netlify.app_.png)  
+*Main landing page of the application.*
 
-📊 Developer Stereotypes: Identifies if you're a "Spaghetti Code Chef," a "Copy-Paste Stack Overflow Engineer," or a "README Neglecter."
+**GitHub Profile Search Page** 
 
-⚡ Fast & Responsive: Built for speed with a clean, modern UI.
+![Search Profile](public/SearchProfile.png)  
+*Enter any GitHub username to analyze.*
 
-🛠️ Tech Stack
-The following technologies were used to build this project:
+**Roast Page** 
 
-Frontend: React.js, typescript / HTML5 & CSS3 
+![Roast Page](public/Roast.png)  
+*Displays the AI-generated roast.*
 
-API: GitHub REST API
+**Digital Personality Page** 
 
-AI Engine:  Gemini API 
+![Personality Page](public/Personality.png)  
+*Shows a fun personality breakdown based on coding habits.*
 
-Deployment: Netlify
+---
 
-🚀 Getting Started
-To run this project locally, follow these steps:
+## ✨ Features
 
-Prerequisites
-Node.js (v16 or higher)
+- **Deep Profile Analysis:** Scans repositories, commit history, and language usage.  
+- **AI-Powered Roasts:** Generates witty, personalized roasts using LLMs.  
+- **Developer Stereotypes:** Identifies patterns like “Spaghetti Code Chef” or “Copy-Paste Stack Overflow Engineer.”  
+- **Fast & Responsive UI:** Clean, modern interface built for speed and clarity.  
 
-npm or yarn
+---
 
-An API Key for the AI service (e.g., OpenAI/Gemini)
+## 🛠 Tech Stack
 
-Installation
-Clone the repository
+| Layer | Technology |
+|-------|------------|
+| Frontend | React.js, TypeScript, HTML5, CSS3 |
+| API | GitHub REST API |
+| AI Engine | Gemini API |
+| Deployment | Netlify |
 
-Bash
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js v16 or higher  
+- npm or yarn  
+- API Key for AI service (Gemini or OpenAI)
+
+### Installation
+1. Clone the repository:
 ```bash
 git clone https://github.com/yourusername/github-roast-master.git
 cd github-roast-master
 ```
-Install dependencies
 
-Bash
+2. Install dependencies:
 ```bash
 npm install
 # or
 yarn install
 ```
-Set up Environment Variables Create a .env file in the root directory and add your API keys:
 
-Code snippet
+3. Set up environment variables:
+Create a .env file in the root directory:
 ```bash
 REACT_APP_GITHUB_TOKEN=your_github_token_here
 REACT_APP_AI_API_KEY=your_ai_api_key_here
 ```
-Run the application
 
-Bash
+4. Run the application:
 ```bash
 npm start
 ```
-🎮 Usage
-Enter a valid GitHub Username in the search bar.
 
-Click the "Roast Me" button.
+🎮 Usage
+
+Enter a valid GitHub username in the search bar.
+
+Click “Roast Me”.
 
 Wait for the AI to analyze the profile.
 
 Read your roast and share it with friends!
 
 🤝 Contributing
-Contributions are always welcome! If you have ideas for new insults, better metrics, or UI improvements:
 
-Fork the project.
+Contributions are welcome!
 
-Create your feature branch `(git checkout -b feature/AmazingFeature)`.
+1.Fork the repository
 
-Commit your changes `(git commit -m 'Add some AmazingFeature')`.
+2. Create your feature branch:
+```bash
+git checkout -b feature/AmazingFeature
+```
 
-Push to the branch `(git push origin feature/AmazingFeature)`.
+3. Commit your changes:
+```bash
+git commit -m "Add some AmazingFeature"
+```
 
-Open a Pull Request.
+4. Push to the branch:
+```bash
+git push origin feature/AmazingFeature
+```
+
+5. Open a Pull Request
 
 📄 License
-Distributed under the MIT License. See LICENSE for more information.
 
-📬 Contact
-Project Link: https://github.com/Mikeal02/github-roast-master
+MIT License — see LICENSE for details.
