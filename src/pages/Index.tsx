@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Activity, FileText, Star, Code2 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { SearchBar } from '@/components/SearchBar';
@@ -15,6 +15,12 @@ import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { ModeToggle } from '@/components/ModeToggle';
 import { RecruiterMetric } from '@/components/RecruiterMetric';
 import { PersonalityProfile } from '@/components/PersonalityProfile';
+import { ShareExport } from '@/components/ShareExport';
+import { CompareProfiles } from '@/components/CompareProfiles';
+import { TopRepositories } from '@/components/TopRepositories';
+import { AchievementBadges } from '@/components/AchievementBadges';
+import { ActivityHeatmap } from '@/components/ActivityHeatmap';
+import { ResultsSkeletonLoader } from '@/components/SkeletonLoader';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { fetchGitHubUser, fetchUserRepos } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,6 +33,7 @@ const Index = () => {
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const [searchedUsername, setSearchedUsername] = useState('');
   const [isRecruiterMode, setIsRecruiterMode] = useState(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
   
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
 
@@ -101,15 +108,41 @@ const Index = () => {
         />
 
         <div className="mt-12">
-          {isLoading && <LoadingState />}
+          {isLoading && <ResultsSkeletonLoader />}
           
           {error && !isLoading && (
             <ErrorDisplay error={error} onRetry={() => handleSearch(searchedUsername)} />
           )}
           
           {userData && aiAnalysis && !isLoading && !error && (
-            <div className="space-y-6 animate-[fadeIn_0.5s_ease-out]">
+            <div ref={resultsRef} className="space-y-6 animate-[fadeIn_0.5s_ease-out]">
+              {/* Action buttons */}
+              <div className="flex justify-end gap-2">
+                <CompareProfiles 
+                  currentUsername={userData.login}
+                  currentAnalysis={aiAnalysis}
+                  currentUserData={userData}
+                />
+                <ShareExport 
+                  username={userData.login}
+                  score={aiAnalysis.scores?.overall?.score || 0}
+                  isRecruiterMode={isRecruiterMode}
+                  containerRef={resultsRef}
+                />
+              </div>
+              
               <ProfileCard user={userData} />
+              
+              {/* Achievement Badges */}
+              <AchievementBadges 
+                userData={userData}
+                analysis={{
+                  totalStars: aiAnalysis.totalStars || 0,
+                  totalForks: aiAnalysis.totalForks || 0,
+                  languages: aiAnalysis.languages || {},
+                  scores: aiAnalysis.scores,
+                }}
+              />
               
               <ActivityBadge 
                 status={aiAnalysis.activityStatus?.label || 'Unknown'} 
@@ -158,14 +191,26 @@ const Index = () => {
                 <StatsGrid 
                   analysis={{
                     totalRepos: userData.public_repos,
-                    totalStars: (Object.values(aiAnalysis.languages || {}) as number[]).reduce((a, b) => a + b, 0),
-                    totalForks: 0,
+                    totalStars: aiAnalysis.totalStars || 0,
+                    totalForks: aiAnalysis.totalForks || 0,
                     daysSinceLastUpdate: aiAnalysis.activityStatus?.daysSinceUpdate || 0,
                     languages: aiAnalysis.languages || {},
                   }} 
                   isRecruiterMode={isRecruiterMode} 
                 />
               </div>
+              
+              {/* Activity Heatmap */}
+              <ActivityHeatmap 
+                activityData={{
+                  recentCommits: aiAnalysis.scores?.activity?.score || 50,
+                }}
+              />
+              
+              {/* Top Repositories */}
+              {aiAnalysis.topRepositories && aiAnalysis.topRepositories.length > 0 && (
+                <TopRepositories repositories={aiAnalysis.topRepositories} />
+              )}
               
               {isRecruiterMode ? (
                 <RecruiterTerminal 
