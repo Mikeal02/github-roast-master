@@ -201,9 +201,27 @@ IMPORTANT: Return ONLY the JSON object, no other text.`;
 
     // Add language data for the chart
     analysisResult.languages = languageCounts;
+    
+    // Add total stars and forks for achievements
+    analysisResult.totalStars = totalStars;
+    analysisResult.totalForks = totalForks;
+    
+    // Add top repositories
+    const topRepos = repos
+      .filter((r: any) => !r.fork)
+      .sort((a: any, b: any) => (b.stargazers_count || 0) - (a.stargazers_count || 0))
+      .slice(0, 5)
+      .map((r: any) => ({
+        name: r.name,
+        description: r.description,
+        stars: r.stargazers_count || 0,
+        forks: r.forks_count || 0,
+        language: r.language,
+        url: r.html_url,
+      }));
+    analysisResult.topRepositories = topRepos;
 
     console.log('Analysis complete for:', user.login);
-
     return new Response(JSON.stringify(analysisResult), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
