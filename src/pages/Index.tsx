@@ -22,7 +22,7 @@ import { AchievementBadges } from '@/components/AchievementBadges';
 import { ActivityHeatmap } from '@/components/ActivityHeatmap';
 import { ResultsSkeletonLoader } from '@/components/SkeletonLoader';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
-import { fetchGitHubUser, fetchUserRepos } from '@/lib/githubApi';
+import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, parseEventsToActivity } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -33,6 +33,9 @@ const Index = () => {
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const [searchedUsername, setSearchedUsername] = useState('');
   const [isRecruiterMode, setIsRecruiterMode] = useState(false);
+  const [userEvents, setUserEvents] = useState<any[]>([]);
+  const [userOrgs, setUserOrgs] = useState<any[]>([]);
+  const [userGists, setUserGists] = useState<any[]>([]);
   const resultsRef = useRef<HTMLDivElement>(null);
   
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
@@ -45,19 +48,32 @@ const Index = () => {
     setSearchedUsername(username);
 
     try {
-      // Fetch GitHub data
-      const [user, repos] = await Promise.all([
+      // Fetch GitHub data in parallel
+      const [user, repos, events, orgs, gists] = await Promise.all([
         fetchGitHubUser(username),
-        fetchUserRepos(username, 30),
+        fetchUserRepos(username, 100),
+        fetchUserEvents(username, 100),
+        fetchUserOrgs(username),
+        fetchUserGists(username),
       ]);
 
       setUserData(user);
+      setUserEvents(events);
+      setUserOrgs(orgs);
+      setUserGists(gists);
 
       // Call AI edge function for analysis
       toast.info('🤖 AI is analyzing the profile...');
       
       const { data, error: fnError } = await supabase.functions.invoke('analyze-github', {
-        body: { user, repos, mode: isRecruiterMode ? 'recruiter' : 'roast' }
+        body: { 
+          user, 
+          repos, 
+          events,
+          orgs,
+          gists,
+          mode: isRecruiterMode ? 'recruiter' : 'roast' 
+        }
       });
 
       if (fnError) {
@@ -204,6 +220,7 @@ const Index = () => {
               <ActivityHeatmap 
                 activityData={{
                   recentCommits: aiAnalysis.scores?.activity?.score || 50,
+                  events: userEvents,
                 }}
               />
               

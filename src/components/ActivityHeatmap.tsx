@@ -2,90 +2,128 @@ import { useMemo } from 'react';
 import { Calendar } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
+interface ContributionDay {
+  date: Date;
+  level: number;
+  contributions: number;
+}
+
 interface ActivityHeatmapProps {
   activityData?: {
     recentCommits?: number;
     activeDays?: string[];
     commitsByMonth?: Record<string, number>;
+    events?: Array<{
+      type: string;
+      created_at: string;
+    }>;
   };
 }
 
 export function ActivityHeatmap({ activityData }: ActivityHeatmapProps) {
-  // Generate activity data organized by weeks (columns) and days (rows)
-  const { weeks, totalContributions, monthLabels } = useMemo(() => {
+  const { grid, totalContributions, monthLabels } = useMemo(() => {
     const today = new Date();
-    const weeksCount = 52; // Full year of data
-    const weeks: Array<Array<{ date: Date; level: number; contributions: number }>> = [];
+    today.setHours(23, 59, 59, 999);
     
-    // Seed based on activity data for consistent generation
+    // Build a map of date -> contribution count from real events
+    const contributionMap = new Map<string, number>();
+    
+    if (activityData?.events && activityData.events.length > 0) {
+      activityData.events.forEach(event => {
+        const date = new Date(event.created_at);
+        const dateKey = date.toISOString().split('T')[0];
+        contributionMap.set(dateKey, (contributionMap.get(dateKey) || 0) + 1);
+      });
+    }
+    
+    // Fallback: generate simulated data based on activity score
     const seed = activityData?.recentCommits || 50;
-    const baseActivity = Math.min(seed / 10, 10);
+    const hasRealData = contributionMap.size > 0;
     
-    let totalContributions = 0;
-    const monthLabels: Array<{ label: string; index: number }> = [];
-    let lastMonth = -1;
-
-    // Calculate the starting date (52 weeks ago, aligned to Sunday)
+    // Calculate the start date: go back ~1 year, aligned to Sunday
     const startDate = new Date(today);
-    startDate.setDate(startDate.getDate() - (weeksCount * 7) - startDate.getDay());
-
+    startDate.setFullYear(startDate.getFullYear() - 1);
+    startDate.setDate(startDate.getDate() - startDate.getDay()); // Align to Sunday
+    startDate.setHours(0, 0, 0, 0);
+    
+    // Calculate number of weeks
+    const daysDiff = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const weeksCount = Math.ceil(daysDiff / 7);
+    
+    // Build grid: 7 rows (days) × N columns (weeks)
+    const grid: ContributionDay[][] = Array.from({ length: 7 }, () => []);
+    const monthLabels: Array<{ label: string; weekIndex: number }> = [];
+    let lastMonth = -1;
+    let totalContributions = 0;
+    
     for (let week = 0; week < weeksCount; week++) {
-      const weekData: Array<{ date: Date; level: number; contributions: number }> = [];
-      
       for (let day = 0; day < 7; day++) {
         const date = new Date(startDate);
         date.setDate(startDate.getDate() + (week * 7) + day);
         
+        // Track month labels (only for first day of week that's in a new month)
+        if (day === 0) {
+          const month = date.getMonth();
+          if (month !== lastMonth) {
+            monthLabels.push({
+              label: date.toLocaleDateString('en-US', { month: 'short' }),
+              weekIndex: week
+            });
+            lastMonth = month;
+          }
+        }
+        
         // Skip future dates
         if (date > today) {
-          weekData.push({ date, level: 0, contributions: 0 });
+          grid[day].push({ date, level: 0, contributions: 0 });
           continue;
         }
         
-        // Track month labels
-        const month = date.getMonth();
-        if (month !== lastMonth && day === 0) {
-          monthLabels.push({ 
-            label: date.toLocaleDateString('en-US', { month: 'short' }), 
-            index: week 
-          });
-          lastMonth = month;
+        // Get contribution count
+        let contributions = 0;
+        const dateKey = date.toISOString().split('T')[0];
+        
+        if (hasRealData) {
+          contributions = contributionMap.get(dateKey) || 0;
+        } else {
+          // Generate simulated data
+          const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+          const randomFactor = Math.abs(Math.sin(dayOfYear * 13.7 + seed * 7.3 + date.getMonth() * 3.1)) * 0.85 + 0.15;
+          const weekendFactor = day === 0 || day === 6 ? 0.35 : 1;
+          const baseActivity = Math.min(seed / 8, 12);
+          
+          // More activity in recent months
+          const monthsAgo = (today.getFullYear() - date.getFullYear()) * 12 + (today.getMonth() - date.getMonth());
+          const recencyFactor = monthsAgo < 2 ? 1.4 : monthsAgo < 4 ? 1.1 : 0.8;
+          
+          contributions = Math.floor(randomFactor * baseActivity * weekendFactor * recencyFactor);
         }
         
-        // Generate activity level with deterministic randomness
-        const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
-        const randomFactor = Math.abs(Math.sin(dayOfYear * 13 + seed * 7)) * 0.8 + 0.2;
-        const weekendFactor = day === 0 || day === 6 ? 0.4 : 1;
-        const recentFactor = week > weeksCount - 12 ? 1.3 : 1; // More activity recently
-        
-        const contributions = Math.floor(randomFactor * baseActivity * weekendFactor * recentFactor);
-        const level = contributions === 0 ? 0 : Math.min(Math.ceil(contributions / 2), 4);
-        
+        const level = contributions === 0 ? 0 : Math.min(Math.ceil(contributions / 3), 4);
         totalContributions += contributions;
-        weekData.push({ date, level, contributions });
+        
+        grid[day].push({ date, level, contributions });
       }
-      
-      weeks.push(weekData);
     }
     
-    return { weeks, totalContributions, monthLabels };
+    return { grid, totalContributions, monthLabels };
   }, [activityData]);
 
   const getLevelColor = (level: number) => {
     switch (level) {
-      case 0: return 'bg-muted/30 dark:bg-muted/20';
-      case 1: return 'bg-terminal-green/25';
+      case 0: return 'bg-muted/40 dark:bg-muted/20';
+      case 1: return 'bg-terminal-green/30';
       case 2: return 'bg-terminal-green/50';
       case 3: return 'bg-terminal-green/75';
       case 4: return 'bg-terminal-green';
-      default: return 'bg-muted/30';
+      default: return 'bg-muted/40';
     }
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
-      month: 'long', 
+      month: 'long',
       day: 'numeric',
       year: 'numeric'
     });
@@ -104,54 +142,45 @@ export function ActivityHeatmap({ activityData }: ActivityHeatmapProps) {
       </div>
 
       <TooltipProvider delayDuration={100}>
-        <div className="overflow-x-auto">
-          {/* Month labels */}
-          <div className="flex mb-1 ml-8">
-            {monthLabels.map((month, i) => (
-              <div 
-                key={i} 
-                className="text-[10px] text-muted-foreground"
-                style={{ 
-                  position: 'relative',
-                  left: `${month.index * 11}px`,
-                  width: 0,
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                {month.label}
-              </div>
-            ))}
-          </div>
-
-          <div className="flex gap-[3px]">
-            {/* Day labels */}
-            <div className="flex flex-col gap-[3px] pr-2">
-              {dayLabels.map((label, i) => (
-                <div 
-                  key={label} 
-                  className="h-[10px] text-[9px] text-muted-foreground flex items-center justify-end"
-                  style={{ visibility: i % 2 === 1 ? 'visible' : 'hidden' }}
+        <div className="overflow-x-auto pb-2">
+          {/* Month labels row */}
+          <div className="flex mb-2">
+            <div className="w-8 shrink-0" /> {/* Spacer for day labels */}
+            <div className="flex relative" style={{ minWidth: `${grid[0]?.length * 13}px` }}>
+              {monthLabels.map((month, i) => (
+                <span
+                  key={i}
+                  className="text-[10px] text-muted-foreground absolute"
+                  style={{ left: `${month.weekIndex * 13}px` }}
                 >
-                  {label}
-                </div>
+                  {month.label}
+                </span>
               ))}
             </div>
+          </div>
 
-            {/* Contribution grid - weeks as columns, days as rows */}
-            {weeks.map((week, weekIndex) => (
-              <div key={weekIndex} className="flex flex-col gap-[3px]">
-                {week.map((day, dayIndex) => (
-                  <Tooltip key={dayIndex}>
+          {/* Heatmap grid: days as rows, weeks as columns */}
+          <div className="flex flex-col gap-[2px]">
+            {grid.map((row, dayIndex) => (
+              <div key={dayIndex} className="flex items-center gap-[2px]">
+                {/* Day label */}
+                <div className="w-8 shrink-0 text-[9px] text-muted-foreground text-right pr-2">
+                  {dayIndex % 2 === 1 ? dayLabels[dayIndex] : ''}
+                </div>
+                
+                {/* Week cells */}
+                {row.map((cell, weekIndex) => (
+                  <Tooltip key={weekIndex}>
                     <TooltipTrigger asChild>
                       <div
-                        className={`w-[10px] h-[10px] rounded-sm ${getLevelColor(day.level)} transition-all hover:ring-1 hover:ring-primary/50 cursor-pointer`}
+                        className={`w-[11px] h-[11px] rounded-[2px] ${getLevelColor(cell.level)} transition-colors hover:ring-1 hover:ring-primary/50 cursor-pointer shrink-0`}
                       />
                     </TooltipTrigger>
                     <TooltipContent side="top" className="text-xs">
                       <p className="font-semibold">
-                        {day.contributions} contribution{day.contributions !== 1 ? 's' : ''}
+                        {cell.contributions} contribution{cell.contributions !== 1 ? 's' : ''}
                       </p>
-                      <p className="text-muted-foreground">{formatDate(day.date)}</p>
+                      <p className="text-muted-foreground">{formatDate(cell.date)}</p>
                     </TooltipContent>
                   </Tooltip>
                 ))}
@@ -164,11 +193,11 @@ export function ActivityHeatmap({ activityData }: ActivityHeatmapProps) {
       {/* Legend */}
       <div className="flex items-center justify-end gap-2 mt-4 text-xs text-muted-foreground">
         <span>Less</span>
-        <div className="flex gap-[3px]">
+        <div className="flex gap-[2px]">
           {[0, 1, 2, 3, 4].map((level) => (
             <div
               key={level}
-              className={`w-[10px] h-[10px] rounded-sm ${getLevelColor(level)}`}
+              className={`w-[11px] h-[11px] rounded-[2px] ${getLevelColor(level)}`}
             />
           ))}
         </div>

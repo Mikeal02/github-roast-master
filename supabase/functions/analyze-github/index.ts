@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { user, repos, mode } = await req.json();
+    const { user, repos, events = [], orgs = [], gists = [], mode } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
@@ -40,11 +40,44 @@ serve(async (req) => {
     
     const mostRecentUpdate = repoActivity.length > 0 ? Math.min(...repoActivity.map((r: any) => r.daysSince)) : 999;
     const inactiveRepos = repoActivity.filter((r: any) => r.daysSince > 180).length;
-     // added ai api keys
+    
+    // Analyze events for activity patterns
+    const eventTypes: Record<string, number> = {};
+    const eventsByDay: Record<string, number> = {};
+    const eventsByHour: number[] = new Array(24).fill(0);
+    
+    events.forEach((event: any) => {
+      eventTypes[event.type] = (eventTypes[event.type] || 0) + 1;
+      const date = new Date(event.created_at);
+      const dateKey = date.toISOString().split('T')[0];
+      eventsByDay[dateKey] = (eventsByDay[dateKey] || 0) + 1;
+      eventsByHour[date.getHours()]++;
+    });
+    
+    // Find peak coding hour
+    const peakHour = eventsByHour.indexOf(Math.max(...eventsByHour));
+    const peakHourLabel = peakHour >= 12 ? `${peakHour - 12 || 12}PM` : `${peakHour || 12}AM`;
+    
+    // Calculate streak and activity metrics
+    const activeDays = Object.keys(eventsByDay).length;
+    const totalEvents = events.length;
+    
+    // Analyze organizations
+    const orgNames = orgs.map((o: any) => o.login);
+    
+    // Analyze gists
+    const publicGists = gists.length;
+    const gistLanguages = gists.flatMap((g: any) => 
+      Object.values(g.files || {}).map((f: any) => f.language).filter(Boolean)
+    );
+    
     const githubSummary = {
       username: user.login,
       name: user.name || user.login,
       bio: user.bio,
+      company: user.company,
+      location: user.location,
+      blog: user.blog,
       publicRepos: user.public_repos,
       followers: user.followers,
       following: user.following,
@@ -58,6 +91,16 @@ serve(async (req) => {
       mostRecentUpdateDays: mostRecentUpdate,
       inactiveRepos,
       repoActivity: repoActivity.slice(0, 10),
+      // New metrics from events
+      totalEvents,
+      activeDaysLast90: activeDays,
+      eventTypes,
+      peakCodingHour: peakHourLabel,
+      organizations: orgNames,
+      publicGists,
+      gistLanguages: [...new Set(gistLanguages)],
+      hireable: user.hireable,
+      twitterUsername: user.twitter_username,
     };
 
     const systemPrompt = mode === 'recruiter' 
