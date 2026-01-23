@@ -26,27 +26,27 @@ It’s built to be fast, responsive, and fun while offering a peek into your cod
 ![Landing Page](public/roastmygit.netlify.app_.png)  
 *Main landing page of the application.*
 
-**GitHub Profile Search Page** 
+**GitHub Profile Search Page**:*Enter any GitHub username to analyze.*
+
 
 ![Search Profile](public/SearchProfile.png) 
  
-*Enter any GitHub username to analyze.*
 
 
 
-**Roast Page** 
+**Roast Page**:*Displays the AI-generated roast.*
+
 
 ![Roast Page](public/Roast.png)  
 
-*Displays the AI-generated roast.*
 
 
 
-**Digital Personality Page** 
+**Digital Personality Page**:*Shows a fun personality breakdown based on coding habits.*
+ 
 
 ![Personality Page](public/Personality.png)  
 
-*Shows a fun personality breakdown based on coding habits.*
 
 
 ---
@@ -104,39 +104,42 @@ REACT_APP_AI_API_KEY=your_ai_api_key_here
 npm start
 ```
 
-🎮 Usage
+## 🎮 Usage
 
-Enter a valid GitHub username in the search bar.
+1.Enter a valid GitHub username in the search bar.
 
-Click “Roast Me”.
+2.Click “Roast Me”.
 
-Wait for the AI to analyze the profile.
+3.Wait for the AI to analyze the profile.
 
-Read your roast and share it with friends!
+4.Read your roast and share it with friends!
+---
 
-🤝 Contributing
+
+## 🤝 Contributing
 
 Contributions are welcome!
 
 1.Fork the repository
 
-2. Create your feature branch:
+2.Create your feature branch:
 ```bash
 git checkout -b feature/AmazingFeature
 ```
 
-3. Commit your changes:
+3.Commit your changes:
 ```bash
 git commit -m "Add some AmazingFeature"
 ```
 
-4. Push to the branch:
+4.Push to the branch:
 ```bash
 git push origin feature/AmazingFeature
 ```
 
 5. Open a Pull Request
+---
 
-📄 License
+## 📄 License
 
 MIT License — see LICENSE for details.
