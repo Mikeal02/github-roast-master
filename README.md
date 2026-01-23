@@ -28,18 +28,26 @@ It’s built to be fast, responsive, and fun while offering a peek into your cod
 
 **GitHub Profile Search Page** 
 
-![Search Profile](public/SearchProfile.png)  
+![Search Profile](public/SearchProfile.png) 
+ 
 *Enter any GitHub username to analyze.*
+
+
 
 **Roast Page** 
 
 ![Roast Page](public/Roast.png)  
+
 *Displays the AI-generated roast.*
+
+
 
 **Digital Personality Page** 
 
 ![Personality Page](public/Personality.png)  
+
 *Shows a fun personality breakdown based on coding habits.*
+
 
 ---
 
