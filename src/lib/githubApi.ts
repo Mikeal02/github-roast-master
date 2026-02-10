@@ -89,6 +89,58 @@ export async function fetchRepoContributors(owner: string, repo: string) {
   }
 }
 
+export async function fetchRepoLanguages(owner: string, repo: string) {
+  try {
+    const response = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/languages`);
+    if (!response.ok) return {};
+    return response.json();
+  } catch {
+    return {};
+  }
+}
+
+export async function fetchRepoCommits(owner: string, repo: string, perPage = 30) {
+  try {
+    const response = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/commits?per_page=${perPage}`);
+    if (!response.ok) return [];
+    return response.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchRepoReadme(owner: string, repo: string) {
+  try {
+    const response = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/readme`);
+    if (!response.ok) return null;
+    return response.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchUserStarred(username: string, perPage = 30) {
+  try {
+    const response = await fetch(`${GITHUB_API_BASE}/users/${username}/starred?per_page=${perPage}`);
+    if (!response.ok) return [];
+    return response.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchRepoTopics(owner: string, repo: string) {
+  try {
+    const response = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/topics`, {
+      headers: { 'Accept': 'application/vnd.github.mercy-preview+json' }
+    });
+    if (!response.ok) return { names: [] };
+    return response.json();
+  } catch {
+    return { names: [] };
+  }
+}
+
 export async function checkReadmeExists(owner: string, repo: string) {
   try {
     const response = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/readme`);
@@ -125,4 +177,58 @@ export function parseEventsToActivity(events: any[]) {
   });
   
   return { activityByDate, eventTypes };
+}
+
+// Calculate coding streaks from events
+export function calculateCodingStreaks(events: any[]) {
+  if (!events.length) return { currentStreak: 0, longestStreak: 0, totalActiveDays: 0 };
+  
+  const dates = new Set<string>();
+  events.forEach(event => {
+    dates.add(new Date(event.created_at).toISOString().split('T')[0]);
+  });
+  
+  const sortedDates = [...dates].sort();
+  let currentStreak = 0;
+  let longestStreak = 0;
+  let tempStreak = 1;
+  
+  for (let i = 1; i < sortedDates.length; i++) {
+    const prev = new Date(sortedDates[i - 1]);
+    const curr = new Date(sortedDates[i]);
+    const diff = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+    
+    if (diff === 1) {
+      tempStreak++;
+    } else {
+      longestStreak = Math.max(longestStreak, tempStreak);
+      tempStreak = 1;
+    }
+  }
+  longestStreak = Math.max(longestStreak, tempStreak);
+  
+  // Check if current streak is still active
+  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  
+  if (dates.has(today) || dates.has(yesterday)) {
+    let streak = 0;
+    for (let i = sortedDates.length - 1; i >= 0; i--) {
+      const d = new Date(sortedDates[i]);
+      const expected = new Date();
+      expected.setDate(expected.getDate() - streak);
+      expected.setHours(0, 0, 0, 0);
+      d.setHours(0, 0, 0, 0);
+      
+      const diff = Math.abs(expected.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
+      if (diff <= 1) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    currentStreak = streak;
+  }
+  
+  return { currentStreak, longestStreak, totalActiveDays: dates.size };
 }
