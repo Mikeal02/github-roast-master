@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useRef, useMemo } from 'react';
 import { Radar } from 'lucide-react';
+import { motion, useInView } from 'framer-motion';
 
 interface RadarChartProps {
   scores: {
@@ -8,6 +9,8 @@ interface RadarChartProps {
     popularity?: { score: number };
     diversity?: { score: number };
     overall?: { score: number };
+    codeQuality?: { score: number };
+    collaboration?: { score: number };
   };
   personality?: {
     metrics?: {
@@ -20,14 +23,17 @@ interface RadarChartProps {
 }
 
 export function RadarChart({ scores, personality }: RadarChartProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
+
   const metrics = useMemo(() => {
     return [
       { label: 'Activity', value: scores?.activity?.score || 0 },
-      { label: 'Documentation', value: scores?.documentation?.score || 0 },
+      { label: 'Docs', value: scores?.documentation?.score || 0 },
       { label: 'Popularity', value: scores?.popularity?.score || 0 },
       { label: 'Diversity', value: scores?.diversity?.score || 0 },
       { label: 'Consistency', value: personality?.metrics?.consistency || 0 },
-      { label: 'Collaboration', value: personality?.metrics?.collaboration || 0 },
+      { label: 'Collab', value: personality?.metrics?.collaboration || 0 },
     ];
   }, [scores, personality]);
 
@@ -48,12 +54,12 @@ export function RadarChart({ scores, personality }: RadarChartProps) {
   const gridLevels = [20, 40, 60, 80, 100];
 
   return (
-    <div className="score-card">
+    <div ref={ref} className="score-card">
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
         <Radar className="w-5 h-5 text-primary" />
         <h3 className="font-semibold text-foreground">Skill Radar</h3>
       </div>
-      
+
       <div className="flex justify-center">
         <svg width="300" height="300" viewBox="0 0 300 300">
           {/* Grid levels */}
@@ -83,23 +89,57 @@ export function RadarChart({ scores, personality }: RadarChartProps) {
             );
           })}
 
-          {/* Data polygon */}
-          <polygon
-            points={polygonPoints}
-            fill="hsl(var(--primary) / 0.15)"
+          {/* Animated data polygon */}
+          <motion.polygon
+            points={isInView ? polygonPoints : metrics.map(() => `${cx},${cy}`).join(' ')}
+            fill="hsl(var(--primary) / 0.12)"
             stroke="hsl(var(--primary))"
             strokeWidth="2"
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : {}}
+            transition={{ duration: 1, delay: 0.3 }}
           />
+
+          {/* Accent fill overlay */}
+          <motion.polygon
+            points={isInView ? polygonPoints : metrics.map(() => `${cx},${cy}`).join(' ')}
+            fill="url(#radarGradient)"
+            stroke="none"
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 0.2 } : {}}
+            transition={{ duration: 1.2, delay: 0.4 }}
+          />
+
+          {/* Gradient definition */}
+          <defs>
+            <linearGradient id="radarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="hsl(var(--primary))" />
+              <stop offset="100%" stopColor="hsl(var(--accent))" />
+            </linearGradient>
+          </defs>
 
           {/* Data points */}
           {metrics.map((m, i) => {
             const p = getPoint(i, m.value);
-            return <circle key={i} cx={p.x} cy={p.y} r="4" fill="hsl(var(--primary))" />;
+            return (
+              <motion.circle
+                key={i}
+                cx={isInView ? p.x : cx}
+                cy={isInView ? p.y : cy}
+                r="5"
+                fill="hsl(var(--primary))"
+                stroke="hsl(var(--background))"
+                strokeWidth="2"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={isInView ? { opacity: 1, scale: 1 } : {}}
+                transition={{ delay: 0.5 + i * 0.08, type: 'spring', stiffness: 200 }}
+              />
+            );
           })}
 
           {/* Labels */}
           {metrics.map((m, i) => {
-            const p = getPoint(i, 120);
+            const p = getPoint(i, 125);
             return (
               <text
                 key={i}
@@ -109,7 +149,8 @@ export function RadarChart({ scores, personality }: RadarChartProps) {
                 dominantBaseline="middle"
                 fill="hsl(var(--muted-foreground))"
                 fontSize="10"
-                fontFamily="'Inter', sans-serif"
+                fontFamily="'Space Grotesk', sans-serif"
+                fontWeight="500"
               >
                 {m.label}
               </text>
@@ -120,18 +161,21 @@ export function RadarChart({ scores, personality }: RadarChartProps) {
           {metrics.map((m, i) => {
             const p = getPoint(i, m.value);
             return (
-              <text
+              <motion.text
                 key={`val-${i}`}
-                x={p.x}
-                y={p.y - 10}
+                x={isInView ? p.x : cx}
+                y={isInView ? p.y - 12 : cy}
                 textAnchor="middle"
                 fill="hsl(var(--primary))"
                 fontSize="9"
                 fontWeight="bold"
                 fontFamily="'JetBrains Mono', monospace"
+                initial={{ opacity: 0 }}
+                animate={isInView ? { opacity: 1 } : {}}
+                transition={{ delay: 0.8 + i * 0.05 }}
               >
                 {m.value}
-              </text>
+              </motion.text>
             );
           })}
         </svg>

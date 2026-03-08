@@ -1,4 +1,7 @@
+import { useRef } from 'react';
 import { Flame, Zap, Calendar, TrendingUp } from 'lucide-react';
+import { motion, useInView } from 'framer-motion';
+import { AnimatedCounter } from './AnimatedCounter';
 
 interface CodingStreaksProps {
   currentStreak: number;
@@ -9,39 +12,50 @@ interface CodingStreaksProps {
 }
 
 export function CodingStreaks({ currentStreak, longestStreak, totalActiveDays, peakCodingHour, totalEvents }: CodingStreaksProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, amount: 0.2 });
+
   const streakItems = [
     {
       icon: <Flame className="w-5 h-5" />,
       label: 'Current Streak',
-      value: `${currentStreak} day${currentStreak !== 1 ? 's' : ''}`,
+      value: currentStreak,
+      suffix: ` day${currentStreak !== 1 ? 's' : ''}`,
       color: currentStreak > 0 ? 'text-terminal-red' : 'text-muted-foreground',
       bgColor: currentStreak > 0 ? 'bg-terminal-red/10 border-terminal-red/30' : 'bg-muted/30 border-border/50',
+      glow: currentStreak > 0 ? 'shadow-[0_0_20px_hsl(var(--terminal-red)/0.15)]' : '',
     },
     {
       icon: <TrendingUp className="w-5 h-5" />,
       label: 'Longest Streak',
-      value: `${longestStreak} day${longestStreak !== 1 ? 's' : ''}`,
+      value: longestStreak,
+      suffix: ` day${longestStreak !== 1 ? 's' : ''}`,
       color: 'text-terminal-yellow',
       bgColor: 'bg-terminal-yellow/10 border-terminal-yellow/30',
+      glow: 'shadow-[0_0_20px_hsl(var(--terminal-yellow)/0.15)]',
     },
     {
       icon: <Calendar className="w-5 h-5" />,
       label: 'Active Days',
-      value: `${totalActiveDays} days`,
+      value: totalActiveDays,
+      suffix: ' days',
       color: 'text-terminal-green',
       bgColor: 'bg-terminal-green/10 border-terminal-green/30',
+      glow: 'shadow-[0_0_20px_hsl(var(--terminal-green)/0.15)]',
     },
     {
       icon: <Zap className="w-5 h-5" />,
       label: 'Peak Hour',
-      value: peakCodingHour || 'N/A',
+      value: null,
+      displayValue: peakCodingHour || 'N/A',
       color: 'text-terminal-cyan',
       bgColor: 'bg-terminal-cyan/10 border-terminal-cyan/30',
+      glow: 'shadow-[0_0_20px_hsl(var(--terminal-cyan)/0.15)]',
     },
   ];
 
   return (
-    <div className="score-card">
+    <div ref={ref} className="score-card">
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
         <Flame className="w-5 h-5 text-terminal-red" />
         <h3 className="font-semibold text-foreground">Coding Streaks</h3>
@@ -50,12 +64,34 @@ export function CodingStreaks({ currentStreak, longestStreak, totalActiveDays, p
         )}
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {streakItems.map((item) => (
-          <div key={item.label} className={`p-3 rounded-lg border ${item.bgColor} text-center`}>
-            <div className={`flex justify-center mb-2 ${item.color}`}>{item.icon}</div>
-            <p className={`text-lg font-bold font-mono ${item.color}`}>{item.value}</p>
+        {streakItems.map((item, index) => (
+          <motion.div
+            key={item.label}
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+            transition={{ delay: index * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+            className={`p-3 rounded-lg border ${item.bgColor} ${item.glow} text-center`}
+          >
+            <motion.div
+              className={`flex justify-center mb-2 ${item.color}`}
+              animate={isInView && item.value && item.value > 0 ? { rotate: [0, -5, 5, 0] } : {}}
+              transition={{ delay: 0.5 + index * 0.1, duration: 0.4 }}
+            >
+              {item.icon}
+            </motion.div>
+            <p className={`text-lg font-bold font-mono ${item.color}`}>
+              {item.value !== null ? (
+                <>
+                  <AnimatedCounter value={item.value} />
+                  {item.suffix}
+                </>
+              ) : (
+                item.displayValue
+              )}
+            </p>
             <p className="text-[10px] text-muted-foreground mt-1">{item.label}</p>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>
