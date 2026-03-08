@@ -1,6 +1,6 @@
 import { useRef, useMemo, useState } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
-import { Dna, X } from 'lucide-react';
+import { Dna, X, Filter, BarChart3, Sparkles } from 'lucide-react';
 
 interface DeveloperDNAProps {
   languages: Record<string, number>;
@@ -24,6 +24,8 @@ interface DeveloperDNAProps {
       documentation: number;
     };
     peakActivityDay?: string;
+    burnoutRisk?: number;
+    procrastinationTendency?: number;
   };
   streaks?: {
     currentStreak: number;
@@ -34,6 +36,7 @@ interface DeveloperDNAProps {
     followers: number;
     public_repos: number;
     created_at: string;
+    following?: number;
   };
 }
 
@@ -41,9 +44,10 @@ interface DNANode {
   id: string;
   label: string;
   value: string;
+  numericValue: number; // 0-100 for comparable analysis
   category: 'language' | 'score' | 'personality' | 'activity' | 'social';
   color: string;
-  intensity: number; // 0–1, used for node size
+  intensity: number;
 }
 
 const categoryColors: Record<string, string> = {
@@ -67,6 +71,7 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
   const isInView = useInView(ref, { once: true, amount: 0.15 });
   const [activeNode, setActiveNode] = useState<DNANode | null>(null);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   const nodes = useMemo(() => {
     const result: DNANode[] = [];
@@ -75,12 +80,10 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
     const langEntries = Object.entries(languages || {}).sort((a, b) => b[1] - a[1]);
     const langTotal = langEntries.reduce((s, [, v]) => s + v, 0);
     langEntries.slice(0, 6).forEach(([lang, count]) => {
+      const pct = Math.round((count / langTotal) * 100);
       result.push({
-        id: `lang-${lang}`,
-        label: lang,
-        value: `${Math.round((count / langTotal) * 100)}% of repos`,
-        category: 'language',
-        color: categoryColors.language,
+        id: `lang-${lang}`, label: lang, value: `${pct}% of repos`,
+        numericValue: pct, category: 'language', color: categoryColors.language,
         intensity: count / (langEntries[0]?.[1] || 1),
       });
     });
@@ -96,11 +99,8 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
     ];
     scoreEntries.forEach(([name, val]) => {
       result.push({
-        id: `score-${name}`,
-        label: name,
-        value: `${val}/100`,
-        category: 'score',
-        color: categoryColors.score,
+        id: `score-${name}`, label: name, value: `${val}/100`,
+        numericValue: val, category: 'score', color: categoryColors.score,
         intensity: val / 100,
       });
     });
@@ -109,50 +109,39 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
     if (personality) {
       if (personality.personalityType) {
         result.push({
-          id: 'pers-type',
-          label: 'Personality',
-          value: `${personality.personalityType.emoji} ${personality.personalityType.type}`,
-          category: 'personality',
-          color: categoryColors.personality,
-          intensity: 0.9,
+          id: 'pers-type', label: 'Personality', value: `${personality.personalityType.emoji} ${personality.personalityType.type}`,
+          numericValue: 90, category: 'personality', color: categoryColors.personality, intensity: 0.9,
         });
       }
       if (personality.focusType) {
         result.push({
-          id: 'pers-focus',
-          label: 'Focus Type',
-          value: personality.focusType,
-          category: 'personality',
-          color: categoryColors.personality,
-          intensity: 0.7,
+          id: 'pers-focus', label: 'Focus Type', value: personality.focusType,
+          numericValue: 70, category: 'personality', color: categoryColors.personality, intensity: 0.7,
         });
       }
       if (personality.learningStyle) {
         result.push({
-          id: 'pers-learn',
-          label: 'Learning Style',
-          value: personality.learningStyle,
-          category: 'personality',
-          color: categoryColors.personality,
-          intensity: 0.6,
+          id: 'pers-learn', label: 'Learning Style', value: personality.learningStyle,
+          numericValue: 60, category: 'personality', color: categoryColors.personality, intensity: 0.6,
         });
       }
       if (personality.metrics) {
         result.push({
-          id: 'pers-consistency',
-          label: 'Consistency',
-          value: `${personality.metrics.consistency}%`,
-          category: 'personality',
-          color: categoryColors.personality,
+          id: 'pers-consistency', label: 'Consistency', value: `${personality.metrics.consistency}%`,
+          numericValue: personality.metrics.consistency, category: 'personality', color: categoryColors.personality,
           intensity: personality.metrics.consistency / 100,
         });
         result.push({
-          id: 'pers-exploration',
-          label: 'Exploration',
-          value: `${personality.metrics.exploration}%`,
-          category: 'personality',
-          color: categoryColors.personality,
+          id: 'pers-exploration', label: 'Exploration', value: `${personality.metrics.exploration}%`,
+          numericValue: personality.metrics.exploration, category: 'personality', color: categoryColors.personality,
           intensity: personality.metrics.exploration / 100,
+        });
+      }
+      if (personality.burnoutRisk !== undefined) {
+        result.push({
+          id: 'pers-burnout', label: 'Burnout Risk', value: `${personality.burnoutRisk}%`,
+          numericValue: personality.burnoutRisk, category: 'personality', color: categoryColors.personality,
+          intensity: personality.burnoutRisk / 100,
         });
       }
     }
@@ -160,93 +149,89 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
     // Activity
     if (streaks) {
       result.push({
-        id: 'act-current',
-        label: 'Current Streak',
-        value: `${streaks.currentStreak} days`,
-        category: 'activity',
-        color: categoryColors.activity,
-        intensity: Math.min(streaks.currentStreak / 30, 1),
+        id: 'act-current', label: 'Current Streak', value: `${streaks.currentStreak} days`,
+        numericValue: Math.min(streaks.currentStreak * 3.3, 100), category: 'activity',
+        color: categoryColors.activity, intensity: Math.min(streaks.currentStreak / 30, 1),
       });
       result.push({
-        id: 'act-longest',
-        label: 'Longest Streak',
-        value: `${streaks.longestStreak} days`,
-        category: 'activity',
-        color: categoryColors.activity,
-        intensity: Math.min(streaks.longestStreak / 60, 1),
+        id: 'act-longest', label: 'Longest Streak', value: `${streaks.longestStreak} days`,
+        numericValue: Math.min(streaks.longestStreak * 1.67, 100), category: 'activity',
+        color: categoryColors.activity, intensity: Math.min(streaks.longestStreak / 60, 1),
       });
       if (streaks.peakHour) {
         result.push({
-          id: 'act-peak',
-          label: 'Peak Hour',
-          value: streaks.peakHour,
-          category: 'activity',
-          color: categoryColors.activity,
-          intensity: 0.5,
+          id: 'act-peak', label: 'Peak Hour', value: streaks.peakHour,
+          numericValue: 50, category: 'activity', color: categoryColors.activity, intensity: 0.5,
         });
       }
     }
     if (personality?.peakActivityDay) {
       result.push({
-        id: 'act-day',
-        label: 'Peak Day',
-        value: personality.peakActivityDay,
-        category: 'activity',
-        color: categoryColors.activity,
-        intensity: 0.6,
+        id: 'act-day', label: 'Peak Day', value: personality.peakActivityDay,
+        numericValue: 60, category: 'activity', color: categoryColors.activity, intensity: 0.6,
       });
     }
 
     // Social
     if (userData) {
       result.push({
-        id: 'soc-followers',
-        label: 'Followers',
-        value: userData.followers.toLocaleString(),
-        category: 'social',
-        color: categoryColors.social,
-        intensity: Math.min(userData.followers / 1000, 1),
+        id: 'soc-followers', label: 'Followers', value: userData.followers.toLocaleString(),
+        numericValue: Math.min(userData.followers / 10, 100), category: 'social',
+        color: categoryColors.social, intensity: Math.min(userData.followers / 1000, 1),
       });
       result.push({
-        id: 'soc-repos',
-        label: 'Public Repos',
-        value: `${userData.public_repos}`,
-        category: 'social',
-        color: categoryColors.social,
-        intensity: Math.min(userData.public_repos / 50, 1),
+        id: 'soc-repos', label: 'Public Repos', value: `${userData.public_repos}`,
+        numericValue: Math.min(userData.public_repos * 2, 100), category: 'social',
+        color: categoryColors.social, intensity: Math.min(userData.public_repos / 50, 1),
       });
       const years = Math.floor((Date.now() - new Date(userData.created_at).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
       result.push({
-        id: 'soc-age',
-        label: 'Account Age',
-        value: `${years} years`,
-        category: 'social',
-        color: categoryColors.social,
-        intensity: Math.min(years / 10, 1),
+        id: 'soc-age', label: 'Account Age', value: `${years} years`,
+        numericValue: Math.min(years * 10, 100), category: 'social',
+        color: categoryColors.social, intensity: Math.min(years / 10, 1),
       });
+      if (userData.following !== undefined) {
+        const ratio = userData.followers > 0 ? +(userData.following / userData.followers).toFixed(2) : 0;
+        result.push({
+          id: 'soc-ratio', label: 'Follow Ratio', value: `${ratio}x`,
+          numericValue: Math.min(ratio * 20, 100), category: 'social',
+          color: categoryColors.social, intensity: Math.min(ratio / 5, 1),
+        });
+      }
     }
 
     return result;
   }, [languages, scores, personality, streaks, userData]);
 
+  const filteredNodes = activeFilter ? nodes.filter(n => n.category === activeFilter) : nodes;
+
+  // Genome summary stats
+  const genomeSummary = useMemo(() => {
+    const avgIntensity = Math.round(nodes.reduce((s, n) => s + n.intensity, 0) / nodes.length * 100);
+    const dominantCategory = Object.entries(
+      nodes.reduce((acc, n) => { acc[n.category] = (acc[n.category] || 0) + n.intensity; return acc; }, {} as Record<string, number>)
+    ).sort((a, b) => b[1] - a[1])[0]?.[0] || 'score';
+    const strongTraits = nodes.filter(n => n.intensity >= 0.7).length;
+    const weakTraits = nodes.filter(n => n.intensity < 0.3).length;
+    return { avgIntensity, dominantCategory, strongTraits, weakTraits, totalTraits: nodes.length };
+  }, [nodes]);
+
   // SVG dimensions
   const svgWidth = 700;
-  const svgHeight = Math.max(600, nodes.length * 28 + 100);
+  const svgHeight = Math.max(600, filteredNodes.length * 28 + 100);
   const centerX = svgWidth / 2;
   const helixAmplitude = 120;
   const nodeSpacing = 28;
   const startY = 60;
 
-  // Generate helix paths
   const getHelixX = (t: number, strand: 'left' | 'right') => {
     const phase = strand === 'left' ? 0 : Math.PI;
     return centerX + Math.sin(t * 0.12 + phase) * helixAmplitude;
   };
 
-  // Build path strings
   const pathPoints = (strand: 'left' | 'right') => {
     const pts: string[] = [];
-    for (let i = 0; i <= nodes.length + 4; i++) {
+    for (let i = 0; i <= filteredNodes.length + 4; i++) {
       const y = startY + i * nodeSpacing;
       const x = getHelixX(i, strand);
       pts.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
@@ -262,34 +247,67 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
         <Dna className="w-5 h-5 text-accent" />
         <h3 className="font-semibold text-foreground">Developer DNA</h3>
-        <span className="ml-auto text-xs text-muted-foreground">{nodes.length} traits encoded</span>
+        <span className="ml-auto text-xs text-muted-foreground">{genomeSummary.totalTraits} traits encoded</span>
       </div>
 
-      {/* Category Legend */}
-      <div className="flex flex-wrap gap-3 mb-4">
+      {/* Genome Summary Stats */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={isInView ? { opacity: 1 } : {}}
+        transition={{ delay: 0.2 }}
+        className="grid grid-cols-4 gap-2 mb-4"
+      >
+        {[
+          { label: 'Avg Intensity', value: `${genomeSummary.avgIntensity}%`, icon: BarChart3, color: 'text-primary' },
+          { label: 'Strong Traits', value: genomeSummary.strongTraits, icon: Sparkles, color: 'text-terminal-green' },
+          { label: 'Weak Traits', value: genomeSummary.weakTraits, icon: Filter, color: 'text-terminal-red' },
+          { label: 'Dominant', value: categoryLabels[genomeSummary.dominantCategory], icon: Dna, color: 'text-accent' },
+        ].map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            className="text-center p-2 bg-muted/30 rounded-lg"
+            initial={{ opacity: 0, y: 10 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.3 + i * 0.08 }}
+          >
+            <stat.icon className={`w-3 h-3 mx-auto mb-1 ${stat.color}`} />
+            <p className={`text-sm font-bold font-mono ${stat.color}`}>{stat.value}</p>
+            <p className="text-[8px] text-muted-foreground">{stat.label}</p>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* Category Filter + Legend */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <button
+          onClick={() => setActiveFilter(null)}
+          className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-colors ${
+            !activeFilter ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          All
+        </button>
         {Object.entries(categoryLabels).map(([key, label]) => (
-          <div key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <div
-              className="w-2.5 h-2.5 rounded-full"
-              style={{ backgroundColor: `hsl(${categoryColors[key]})` }}
-            />
+          <button
+            key={key}
+            onClick={() => setActiveFilter(activeFilter === key ? null : key)}
+            className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-colors ${
+              activeFilter === key ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: `hsl(${categoryColors[key]})` }} />
             <span>{label}</span>
-          </div>
+            <span className="text-[9px] opacity-60">({nodes.filter(n => n.category === key).length})</span>
+          </button>
         ))}
       </div>
 
       {/* DNA Visualization */}
       <div className="relative overflow-hidden">
         <div className="overflow-x-auto flex justify-center">
-          <svg
-            width={svgWidth}
-            height={svgHeight}
-            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-            className="max-w-full"
-          >
-            {/* Glow filters */}
+          <svg width={svgWidth} height={svgHeight} viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="max-w-full">
             <defs>
-              {Object.entries(categoryColors).map(([key, color]) => (
+              {Object.entries(categoryColors).map(([key]) => (
                 <filter key={key} id={`glow-${key}`}>
                   <feGaussianBlur stdDeviation="4" result="blur" />
                   <feMerge>
@@ -311,29 +329,15 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
             </defs>
 
             {/* Helix strands */}
-            <motion.path
-              d={leftPath}
-              fill="none"
-              stroke="url(#helix-gradient-left)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={isInView ? { pathLength: 1, opacity: 1 } : {}}
-              transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
-            />
-            <motion.path
-              d={rightPath}
-              fill="none"
-              stroke="url(#helix-gradient-right)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={isInView ? { pathLength: 1, opacity: 1 } : {}}
-              transition={{ duration: 2, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
-            />
+            <motion.path d={leftPath} fill="none" stroke="url(#helix-gradient-left)" strokeWidth="2.5" strokeLinecap="round"
+              initial={{ pathLength: 0, opacity: 0 }} animate={isInView ? { pathLength: 1, opacity: 1 } : {}}
+              transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }} />
+            <motion.path d={rightPath} fill="none" stroke="url(#helix-gradient-right)" strokeWidth="2.5" strokeLinecap="round"
+              initial={{ pathLength: 0, opacity: 0 }} animate={isInView ? { pathLength: 1, opacity: 1 } : {}}
+              transition={{ duration: 2, ease: [0.16, 1, 0.3, 1], delay: 0.3 }} />
 
-            {/* Rungs (connecting bridges) + Nodes */}
-            {nodes.map((node, i) => {
+            {/* Nodes */}
+            {filteredNodes.map((node, i) => {
               const y = startY + (i + 2) * nodeSpacing;
               const leftX = getHelixX(i + 2, 'left');
               const rightX = getHelixX(i + 2, 'right');
@@ -341,96 +345,62 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
               const nodeX = isLeft ? leftX : rightX;
               const labelX = isLeft ? leftX - 12 : rightX + 12;
               const anchor = isLeft ? 'end' : 'start';
-              const nodeSize = 5 + node.intensity * 5;
+              const nodeSize = 5 + node.intensity * 6;
               const isHovered = hoveredNode === node.id;
 
               return (
-                <motion.g
-                  key={node.id}
-                  initial={{ opacity: 0 }}
-                  animate={isInView ? { opacity: 1 } : {}}
-                  transition={{ delay: 0.8 + i * 0.06, duration: 0.4 }}
-                >
+                <motion.g key={node.id} initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : {}} transition={{ delay: 0.8 + i * 0.06, duration: 0.4 }}>
                   {/* Rung */}
-                  <motion.line
-                    x1={leftX} y1={y} x2={rightX} y2={y}
-                    stroke="hsl(var(--border))"
-                    strokeWidth="1"
-                    strokeDasharray="3 3"
-                    initial={{ opacity: 0 }}
-                    animate={isInView ? { opacity: 0.4 } : {}}
-                    transition={{ delay: 1 + i * 0.05 }}
-                  />
+                  <motion.line x1={leftX} y1={y} x2={rightX} y2={y}
+                    stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="3 3"
+                    initial={{ opacity: 0 }} animate={isInView ? { opacity: 0.4 } : {}} transition={{ delay: 1 + i * 0.05 }} />
 
-                  {/* Node glow */}
-                  {isHovered && (
-                    <circle
-                      cx={nodeX}
-                      cy={y}
-                      r={nodeSize + 8}
-                      fill={`hsl(${node.color} / 0.15)`}
-                    />
+                  {/* Intensity bar along rung */}
+                  <motion.line
+                    x1={Math.min(leftX, rightX)} y1={y} x2={Math.min(leftX, rightX) + (Math.abs(rightX - leftX) * node.intensity)} y2={y}
+                    stroke={`hsl(${node.color} / 0.15)`} strokeWidth="3"
+                    initial={{ pathLength: 0 }} animate={isInView ? { pathLength: 1 } : {}} transition={{ delay: 1.2 + i * 0.05, duration: 0.6 }} />
+
+                  {/* Glow on hover */}
+                  {isHovered && <circle cx={nodeX} cy={y} r={nodeSize + 10} fill={`hsl(${node.color} / 0.12)`} />}
+
+                  {/* Pulse ring for strong traits */}
+                  {node.intensity >= 0.7 && (
+                    <motion.circle cx={nodeX} cy={y} r={nodeSize + 4} fill="none"
+                      stroke={`hsl(${node.color} / 0.3)`} strokeWidth="1"
+                      animate={{ r: [nodeSize + 4, nodeSize + 10, nodeSize + 4], opacity: [0.3, 0, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }} />
                   )}
 
                   {/* Node circle */}
-                  <motion.circle
-                    cx={nodeX}
-                    cy={y}
-                    r={isHovered ? nodeSize + 2 : nodeSize}
-                    fill={`hsl(${node.color})`}
-                    stroke={`hsl(${node.color} / 0.3)`}
-                    strokeWidth="2"
+                  <motion.circle cx={nodeX} cy={y} r={isHovered ? nodeSize + 2 : nodeSize}
+                    fill={`hsl(${node.color})`} stroke={`hsl(${node.color} / 0.3)`} strokeWidth="2"
                     className="cursor-pointer"
-                    onMouseEnter={() => setHoveredNode(node.id)}
-                    onMouseLeave={() => setHoveredNode(null)}
+                    onMouseEnter={() => setHoveredNode(node.id)} onMouseLeave={() => setHoveredNode(null)}
                     onClick={() => setActiveNode(activeNode?.id === node.id ? null : node)}
-                    style={{ transition: 'r 0.2s ease' }}
-                    whileHover={{ scale: 1.3 }}
-                  />
+                    style={{ transition: 'r 0.2s ease' }} whileHover={{ scale: 1.3 }} />
 
-                  {/* Node on opposite strand (smaller echo) */}
-                  <motion.circle
-                    cx={isLeft ? rightX : leftX}
-                    cy={y}
-                    r={3}
+                  {/* Echo node */}
+                  <motion.circle cx={isLeft ? rightX : leftX} cy={y} r={3}
                     fill={`hsl(${node.color} / 0.4)`}
-                    initial={{ opacity: 0 }}
-                    animate={isInView ? { opacity: 0.6 } : {}}
-                    transition={{ delay: 1.2 + i * 0.05 }}
-                  />
+                    initial={{ opacity: 0 }} animate={isInView ? { opacity: 0.6 } : {}} transition={{ delay: 1.2 + i * 0.05 }} />
 
                   {/* Label */}
-                  <motion.text
-                    x={labelX}
-                    y={y}
-                    textAnchor={anchor}
-                    dominantBaseline="middle"
-                    fontSize="11"
-                    fontFamily="'Space Grotesk', sans-serif"
-                    fontWeight="500"
+                  <motion.text x={labelX} y={y} textAnchor={anchor} dominantBaseline="middle"
+                    fontSize="11" fontFamily="'Space Grotesk', sans-serif" fontWeight="500"
                     fill={isHovered ? `hsl(${node.color})` : 'hsl(var(--muted-foreground))'}
                     className="cursor-pointer select-none"
-                    onMouseEnter={() => setHoveredNode(node.id)}
-                    onMouseLeave={() => setHoveredNode(null)}
+                    onMouseEnter={() => setHoveredNode(node.id)} onMouseLeave={() => setHoveredNode(null)}
                     onClick={() => setActiveNode(activeNode?.id === node.id ? null : node)}
-                    style={{ transition: 'fill 0.2s ease' }}
-                  >
+                    style={{ transition: 'fill 0.2s ease' }}>
                     {node.label}
                   </motion.text>
 
-                  {/* Value (shown on hover) */}
+                  {/* Value on hover */}
                   {isHovered && (
-                    <motion.text
-                      x={labelX}
-                      y={y + 14}
-                      textAnchor={anchor}
-                      dominantBaseline="middle"
-                      fontSize="9"
-                      fontFamily="'JetBrains Mono', monospace"
-                      fill={`hsl(${node.color})`}
-                      initial={{ opacity: 0, y: y + 8 }}
-                      animate={{ opacity: 1, y: y + 14 }}
-                    >
+                    <motion.text x={labelX} y={y + 14} textAnchor={anchor} dominantBaseline="middle"
+                      fontSize="9" fontFamily="'JetBrains Mono', monospace" fill={`hsl(${node.color})`}
+                      initial={{ opacity: 0, y: y + 8 }} animate={{ opacity: 1, y: y + 14 }}>
                       {node.value}
                     </motion.text>
                   )}
@@ -444,33 +414,20 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
         <AnimatePresence>
           {activeNode && (
             <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-card border border-border rounded-xl p-4 shadow-2xl min-w-[240px] z-20"
-              style={{
-                boxShadow: `0 0 30px hsl(${activeNode.color} / 0.15)`,
-              }}
+              initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-card border border-border rounded-xl p-4 shadow-2xl min-w-[280px] z-20"
+              style={{ boxShadow: `0 0 30px hsl(${activeNode.color} / 0.15)` }}
             >
-              <button
-                onClick={() => setActiveNode(null)}
-                className="absolute top-2 right-2 p-1 rounded-lg hover:bg-muted text-muted-foreground"
-              >
+              <button onClick={() => setActiveNode(null)} className="absolute top-2 right-2 p-1 rounded-lg hover:bg-muted text-muted-foreground">
                 <X className="w-3 h-3" />
               </button>
               <div className="flex items-center gap-2 mb-2">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: `hsl(${activeNode.color})` }}
-                />
-                <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                  {categoryLabels[activeNode.category]}
-                </span>
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: `hsl(${activeNode.color})` }} />
+                <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">{categoryLabels[activeNode.category]}</span>
               </div>
               <p className="text-lg font-bold text-foreground">{activeNode.label}</p>
-              <p className="text-sm font-mono" style={{ color: `hsl(${activeNode.color})` }}>
-                {activeNode.value}
-              </p>
+              <p className="text-sm font-mono" style={{ color: `hsl(${activeNode.color})` }}>{activeNode.value}</p>
+              
               {/* Intensity bar */}
               <div className="mt-3">
                 <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
@@ -478,14 +435,17 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
                   <span>{Math.round(activeNode.intensity * 100)}%</span>
                 </div>
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ backgroundColor: `hsl(${activeNode.color})` }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${activeNode.intensity * 100}%` }}
-                    transition={{ duration: 0.6 }}
-                  />
+                  <motion.div className="h-full rounded-full" style={{ backgroundColor: `hsl(${activeNode.color})` }}
+                    initial={{ width: 0 }} animate={{ width: `${activeNode.intensity * 100}%` }} transition={{ duration: 0.6 }} />
                 </div>
+              </div>
+
+              {/* Strength classification */}
+              <div className="mt-2 text-[10px]">
+                <span className="text-muted-foreground">Classification: </span>
+                <span className={activeNode.intensity >= 0.7 ? 'text-terminal-green font-semibold' : activeNode.intensity >= 0.4 ? 'text-terminal-yellow font-semibold' : 'text-terminal-red font-semibold'}>
+                  {activeNode.intensity >= 0.7 ? 'Dominant Trait' : activeNode.intensity >= 0.4 ? 'Moderate Trait' : 'Recessive Trait'}
+                </span>
               </div>
             </motion.div>
           )}
