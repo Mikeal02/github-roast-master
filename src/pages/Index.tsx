@@ -57,6 +57,11 @@ const Index = () => {
   const resultsRef = useRef<HTMLDivElement>(null);
   const [showWrapped, setShowWrapped] = useState(false);
 
+  // Initialize stored theme on mount
+  useEffect(() => {
+    applyTheme(getStoredTheme());
+  }, []);
+
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
 
   const handleSearch = async (username: string) => {
