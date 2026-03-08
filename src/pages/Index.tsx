@@ -87,6 +87,7 @@ const Index = () => {
 
       setUserData(user);
       setUserEvents(events);
+      setUserRepos(repos);
       setUserOrgs(orgs);
       setUserGists(gists);
 
