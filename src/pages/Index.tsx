@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Activity, FileText, Star, Code2, Shield, Users, Sparkles } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
 import { SearchBar } from '@/components/SearchBar';
 import { SearchHistory } from '@/components/SearchHistory';
