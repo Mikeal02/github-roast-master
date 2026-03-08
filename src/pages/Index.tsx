@@ -31,6 +31,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { ResultsTabs } from '@/components/ResultsTabs';
 import { AnimatedSection, StaggerContainer, StaggerItem } from '@/components/AnimatedSection';
 import { ScrollReveal, ScrollStagger, ScrollStaggerItem } from '@/components/ScrollReveal';
+import { DeveloperDNA } from '@/components/DeveloperDNA';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
@@ -205,6 +206,29 @@ const Index = () => {
                 </ScrollReveal>
               </div>
             </div>
+          </AnimatedSection>
+        );
+
+      case 'dna':
+        return (
+          <AnimatedSection key="dna">
+            <ScrollReveal variant="blur">
+              <DeveloperDNA
+                languages={aiAnalysis.languages || {}}
+                scores={aiAnalysis.scores || {}}
+                personality={aiAnalysis.personality}
+                streaks={{
+                  currentStreak: aiAnalysis.currentStreak || 0,
+                  longestStreak: aiAnalysis.longestStreak || 0,
+                  peakHour: aiAnalysis.peakCodingHour,
+                }}
+                userData={{
+                  followers: userData.followers,
+                  public_repos: userData.public_repos,
+                  created_at: userData.created_at,
+                }}
+              />
+            </ScrollReveal>
           </AnimatedSection>
         );
 

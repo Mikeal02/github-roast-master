@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { 
   BarChart3, Brain, GitFork, Flame, Briefcase, 
-  Radar, Clock, Code2, Users
+  Radar, Clock, Code2, Users, Dna
 } from 'lucide-react';
 
 interface Tab {
@@ -14,7 +14,8 @@ interface Tab {
 const roastTabs: Tab[] = [
   { id: 'overview', label: 'Overview', icon: <BarChart3 className="w-4 h-4" />, accent: 'hsl(var(--primary))' },
   { id: 'scores', label: 'Scores', icon: <Radar className="w-4 h-4" />, accent: 'hsl(var(--terminal-cyan))' },
-  { id: 'tech', label: 'Tech Stack', icon: <Code2 className="w-4 h-4" />, accent: 'hsl(var(--accent))' },
+  { id: 'dna', label: 'DNA', icon: <Dna className="w-4 h-4" />, accent: 'hsl(var(--accent))' },
+  { id: 'tech', label: 'Tech Stack', icon: <Code2 className="w-4 h-4" />, accent: 'hsl(var(--terminal-purple))' },
   { id: 'activity', label: 'Activity', icon: <Clock className="w-4 h-4" />, accent: 'hsl(var(--terminal-green))' },
   { id: 'repos', label: 'Repos', icon: <GitFork className="w-4 h-4" />, accent: 'hsl(var(--secondary))' },
   { id: 'roast', label: 'Roast', icon: <Flame className="w-4 h-4" />, accent: 'hsl(var(--destructive))' },
@@ -24,7 +25,8 @@ const roastTabs: Tab[] = [
 const recruiterTabs: Tab[] = [
   { id: 'overview', label: 'Overview', icon: <BarChart3 className="w-4 h-4" />, accent: 'hsl(var(--primary))' },
   { id: 'scores', label: 'Scores', icon: <Radar className="w-4 h-4" />, accent: 'hsl(var(--terminal-cyan))' },
-  { id: 'tech', label: 'Tech Stack', icon: <Code2 className="w-4 h-4" />, accent: 'hsl(var(--accent))' },
+  { id: 'dna', label: 'DNA', icon: <Dna className="w-4 h-4" />, accent: 'hsl(var(--accent))' },
+  { id: 'tech', label: 'Tech Stack', icon: <Code2 className="w-4 h-4" />, accent: 'hsl(var(--terminal-purple))' },
   { id: 'activity', label: 'Activity', icon: <Clock className="w-4 h-4" />, accent: 'hsl(var(--terminal-green))' },
   { id: 'repos', label: 'Repos', icon: <GitFork className="w-4 h-4" />, accent: 'hsl(var(--secondary))' },
   { id: 'assessment', label: 'Assessment', icon: <Briefcase className="w-4 h-4" />, accent: 'hsl(var(--terminal-yellow))' },
