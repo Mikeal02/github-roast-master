@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
-import { Activity, FileText, Star, Code2, Shield, Users } from 'lucide-react';
+import { Activity, FileText, Star, Code2, Shield, Users, Sparkles } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
 import { SearchBar } from '@/components/SearchBar';
 import { SearchHistory } from '@/components/SearchHistory';
@@ -32,6 +33,8 @@ import { ResultsTabs } from '@/components/ResultsTabs';
 import { AnimatedSection, StaggerContainer, StaggerItem } from '@/components/AnimatedSection';
 import { ScrollReveal, ScrollStagger, ScrollStaggerItem } from '@/components/ScrollReveal';
 import { DeveloperDNA } from '@/components/DeveloperDNA';
+import { GitHubWrapped } from '@/components/GitHubWrapped';
+import { RoastBattle } from '@/components/RoastBattle';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
@@ -49,6 +52,7 @@ const Index = () => {
   const [userGists, setUserGists] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const resultsRef = useRef<HTMLDivElement>(null);
+  const [showWrapped, setShowWrapped] = useState(false);
 
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
 
@@ -438,6 +442,17 @@ const Index = () => {
   };
 
   return (
+    <>
+    <AnimatePresence>
+      {showWrapped && userData && aiAnalysis && (
+        <GitHubWrapped
+          username={userData.login}
+          userData={userData}
+          aiAnalysis={aiAnalysis}
+          onClose={() => setShowWrapped(false)}
+        />
+      )}
+    </AnimatePresence>
     <div className="min-h-screen bg-background cyber-grid">
       <AnimatedBackground />
       <ThemeToggle />
@@ -476,6 +491,10 @@ const Index = () => {
               {/* Action buttons */}
               <ScrollReveal variant="fadeDown" delay={0.1}>
                 <div className="flex justify-end gap-2 flex-wrap mb-6">
+                  <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowWrapped(true)}>
+                    <Sparkles className="w-4 h-4" /> Wrapped
+                  </Button>
+                  <RoastBattle currentUsername={userData.login} currentAnalysis={aiAnalysis} currentUserData={userData} />
                   <CompareProfiles currentUsername={userData.login} currentAnalysis={aiAnalysis} currentUserData={userData} />
                   <SocialShareCard
                     username={userData.login}
@@ -568,6 +587,7 @@ const Index = () => {
         </motion.footer>
       </div>
     </div>
+    </>
   );
 };
 

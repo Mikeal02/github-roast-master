@@ -1,1 +1,4 @@
 project_id = "vxsoxnuijdarejaalxob"
+
+[functions.roast-battle]
+verify_jwt = false
