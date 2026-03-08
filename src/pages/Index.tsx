@@ -51,6 +51,7 @@ const Index = () => {
   const [userGists, setUserGists] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const resultsRef = useRef<HTMLDivElement>(null);
+  const [showWrapped, setShowWrapped] = useState(false);
 
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
 
