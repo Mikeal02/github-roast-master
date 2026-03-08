@@ -38,6 +38,8 @@ import { RoastBattle } from '@/components/RoastBattle';
 import { ThemePicker, applyTheme, getStoredTheme } from '@/components/ThemePicker';
 import { CodeRhythm } from '@/components/CodeRhythm';
 import { XPLevelSystem } from '@/components/XPLevelSystem';
+import { TimeMachine } from '@/components/TimeMachine';
+import { DeveloperGlobe } from '@/components/DeveloperGlobe';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
