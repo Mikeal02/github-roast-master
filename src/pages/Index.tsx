@@ -54,6 +54,7 @@ const Index = () => {
   const [isRecruiterMode, setIsRecruiterMode] = useState(false);
   const [userEvents, setUserEvents] = useState<any[]>([]);
   const [userOrgs, setUserOrgs] = useState<any[]>([]);
+  const [userRepos, setUserRepos] = useState<any[]>([]);
   const [userGists, setUserGists] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const resultsRef = useRef<HTMLDivElement>(null);
