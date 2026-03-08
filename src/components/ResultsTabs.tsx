@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { 
   BarChart3, Brain, GitFork, Flame, Briefcase, 
-  Radar, Clock, Code2, Users, Dna, Music, Trophy
+  Radar, Clock, Code2, Users, Dna, Music, Trophy, Globe, Rewind
 } from 'lucide-react';
 
 interface Tab {
