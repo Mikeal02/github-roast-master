@@ -442,6 +442,17 @@ const Index = () => {
   };
 
   return (
+    <>
+    <AnimatePresence>
+      {showWrapped && userData && aiAnalysis && (
+        <GitHubWrapped
+          username={userData.login}
+          userData={userData}
+          aiAnalysis={aiAnalysis}
+          onClose={() => setShowWrapped(false)}
+        />
+      )}
+    </AnimatePresence>
     <div className="min-h-screen bg-background cyber-grid">
       <AnimatedBackground />
       <ThemeToggle />
