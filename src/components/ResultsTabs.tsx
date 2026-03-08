@@ -20,6 +20,8 @@ const roastTabs: Tab[] = [
   { id: 'repos', label: 'Repos', icon: <GitFork className="w-4 h-4" />, accent: 'hsl(var(--secondary))' },
   { id: 'rhythm', label: 'Rhythm', icon: <Music className="w-4 h-4" />, accent: 'hsl(var(--accent))' },
   { id: 'xp', label: 'XP', icon: <Trophy className="w-4 h-4" />, accent: 'hsl(var(--terminal-yellow))' },
+  { id: 'timeline', label: 'Time Machine', icon: <Rewind className="w-4 h-4" />, accent: 'hsl(var(--secondary))' },
+  { id: 'globe', label: 'World Map', icon: <Globe className="w-4 h-4" />, accent: 'hsl(var(--terminal-cyan))' },
   { id: 'roast', label: 'Roast', icon: <Flame className="w-4 h-4" />, accent: 'hsl(var(--destructive))' },
   { id: 'personality', label: 'Personality', icon: <Brain className="w-4 h-4" />, accent: 'hsl(var(--terminal-purple))' },
 ];
