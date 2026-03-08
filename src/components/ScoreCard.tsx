@@ -2,12 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { getSeverityLabel } from '@/lib/roastGenerator';
 
-export function ScoreCard({ title, score, icon, explanation = '', delay = 0 }: {
+interface SubMetrics {
+  [key: string]: number;
+}
+
+export function ScoreCard({ title, score, icon, explanation = '', delay = 0, subMetrics }: {
   title: string;
   score: number;
   icon: React.ReactNode;
   explanation?: string;
   delay?: number;
+  subMetrics?: SubMetrics;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
@@ -66,6 +71,10 @@ export function ScoreCard({ title, score, icon, explanation = '', delay = 0 }: {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (animatedScore / 100) * circumference;
 
+  const formatSubMetricLabel = (key: string) => {
+    return key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+  };
+
   return (
     <motion.div
       ref={ref}
@@ -121,6 +130,31 @@ export function ScoreCard({ title, score, icon, explanation = '', delay = 0 }: {
           transition={{ duration: 1.4, delay: delay / 1000, ease: [0.16, 1, 0.3, 1] }}
         />
       </div>
+
+      {/* Sub-metrics breakdown */}
+      {subMetrics && Object.keys(subMetrics).length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={isInView ? { opacity: 1 } : {}}
+          transition={{ delay: delay / 1000 + 0.6 }}
+          className="space-y-1.5 mt-3 pt-3 border-t border-border/50"
+        >
+          {Object.entries(subMetrics).map(([key, value]) => (
+            <div key={key} className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground flex-1 truncate">{formatSubMetricLabel(key)}</span>
+              <div className="w-16 h-1 rounded-full bg-muted overflow-hidden">
+                <motion.div
+                  className={`h-full rounded-full bg-gradient-to-r ${getBarGradient(value)}`}
+                  initial={{ width: 0 }}
+                  animate={isInView ? { width: `${value}%` } : {}}
+                  transition={{ delay: delay / 1000 + 0.8, duration: 0.6 }}
+                />
+              </div>
+              <span className={`text-[9px] font-mono w-6 text-right ${getScoreColor(value)}`}>{value}</span>
+            </div>
+          ))}
+        </motion.div>
+      )}
 
       {explanation && (
         <motion.div

@@ -1,36 +1,40 @@
-import { Code2, Layers, TrendingUp, Award } from 'lucide-react';
+import { Code2, Layers, TrendingUp, Award, GitFork, FileText, Scale } from 'lucide-react';
 
 interface TechStackAnalysisProps {
   languages: Record<string, number>;
   totalRepos: number;
   repoTopics?: string[];
+  reposWithLicense?: number;
+  reposWithDescription?: number;
+  conventionalCommitRatio?: number;
+  sizeDistribution?: { tiny: number; small: number; medium: number; large: number };
 }
 
-const categoryMap: Record<string, { category: string; color: string }> = {
-  JavaScript: { category: 'Frontend', color: 'bg-yellow-400' },
-  TypeScript: { category: 'Frontend', color: 'bg-blue-400' },
-  HTML: { category: 'Frontend', color: 'bg-red-400' },
-  CSS: { category: 'Frontend', color: 'bg-blue-500' },
-  Vue: { category: 'Frontend', color: 'bg-emerald-400' },
-  Svelte: { category: 'Frontend', color: 'bg-orange-500' },
-  Python: { category: 'Backend', color: 'bg-green-400' },
-  Java: { category: 'Backend', color: 'bg-orange-400' },
-  Go: { category: 'Backend', color: 'bg-cyan-400' },
-  Rust: { category: 'Systems', color: 'bg-orange-600' },
-  'C++': { category: 'Systems', color: 'bg-pink-400' },
-  C: { category: 'Systems', color: 'bg-gray-400' },
-  Ruby: { category: 'Backend', color: 'bg-red-500' },
-  PHP: { category: 'Backend', color: 'bg-purple-400' },
-  Kotlin: { category: 'Mobile', color: 'bg-purple-500' },
-  Swift: { category: 'Mobile', color: 'bg-orange-500' },
-  Dart: { category: 'Mobile', color: 'bg-teal-400' },
-  Shell: { category: 'DevOps', color: 'bg-green-500' },
-  Dockerfile: { category: 'DevOps', color: 'bg-blue-600' },
-  Jupyter: { category: 'Data Science', color: 'bg-orange-400' },
-  R: { category: 'Data Science', color: 'bg-blue-300' },
+const categoryMap: Record<string, { category: string; colorClass: string }> = {
+  JavaScript: { category: 'Frontend', colorClass: 'bg-terminal-yellow' },
+  TypeScript: { category: 'Frontend', colorClass: 'bg-terminal-cyan' },
+  HTML: { category: 'Frontend', colorClass: 'bg-terminal-red' },
+  CSS: { category: 'Frontend', colorClass: 'bg-terminal-cyan' },
+  Vue: { category: 'Frontend', colorClass: 'bg-terminal-green' },
+  Svelte: { category: 'Frontend', colorClass: 'bg-accent' },
+  Python: { category: 'Backend', colorClass: 'bg-terminal-green' },
+  Java: { category: 'Backend', colorClass: 'bg-accent' },
+  Go: { category: 'Backend', colorClass: 'bg-terminal-cyan' },
+  Rust: { category: 'Systems', colorClass: 'bg-accent' },
+  'C++': { category: 'Systems', colorClass: 'bg-terminal-purple' },
+  C: { category: 'Systems', colorClass: 'bg-muted-foreground' },
+  Ruby: { category: 'Backend', colorClass: 'bg-terminal-red' },
+  PHP: { category: 'Backend', colorClass: 'bg-terminal-purple' },
+  Kotlin: { category: 'Mobile', colorClass: 'bg-terminal-purple' },
+  Swift: { category: 'Mobile', colorClass: 'bg-accent' },
+  Dart: { category: 'Mobile', colorClass: 'bg-terminal-cyan' },
+  Shell: { category: 'DevOps', colorClass: 'bg-terminal-green' },
+  Dockerfile: { category: 'DevOps', colorClass: 'bg-terminal-cyan' },
+  Jupyter: { category: 'Data Science', colorClass: 'bg-accent' },
+  R: { category: 'Data Science', colorClass: 'bg-terminal-cyan' },
 };
 
-export function TechStackAnalysis({ languages, totalRepos, repoTopics = [] }: TechStackAnalysisProps) {
+export function TechStackAnalysis({ languages, totalRepos, repoTopics = [], reposWithLicense, reposWithDescription, conventionalCommitRatio, sizeDistribution }: TechStackAnalysisProps) {
   const entries = Object.entries(languages).sort((a, b) => b[1] - a[1]);
   const total = entries.reduce((s, [, v]) => s + v, 0);
 
@@ -45,7 +49,6 @@ export function TechStackAnalysis({ languages, totalRepos, repoTopics = [] }: Te
 
   const sortedCategories = Object.entries(categories).sort((a, b) => b[1].count - a[1].count);
 
-  // Determine primary stack
   const primaryCategory = sortedCategories[0]?.[0] || 'Unknown';
   const diversityLevel = entries.length >= 8 ? 'Full-Stack Polyglot' : entries.length >= 5 ? 'Versatile Developer' : entries.length >= 3 ? 'Focused Specialist' : 'Niche Expert';
 
@@ -66,13 +69,40 @@ export function TechStackAnalysis({ languages, totalRepos, repoTopics = [] }: Te
         </div>
       </div>
 
+      {/* Quality indicators */}
+      {(reposWithLicense !== undefined || conventionalCommitRatio !== undefined) && (
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {reposWithLicense !== undefined && (
+            <div className="text-center p-2 bg-muted/30 rounded-lg">
+              <Scale className="w-3.5 h-3.5 text-terminal-cyan mx-auto mb-1" />
+              <p className="text-xs font-bold text-foreground">{reposWithLicense}/{totalRepos}</p>
+              <p className="text-[9px] text-muted-foreground">Licensed</p>
+            </div>
+          )}
+          {reposWithDescription !== undefined && (
+            <div className="text-center p-2 bg-muted/30 rounded-lg">
+              <FileText className="w-3.5 h-3.5 text-terminal-green mx-auto mb-1" />
+              <p className="text-xs font-bold text-foreground">{reposWithDescription}/{totalRepos}</p>
+              <p className="text-[9px] text-muted-foreground">Documented</p>
+            </div>
+          )}
+          {conventionalCommitRatio !== undefined && (
+            <div className="text-center p-2 bg-muted/30 rounded-lg">
+              <GitFork className="w-3.5 h-3.5 text-terminal-purple mx-auto mb-1" />
+              <p className="text-xs font-bold text-foreground">{conventionalCommitRatio}%</p>
+              <p className="text-[9px] text-muted-foreground">Conv. Commits</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Category breakdown */}
       <div className="space-y-3 mb-4">
         {sortedCategories.map(([category, data]) => (
           <div key={category}>
             <div className="flex items-center justify-between text-xs mb-1">
               <span className="text-foreground font-medium">{category}</span>
-              <span className="text-muted-foreground">{data.languages.length} languages</span>
+              <span className="text-muted-foreground">{data.languages.length} lang • {Math.round((data.count / total) * 100)}%</span>
             </div>
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div
@@ -91,6 +121,29 @@ export function TechStackAnalysis({ languages, totalRepos, repoTopics = [] }: Te
         ))}
       </div>
 
+      {/* Repo size distribution */}
+      {sizeDistribution && (
+        <div className="pt-3 border-t border-border/50 mb-4">
+          <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+            📦 Project Size Distribution
+          </p>
+          <div className="grid grid-cols-4 gap-1.5">
+            {[
+              { label: 'Tiny', count: sizeDistribution.tiny, desc: '<100KB' },
+              { label: 'Small', count: sizeDistribution.small, desc: '100KB–1MB' },
+              { label: 'Medium', count: sizeDistribution.medium, desc: '1–10MB' },
+              { label: 'Large', count: sizeDistribution.large, desc: '10MB+' },
+            ].map(item => (
+              <div key={item.label} className="text-center p-1.5 bg-muted/20 rounded-lg">
+                <p className="text-xs font-bold text-foreground">{item.count}</p>
+                <p className="text-[9px] text-muted-foreground">{item.label}</p>
+                <p className="text-[8px] text-muted-foreground/70">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Top language dominance */}
       {entries.length > 0 && (
         <div className="pt-3 border-t border-border/50">
@@ -100,16 +153,16 @@ export function TechStackAnalysis({ languages, totalRepos, repoTopics = [] }: Te
           <div className="space-y-1.5">
             {entries.slice(0, 5).map(([lang, count]) => (
               <div key={lang} className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${categoryMap[lang]?.color || 'bg-gray-400'}`} />
+                <span className={`w-2 h-2 rounded-full ${categoryMap[lang]?.colorClass || 'bg-muted-foreground'}`} />
                 <span className="text-xs text-foreground flex-1">{lang}</span>
                 <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full ${categoryMap[lang]?.color || 'bg-gray-400'}`}
+                    className={`h-full rounded-full ${categoryMap[lang]?.colorClass || 'bg-muted-foreground'}`}
                     style={{ width: `${(count / total) * 100}%` }}
                   />
                 </div>
-                <span className="text-[10px] font-mono text-muted-foreground w-8 text-right">
-                  {Math.round((count / total) * 100)}%
+                <span className="text-[10px] font-mono text-muted-foreground w-12 text-right">
+                  {Math.round((count / total) * 100)}% ({count})
                 </span>
               </div>
             ))}

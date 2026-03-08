@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, GitFork, Star, Code2, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock, GitFork, Star, Code2, TrendingUp, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 
 interface TimeMachineProps {
   repos: any[];
   userData: any;
   languages: Record<string, number>;
   totalStars: number;
+  languagesByYear?: Record<number, Record<string, number>>;
 }
 
 interface YearSnapshot {
@@ -20,9 +21,13 @@ interface YearSnapshot {
   forks: number;
   cumulativeForks: number;
   repos: any[];
+  growthRate: number; // % change from prev year in repos
+  starsGrowthRate: number;
+  avgStarsPerRepo: number;
+  newLanguages: string[];
 }
 
-export function TimeMachine({ repos, userData, languages, totalStars }: TimeMachineProps) {
+export function TimeMachine({ repos, userData, languages, totalStars, languagesByYear }: TimeMachineProps) {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   const { snapshots, years } = useMemo(() => {
@@ -39,7 +44,8 @@ export function TimeMachine({ repos, userData, languages, totalStars }: TimeMach
     for (let y = joinYear; y <= currentYear; y++) years.push(y);
 
     let cumRepos = 0, cumStars = 0, cumForks = 0;
-    const snapshots: YearSnapshot[] = years.map((year) => {
+    const allSeenLanguages = new Set<string>();
+    const snapshots: YearSnapshot[] = years.map((year, idx) => {
       const yearRepos = byYear[year] || [];
       const langs: Record<string, number> = {};
       let stars = 0, forks = 0;
@@ -50,9 +56,19 @@ export function TimeMachine({ repos, userData, languages, totalStars }: TimeMach
         forks += r.forks_count || 0;
       });
 
+      // Detect new languages this year
+      const newLanguages = Object.keys(langs).filter(l => !allSeenLanguages.has(l));
+      Object.keys(langs).forEach(l => allSeenLanguages.add(l));
+
+      const prevRepos = cumRepos;
+      const prevStars = cumStars;
       cumRepos += yearRepos.length;
       cumStars += stars;
       cumForks += forks;
+
+      const growthRate = prevRepos > 0 ? +((yearRepos.length / prevRepos) * 100).toFixed(0) : (yearRepos.length > 0 ? 100 : 0);
+      const starsGrowthRate = prevStars > 0 ? +((stars / prevStars) * 100).toFixed(0) : (stars > 0 ? 100 : 0);
+      const avgStarsPerRepo = yearRepos.length > 0 ? +(stars / yearRepos.length).toFixed(1) : 0;
 
       const topLang = Object.entries(langs).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
 
@@ -67,6 +83,10 @@ export function TimeMachine({ repos, userData, languages, totalStars }: TimeMach
         forks,
         cumulativeForks: cumForks,
         repos: yearRepos.sort((a: any, b: any) => (b.stargazers_count || 0) - (a.stargazers_count || 0)),
+        growthRate,
+        starsGrowthRate,
+        avgStarsPerRepo,
+        newLanguages,
       };
     });
 
@@ -77,11 +97,24 @@ export function TimeMachine({ repos, userData, languages, totalStars }: TimeMach
   const maxStars = Math.max(...snapshots.map((s) => s.stars), 1);
 
   const selected = selectedYear !== null ? snapshots.find((s) => s.year === selectedYear) : null;
+  const selectedIdx = selected ? snapshots.indexOf(selected) : -1;
+  const prevSnapshot = selectedIdx > 0 ? snapshots[selectedIdx - 1] : null;
 
   const navYear = (dir: number) => {
     const idx = years.indexOf(selectedYear || years[years.length - 1]);
     const next = years[Math.max(0, Math.min(years.length - 1, idx + dir))];
     setSelectedYear(next);
+  };
+
+  const GrowthIndicator = ({ current, previous, label }: { current: number; previous: number; label: string }) => {
+    const diff = current - previous;
+    const icon = diff > 0 ? <ArrowUpRight className="w-3 h-3" /> : diff < 0 ? <ArrowDownRight className="w-3 h-3" /> : <Minus className="w-3 h-3" />;
+    const color = diff > 0 ? 'text-terminal-green' : diff < 0 ? 'text-terminal-red' : 'text-muted-foreground';
+    return (
+      <span className={`flex items-center gap-0.5 text-[9px] ${color}`}>
+        {icon} {diff > 0 ? '+' : ''}{diff} vs prev
+      </span>
+    );
   };
 
   return (
@@ -173,11 +206,12 @@ export function TimeMachine({ repos, userData, languages, totalStars }: TimeMach
         </div>
       </div>
 
-      {/* Cumulative growth line */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      {/* Cumulative growth */}
+      <div className="grid grid-cols-4 gap-3 mb-6">
         {[
           { label: 'Total Repos', value: snapshots[snapshots.length - 1]?.cumulativeRepos || 0, icon: <GitFork className="w-3.5 h-3.5" /> },
           { label: 'Total Stars', value: snapshots[snapshots.length - 1]?.cumulativeStars || 0, icon: <Star className="w-3.5 h-3.5" /> },
+          { label: 'Total Forks', value: snapshots[snapshots.length - 1]?.cumulativeForks || 0, icon: <GitFork className="w-3.5 h-3.5" /> },
           { label: 'Languages', value: Object.keys(languages).length, icon: <Code2 className="w-3.5 h-3.5" /> },
         ].map((item, i) => (
           <motion.div
@@ -222,7 +256,7 @@ export function TimeMachine({ repos, userData, languages, totalStars }: TimeMach
                 { label: 'New Repos', val: selected.reposCreated },
                 { label: 'Stars', val: selected.stars },
                 { label: 'Forks', val: selected.forks },
-                { label: 'Top Lang', val: selected.topLanguage },
+                { label: 'Avg ⭐/Repo', val: selected.avgStarsPerRepo },
               ].map((item, i) => (
                 <motion.div
                   key={item.label}
@@ -233,9 +267,38 @@ export function TimeMachine({ repos, userData, languages, totalStars }: TimeMach
                 >
                   <p className="text-xs font-bold text-foreground">{typeof item.val === 'number' ? item.val.toLocaleString() : item.val}</p>
                   <p className="text-[9px] text-muted-foreground">{item.label}</p>
+                  {prevSnapshot && typeof item.val === 'number' && (
+                    <GrowthIndicator
+                      current={item.val}
+                      previous={
+                        item.label === 'New Repos' ? prevSnapshot.reposCreated :
+                        item.label === 'Stars' ? prevSnapshot.stars :
+                        item.label === 'Forks' ? prevSnapshot.forks :
+                        prevSnapshot.avgStarsPerRepo
+                      }
+                      label={item.label}
+                    />
+                  )}
                 </motion.div>
               ))}
             </div>
+
+            {/* New languages learned this year */}
+            {selected.newLanguages.length > 0 && (
+              <div className="mb-3">
+                <p className="text-[10px] text-terminal-green mb-1.5 font-medium">🆕 New Languages This Year</p>
+                <div className="flex gap-1 flex-wrap">
+                  {selected.newLanguages.map((lang) => (
+                    <span
+                      key={lang}
+                      className="text-[10px] px-2 py-0.5 rounded-full bg-terminal-green/10 text-terminal-green border border-terminal-green/20"
+                    >
+                      {lang}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Language breakdown for the year */}
             {Object.keys(selected.languages).length > 0 && (
@@ -261,7 +324,7 @@ export function TimeMachine({ repos, userData, languages, totalStars }: TimeMach
               <div>
                 <p className="text-[10px] text-muted-foreground mb-1.5">Top Repos This Year</p>
                 <div className="space-y-1">
-                  {selected.repos.slice(0, 3).map((r: any, i: number) => (
+                  {selected.repos.slice(0, 5).map((r: any, i: number) => (
                     <motion.div
                       key={r.name}
                       className="flex items-center gap-2 text-xs p-1.5 rounded-lg bg-card/50"
@@ -275,6 +338,7 @@ export function TimeMachine({ repos, userData, languages, totalStars }: TimeMach
                         <span className="text-[9px] text-muted-foreground">{r.language}</span>
                       )}
                       <span className="text-terminal-yellow text-[10px]">⭐ {r.stargazers_count || 0}</span>
+                      <span className="text-terminal-cyan text-[10px]">🍴 {r.forks_count || 0}</span>
                     </motion.div>
                   ))}
                 </div>

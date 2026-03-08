@@ -60,7 +60,6 @@ const Index = () => {
   const resultsRef = useRef<HTMLDivElement>(null);
   const [showWrapped, setShowWrapped] = useState(false);
 
-  // Initialize stored theme on mount
   useEffect(() => {
     applyTheme(getStoredTheme());
   }, []);
@@ -136,7 +135,11 @@ const Index = () => {
           <AnimatedSection key="overview">
             <div className="space-y-6">
               <ScrollReveal variant="fadeUp">
-                <ProfileCard user={userData} />
+                <ProfileCard
+                  user={userData}
+                  orgCount={aiAnalysis.orgCount || 0}
+                  gistCount={aiAnalysis.publicGists || 0}
+                />
               </ScrollReveal>
 
               <ScrollReveal variant="scaleUp" delay={0.1}>
@@ -167,6 +170,9 @@ const Index = () => {
                   totalActiveDays={aiAnalysis.activeDays || 0}
                   peakCodingHour={aiAnalysis.peakCodingHour}
                   totalEvents={aiAnalysis.totalEvents}
+                  weekendRatio={aiAnalysis.weekendRatio}
+                  eventsPerActiveDay={aiAnalysis.eventsPerActiveDay}
+                  peakCodingDay={aiAnalysis.peakCodingDay}
                 />
               </ScrollReveal>
 
@@ -185,22 +191,22 @@ const Index = () => {
             <div className="space-y-6">
               <ScrollStagger className="grid grid-cols-2 md:grid-cols-3 gap-4" staggerDelay={0.1}>
                 <ScrollStaggerItem variant="scaleUp">
-                  <ScoreCard title="Activity" score={aiAnalysis.scores?.activity?.score || 0} icon={<Activity className="w-4 h-4" />} explanation={aiAnalysis.scores?.activity?.explanation} delay={0} />
+                  <ScoreCard title="Activity" score={aiAnalysis.scores?.activity?.score || 0} icon={<Activity className="w-4 h-4" />} explanation={aiAnalysis.scores?.activity?.explanation} subMetrics={aiAnalysis.scores?.activity?.subMetrics} delay={0} />
                 </ScrollStaggerItem>
                 <ScrollStaggerItem variant="scaleUp">
-                  <ScoreCard title="Documentation" score={aiAnalysis.scores?.documentation?.score || 0} icon={<FileText className="w-4 h-4" />} explanation={aiAnalysis.scores?.documentation?.explanation} delay={100} />
+                  <ScoreCard title="Documentation" score={aiAnalysis.scores?.documentation?.score || 0} icon={<FileText className="w-4 h-4" />} explanation={aiAnalysis.scores?.documentation?.explanation} subMetrics={aiAnalysis.scores?.documentation?.subMetrics} delay={100} />
                 </ScrollStaggerItem>
                 <ScrollStaggerItem variant="scaleUp">
-                  <ScoreCard title="Popularity" score={aiAnalysis.scores?.popularity?.score || 0} icon={<Star className="w-4 h-4" />} explanation={aiAnalysis.scores?.popularity?.explanation} delay={200} />
+                  <ScoreCard title="Popularity" score={aiAnalysis.scores?.popularity?.score || 0} icon={<Star className="w-4 h-4" />} explanation={aiAnalysis.scores?.popularity?.explanation} subMetrics={aiAnalysis.scores?.popularity?.subMetrics} delay={200} />
                 </ScrollStaggerItem>
                 <ScrollStaggerItem variant="scaleUp">
-                  <ScoreCard title="Diversity" score={aiAnalysis.scores?.diversity?.score || 0} icon={<Code2 className="w-4 h-4" />} explanation={aiAnalysis.scores?.diversity?.explanation} delay={300} />
+                  <ScoreCard title="Diversity" score={aiAnalysis.scores?.diversity?.score || 0} icon={<Code2 className="w-4 h-4" />} explanation={aiAnalysis.scores?.diversity?.explanation} subMetrics={aiAnalysis.scores?.diversity?.subMetrics} delay={300} />
                 </ScrollStaggerItem>
                 <ScrollStaggerItem variant="scaleUp">
-                  <ScoreCard title="Code Quality" score={aiAnalysis.scores?.codeQuality?.score || 0} icon={<Shield className="w-4 h-4" />} explanation={aiAnalysis.scores?.codeQuality?.explanation} delay={400} />
+                  <ScoreCard title="Code Quality" score={aiAnalysis.scores?.codeQuality?.score || 0} icon={<Shield className="w-4 h-4" />} explanation={aiAnalysis.scores?.codeQuality?.explanation} subMetrics={aiAnalysis.scores?.codeQuality?.subMetrics} delay={400} />
                 </ScrollStaggerItem>
                 <ScrollStaggerItem variant="scaleUp">
-                  <ScoreCard title="Collaboration" score={aiAnalysis.scores?.collaboration?.score || 0} icon={<Users className="w-4 h-4" />} explanation={aiAnalysis.scores?.collaboration?.explanation} delay={500} />
+                  <ScoreCard title="Collaboration" score={aiAnalysis.scores?.collaboration?.score || 0} icon={<Users className="w-4 h-4" />} explanation={aiAnalysis.scores?.collaboration?.explanation} subMetrics={aiAnalysis.scores?.collaboration?.subMetrics} delay={500} />
                 </ScrollStaggerItem>
               </ScrollStagger>
 
@@ -216,6 +222,13 @@ const Index = () => {
                       totalForks: aiAnalysis.totalForks || 0,
                       daysSinceLastUpdate: aiAnalysis.activityStatus?.daysSinceUpdate || 0,
                       languages: aiAnalysis.languages || {},
+                      reposWithDescription: aiAnalysis.reposWithDescription || 0,
+                      originalRepos: aiAnalysis.originalRepos || 0,
+                      forkedRepos: aiAnalysis.forkedRepos || 0,
+                      avgStarsPerRepo: aiAnalysis.avgStarsPerRepo,
+                      forkToStarRatio: aiAnalysis.forkToStarRatio,
+                      totalRepoSizeMB: aiAnalysis.totalRepoSizeMB,
+                      totalOpenIssues: aiAnalysis.totalOpenIssues,
                     }}
                     isRecruiterMode={isRecruiterMode}
                   />
@@ -258,6 +271,10 @@ const Index = () => {
                     languages={aiAnalysis.languages || {}}
                     totalRepos={userData.public_repos}
                     repoTopics={aiAnalysis.topTopics}
+                    reposWithLicense={aiAnalysis.reposWithLicense}
+                    reposWithDescription={aiAnalysis.reposWithDescription}
+                    conventionalCommitRatio={aiAnalysis.conventionalCommitRatio}
+                    sizeDistribution={aiAnalysis.sizeDistribution}
                   />
                 </ScrollReveal>
                 <ScrollReveal variant="fadeRight" delay={0.1}>
@@ -282,6 +299,11 @@ const Index = () => {
                         <p className="text-xs text-muted-foreground mt-2">
                           Open Source: <span className="text-foreground font-medium">{aiAnalysis.techAnalysis.openSourceEngagement}</span>
                         </p>
+                        {aiAnalysis.techAnalysis.architectureStyle && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Style: <span className="text-foreground font-medium">{aiAnalysis.techAnalysis.architectureStyle}</span>
+                          </p>
+                        )}
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground mb-2">Strengths</p>
@@ -306,7 +328,13 @@ const Index = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-border/50">
+                    {aiAnalysis.techAnalysis.techTrend && (
+                      <div className="mt-4 pt-3 border-t border-border/50">
+                        <p className="text-xs text-muted-foreground mb-1">Tech Evolution</p>
+                        <p className="text-sm text-foreground">{aiAnalysis.techAnalysis.techTrend}</p>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-border/50">
                       <div className="text-center p-3 bg-muted/30 rounded-xl">
                         <p className="text-xs text-muted-foreground mb-1">Project Complexity</p>
                         <p className="stat-value">{aiAnalysis.techAnalysis.projectComplexityScore || 0}</p>
@@ -424,6 +452,12 @@ const Index = () => {
                           <p className="text-xs text-muted-foreground mb-1">Team Fit</p>
                           <p className="text-sm text-foreground">{aiAnalysis.careerInsights.teamFit}</p>
                         </div>
+                        {aiAnalysis.careerInsights.salaryTier && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Salary Tier</p>
+                            <p className="text-sm font-bold text-primary">{aiAnalysis.careerInsights.salaryTier}</p>
+                          </div>
+                        )}
                       </div>
                       <div className="space-y-4">
                         <div>
@@ -434,8 +468,42 @@ const Index = () => {
                           <p className="text-xs text-muted-foreground mb-1">Growth Trajectory</p>
                           <p className="text-lg font-bold text-gradient">{aiAnalysis.careerInsights.growthTrajectory}</p>
                         </div>
+                        {aiAnalysis.careerInsights.industryFit && (
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-2">Industry Fit</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {aiAnalysis.careerInsights.industryFit.map((ind: string, i: number) => (
+                                <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">
+                                  {ind}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
+
+                    {/* Health metrics */}
+                    {aiAnalysis.healthMetrics && (
+                      <div className="mt-6 pt-4 border-t border-border/50">
+                        <p className="text-xs text-muted-foreground mb-3">Developer Health</p>
+                        <div className="grid grid-cols-4 gap-3">
+                          {[
+                            { label: 'Work-Life Balance', value: aiAnalysis.healthMetrics.workLifeBalance, color: 'text-terminal-green' },
+                            { label: 'Weekend Coding', value: `${aiAnalysis.healthMetrics.weekendCodingPercent}%`, isText: true, color: 'text-terminal-yellow' },
+                            { label: 'Sustainability', value: aiAnalysis.healthMetrics.sustainabilityScore, color: 'text-terminal-cyan' },
+                            { label: 'Diversification', value: aiAnalysis.healthMetrics.diversificationIndex, color: 'text-terminal-purple' },
+                          ].map((item, i) => (
+                            <div key={item.label} className="text-center p-2 bg-muted/30 rounded-lg">
+                              <p className={`text-lg font-bold font-mono ${item.color}`}>
+                                {(item as any).isText ? item.value : item.value}
+                              </p>
+                              <p className="text-[9px] text-muted-foreground">{item.label}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </ScrollReveal>
               )}
@@ -452,7 +520,11 @@ const Index = () => {
         return (
           <AnimatedSection key="rhythm">
             <ScrollReveal variant="fadeUp">
-              <CodeRhythm events={userEvents} peakHour={aiAnalysis.peakCodingHour} />
+              <CodeRhythm
+                events={userEvents}
+                peakHour={aiAnalysis.peakCodingHour}
+                eventTypeBreakdown={aiAnalysis.eventTypeBreakdown}
+              />
             </ScrollReveal>
           </AnimatedSection>
         );
@@ -468,6 +540,9 @@ const Index = () => {
                 followers={userData.followers}
                 currentStreak={aiAnalysis.currentStreak || 0}
                 languages={aiAnalysis.languages || {}}
+                totalForks={aiAnalysis.totalForks || 0}
+                orgCount={aiAnalysis.orgCount || 0}
+                publicGists={aiAnalysis.publicGists || 0}
               />
             </ScrollReveal>
           </AnimatedSection>
@@ -482,6 +557,7 @@ const Index = () => {
                 userData={userData}
                 languages={aiAnalysis.languages || {}}
                 totalStars={aiAnalysis.totalStars || 0}
+                languagesByYear={aiAnalysis.languagesByYear}
               />
             </ScrollReveal>
           </AnimatedSection>

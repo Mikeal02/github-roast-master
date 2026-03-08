@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Flame, Zap, Calendar, TrendingUp } from 'lucide-react';
+import { Flame, Zap, Calendar, TrendingUp, Sun, Moon, BarChart3 } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
 import { AnimatedCounter } from './AnimatedCounter';
 
@@ -9,9 +9,12 @@ interface CodingStreaksProps {
   totalActiveDays: number;
   peakCodingHour?: string;
   totalEvents?: number;
+  weekendRatio?: number;
+  eventsPerActiveDay?: number;
+  peakCodingDay?: string;
 }
 
-export function CodingStreaks({ currentStreak, longestStreak, totalActiveDays, peakCodingHour, totalEvents }: CodingStreaksProps) {
+export function CodingStreaks({ currentStreak, longestStreak, totalActiveDays, peakCodingHour, totalEvents, weekendRatio, eventsPerActiveDay, peakCodingDay }: CodingStreaksProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
@@ -54,6 +57,30 @@ export function CodingStreaks({ currentStreak, longestStreak, totalActiveDays, p
     },
   ];
 
+  const extendedItems = [
+    ...(peakCodingDay ? [{
+      icon: <Sun className="w-4 h-4" />,
+      label: 'Peak Day',
+      displayValue: peakCodingDay,
+      color: 'text-terminal-purple',
+      bgColor: 'bg-terminal-purple/10 border-terminal-purple/30',
+    }] : []),
+    ...(eventsPerActiveDay !== undefined ? [{
+      icon: <BarChart3 className="w-4 h-4" />,
+      label: 'Events/Active Day',
+      displayValue: `${eventsPerActiveDay}`,
+      color: 'text-primary',
+      bgColor: 'bg-primary/10 border-primary/30',
+    }] : []),
+    ...(weekendRatio !== undefined ? [{
+      icon: <Moon className="w-4 h-4" />,
+      label: 'Weekend Coding',
+      displayValue: `${weekendRatio}%`,
+      color: weekendRatio > 30 ? 'text-terminal-yellow' : 'text-terminal-green',
+      bgColor: weekendRatio > 30 ? 'bg-terminal-yellow/10 border-terminal-yellow/30' : 'bg-terminal-green/10 border-terminal-green/30',
+    }] : []),
+  ];
+
   return (
     <div ref={ref} className="score-card">
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
@@ -94,6 +121,25 @@ export function CodingStreaks({ currentStreak, longestStreak, totalActiveDays, p
           </motion.div>
         ))}
       </div>
+
+      {/* Extended metrics row */}
+      {extendedItems.length > 0 && (
+        <div className="grid grid-cols-3 gap-2 mt-3">
+          {extendedItems.map((item, index) => (
+            <motion.div
+              key={item.label}
+              initial={{ opacity: 0, y: 10 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: 0.6 + index * 0.1 }}
+              className={`p-2 rounded-lg border ${item.bgColor} text-center`}
+            >
+              <div className={`flex justify-center mb-1 ${item.color}`}>{item.icon}</div>
+              <p className={`text-sm font-bold font-mono ${item.color}`}>{item.displayValue}</p>
+              <p className="text-[9px] text-muted-foreground">{item.label}</p>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

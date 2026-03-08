@@ -1,13 +1,14 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Music, Clock } from 'lucide-react';
+import { Music, Clock, BarChart3 } from 'lucide-react';
 
 interface CodeRhythmProps {
   events: any[];
   peakHour?: number;
+  eventTypeBreakdown?: { type: string; count: number; percentage: number }[];
 }
 
-export function CodeRhythm({ events, peakHour }: CodeRhythmProps) {
+export function CodeRhythm({ events, peakHour, eventTypeBreakdown }: CodeRhythmProps) {
   const hourlyData = useMemo(() => {
     const hours = Array(24).fill(0);
     events.forEach((e: any) => {
@@ -48,12 +49,27 @@ export function CodeRhythm({ events, peakHour }: CodeRhythmProps) {
     const afternoonSum = afternoon.reduce((s, d) => s + d.count, 0);
     const eveningSum = evening.reduce((s, d) => s + d.count, 0);
 
+    const total = nightSum + morningSum + afternoonSum + eveningSum;
     const max = Math.max(nightSum, morningSum, afternoonSum, eveningSum);
-    if (max === nightSum) return { name: 'Night Owl 🦉', desc: 'Most active between 10PM–6AM', bpm: 140 };
-    if (max === morningSum) return { name: 'Early Bird 🐦', desc: 'Peak productivity 6AM–12PM', bpm: 120 };
-    if (max === afternoonSum) return { name: 'Steady Cruiser 🚀', desc: 'Afternoon power coder 12PM–6PM', bpm: 100 };
-    return { name: 'Evening Warrior ⚔️', desc: 'Fires up after dinner 6PM–10PM', bpm: 130 };
+    const focusPercent = total > 0 ? Math.round((max / total) * 100) : 0;
+
+    if (max === nightSum) return { name: 'Night Owl 🦉', desc: 'Most active between 10PM–6AM', bpm: 140, focusPercent };
+    if (max === morningSum) return { name: 'Early Bird 🐦', desc: 'Peak productivity 6AM–12PM', bpm: 120, focusPercent };
+    if (max === afternoonSum) return { name: 'Steady Cruiser 🚀', desc: 'Afternoon power coder 12PM–6PM', bpm: 100, focusPercent };
+    return { name: 'Evening Warrior ⚔️', desc: 'Fires up after dinner 6PM–10PM', bpm: 130, focusPercent };
   }, [hourlyData]);
+
+  const eventTypeColors: Record<string, string> = {
+    'Push': 'bg-terminal-green',
+    'Create': 'bg-terminal-cyan',
+    'Watch': 'bg-terminal-yellow',
+    'Fork': 'bg-terminal-purple',
+    'Issues': 'bg-terminal-red',
+    'IssueComment': 'bg-accent',
+    'PullRequest': 'bg-secondary',
+    'PullRequestReview': 'bg-primary',
+    'Delete': 'bg-destructive',
+  };
 
   return (
     <div className="score-card">
@@ -75,6 +91,7 @@ export function CodeRhythm({ events, peakHour }: CodeRhythmProps) {
           {rhythmType.name}
         </motion.div>
         <p className="text-xs text-muted-foreground mt-1">{rhythmType.desc}</p>
+        <p className="text-[10px] text-primary mt-0.5">{rhythmType.focusPercent}% of activity in peak window</p>
       </div>
 
       {/* 24-hour equalizer */}
@@ -96,7 +113,6 @@ export function CodeRhythm({ events, peakHour }: CodeRhythmProps) {
               animate={{ height: `${Math.max(8, d.intensity * 100)}%` }}
               transition={{ delay: i * 0.03, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
-              {/* Pulse animation for bars */}
               <motion.div
                 className="absolute inset-0 rounded-t-sm"
                 style={{
@@ -111,7 +127,6 @@ export function CodeRhythm({ events, peakHour }: CodeRhythmProps) {
                   delay: i * 0.05,
                 }}
               />
-              {/* Tooltip */}
               <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                 <div className="bg-card border border-border rounded px-1.5 py-0.5 text-[9px] text-foreground whitespace-nowrap shadow-lg">
                   {d.label}: {d.count}
@@ -130,7 +145,7 @@ export function CodeRhythm({ events, peakHour }: CodeRhythmProps) {
       </div>
 
       {/* Weekly rhythm */}
-      <div>
+      <div className="mb-6">
         <p className="text-xs text-muted-foreground mb-3">Weekly Groove</p>
         <div className="grid grid-cols-7 gap-1.5">
           {dayData.map((d, i) => (
@@ -158,6 +173,38 @@ export function CodeRhythm({ events, peakHour }: CodeRhythmProps) {
           ))}
         </div>
       </div>
+
+      {/* Event type breakdown */}
+      {eventTypeBreakdown && eventTypeBreakdown.length > 0 && (
+        <div className="pt-4 border-t border-border/50">
+          <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1">
+            <BarChart3 className="w-3 h-3" /> Event Type Distribution
+          </p>
+          <div className="space-y-2">
+            {eventTypeBreakdown.slice(0, 6).map((item, i) => (
+              <motion.div
+                key={item.type}
+                className="flex items-center gap-2"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.8 + i * 0.05 }}
+              >
+                <div className={`w-2 h-2 rounded-full ${eventTypeColors[item.type] || 'bg-muted-foreground'}`} />
+                <span className="text-xs text-muted-foreground flex-1">{item.type}</span>
+                <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <motion.div
+                    className={`h-full rounded-full ${eventTypeColors[item.type] || 'bg-muted-foreground'}`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${item.percentage}%` }}
+                    transition={{ delay: 1 + i * 0.05, duration: 0.6 }}
+                  />
+                </div>
+                <span className="text-[10px] font-mono text-foreground w-10 text-right">{item.percentage}%</span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

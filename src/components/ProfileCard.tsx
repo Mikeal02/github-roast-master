@@ -1,12 +1,16 @@
-import { MapPin, Link as LinkIcon, Calendar, Users, BookOpen, ExternalLink, Verified } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Calendar, Users, BookOpen, ExternalLink, Verified, Building2, Briefcase, FileCode } from 'lucide-react';
 import { formatDate } from '@/lib/githubApi';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { AnimatedCounter } from './AnimatedCounter';
 
-export function ProfileCard({ user }: { user: any }) {
+export function ProfileCard({ user, orgCount = 0, gistCount = 0 }: { user: any; orgCount?: number; gistCount?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
+
+  const accountAgeDays = Math.floor((Date.now() - new Date(user.created_at).getTime()) / (1000 * 60 * 60 * 24));
+  const accountAgeYears = Math.floor(accountAgeDays / 365);
+  const accountAgeMonths = Math.floor((accountAgeDays % 365) / 30);
 
   return (
     <motion.div
@@ -50,10 +54,15 @@ export function ProfileCard({ user }: { user: any }) {
       </div>
 
       <div className="flex-1 text-center md:text-left">
-        <div className="flex items-center gap-3 justify-center md:justify-start">
+        <div className="flex items-center gap-3 justify-center md:justify-start flex-wrap">
           <h2 className="text-2xl font-bold text-foreground tracking-tight">
             {user.name || user.login}
           </h2>
+          {user.hireable && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-terminal-green/15 text-terminal-green border border-terminal-green/30 font-medium">
+              Open to work
+            </span>
+          )}
           <a
             href={user.html_url}
             target="_blank"
@@ -90,9 +99,21 @@ export function ProfileCard({ user }: { user: any }) {
             <BookOpen className="w-4 h-4 text-secondary" />
             <AnimatedCounter value={user.public_repos} className="text-foreground font-bold" /> repos
           </div>
+          {gistCount > 0 && (
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <FileCode className="w-4 h-4 text-secondary" />
+              <AnimatedCounter value={gistCount} className="text-foreground font-bold" /> gists
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-4 mt-3 justify-center md:justify-start text-xs text-muted-foreground">
+          {user.company && (
+            <div className="flex items-center gap-1.5">
+              <Building2 className="w-3 h-3" />
+              {user.company}
+            </div>
+          )}
           {user.location && (
             <div className="flex items-center gap-1.5">
               <MapPin className="w-3 h-3" />
@@ -113,7 +134,16 @@ export function ProfileCard({ user }: { user: any }) {
           <div className="flex items-center gap-1.5">
             <Calendar className="w-3 h-3" />
             Joined {formatDate(user.created_at)}
+            <span className="text-muted-foreground/70">
+              ({accountAgeYears}y {accountAgeMonths}m)
+            </span>
           </div>
+          {orgCount > 0 && (
+            <div className="flex items-center gap-1.5">
+              <Briefcase className="w-3 h-3" />
+              {orgCount} org{orgCount !== 1 ? 's' : ''}
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
