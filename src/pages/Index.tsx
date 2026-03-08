@@ -439,6 +439,31 @@ const Index = () => {
           </AnimatedSection>
         );
 
+      case 'rhythm':
+        return (
+          <AnimatedSection key="rhythm">
+            <ScrollReveal variant="fadeUp">
+              <CodeRhythm events={userEvents} peakHour={aiAnalysis.peakCodingHour} />
+            </ScrollReveal>
+          </AnimatedSection>
+        );
+
+      case 'xp':
+        return (
+          <AnimatedSection key="xp">
+            <ScrollReveal variant="scaleUp">
+              <XPLevelSystem
+                scores={aiAnalysis.scores || {}}
+                totalStars={aiAnalysis.totalStars || 0}
+                totalRepos={userData.public_repos}
+                followers={userData.followers}
+                currentStreak={aiAnalysis.currentStreak || 0}
+                languages={aiAnalysis.languages || {}}
+              />
+            </ScrollReveal>
+          </AnimatedSection>
+        );
+
       default:
         return null;
     }
