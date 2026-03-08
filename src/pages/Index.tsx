@@ -473,6 +473,34 @@ const Index = () => {
           </AnimatedSection>
         );
 
+      case 'timeline':
+        return (
+          <AnimatedSection key="timeline">
+            <ScrollReveal variant="fadeUp">
+              <TimeMachine
+                repos={userRepos}
+                userData={userData}
+                languages={aiAnalysis.languages || {}}
+                totalStars={aiAnalysis.totalStars || 0}
+              />
+            </ScrollReveal>
+          </AnimatedSection>
+        );
+
+      case 'globe':
+        return (
+          <AnimatedSection key="globe">
+            <ScrollReveal variant="blur">
+              <DeveloperGlobe
+                userData={userData}
+                languages={aiAnalysis.languages || {}}
+                totalStars={aiAnalysis.totalStars || 0}
+                followers={userData.followers}
+              />
+            </ScrollReveal>
+          </AnimatedSection>
+        );
+
       default:
         return null;
     }
