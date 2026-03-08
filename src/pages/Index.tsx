@@ -190,6 +190,9 @@ const Index = () => {
         return (
           <AnimatedSection key="scores">
             <div className="space-y-6">
+              <ScrollReveal variant="scaleUp">
+                <ScoreSummaryPanel scores={aiAnalysis.scores || {}} />
+              </ScrollReveal>
               <ScrollStagger className="grid grid-cols-2 md:grid-cols-3 gap-4" staggerDelay={0.1}>
                 <ScrollStaggerItem variant="scaleUp">
                   <ScoreCard title="Activity" score={aiAnalysis.scores?.activity?.score || 0} icon={<Activity className="w-4 h-4" />} explanation={aiAnalysis.scores?.activity?.explanation} subMetrics={aiAnalysis.scores?.activity?.subMetrics} delay={0} />
