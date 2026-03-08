@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Activity, FileText, Star, Code2, Shield, Users, Sparkles } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,9 @@ import { ScrollReveal, ScrollStagger, ScrollStaggerItem } from '@/components/Scr
 import { DeveloperDNA } from '@/components/DeveloperDNA';
 import { GitHubWrapped } from '@/components/GitHubWrapped';
 import { RoastBattle } from '@/components/RoastBattle';
+import { ThemePicker, applyTheme, getStoredTheme } from '@/components/ThemePicker';
+import { CodeRhythm } from '@/components/CodeRhythm';
+import { XPLevelSystem } from '@/components/XPLevelSystem';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,6 +56,11 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const resultsRef = useRef<HTMLDivElement>(null);
   const [showWrapped, setShowWrapped] = useState(false);
+
+  // Initialize stored theme on mount
+  useEffect(() => {
+    applyTheme(getStoredTheme());
+  }, []);
 
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
 
@@ -436,6 +444,31 @@ const Index = () => {
           </AnimatedSection>
         );
 
+      case 'rhythm':
+        return (
+          <AnimatedSection key="rhythm">
+            <ScrollReveal variant="fadeUp">
+              <CodeRhythm events={userEvents} peakHour={aiAnalysis.peakCodingHour} />
+            </ScrollReveal>
+          </AnimatedSection>
+        );
+
+      case 'xp':
+        return (
+          <AnimatedSection key="xp">
+            <ScrollReveal variant="scaleUp">
+              <XPLevelSystem
+                scores={aiAnalysis.scores || {}}
+                totalStars={aiAnalysis.totalStars || 0}
+                totalRepos={userData.public_repos}
+                followers={userData.followers}
+                currentStreak={aiAnalysis.currentStreak || 0}
+                languages={aiAnalysis.languages || {}}
+              />
+            </ScrollReveal>
+          </AnimatedSection>
+        );
+
       default:
         return null;
     }
@@ -491,6 +524,7 @@ const Index = () => {
               {/* Action buttons */}
               <ScrollReveal variant="fadeDown" delay={0.1}>
                 <div className="flex justify-end gap-2 flex-wrap mb-6">
+                  <ThemePicker score={aiAnalysis.scores?.overall?.score || 0} />
                   <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowWrapped(true)}>
                     <Sparkles className="w-4 h-4" /> Wrapped
                   </Button>
