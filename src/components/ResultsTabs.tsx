@@ -31,6 +31,8 @@ const recruiterTabs: Tab[] = [
   { id: 'tech', label: 'Tech Stack', icon: <Code2 className="w-4 h-4" />, accent: 'hsl(var(--terminal-purple))' },
   { id: 'activity', label: 'Activity', icon: <Clock className="w-4 h-4" />, accent: 'hsl(var(--terminal-green))' },
   { id: 'repos', label: 'Repos', icon: <GitFork className="w-4 h-4" />, accent: 'hsl(var(--secondary))' },
+  { id: 'rhythm', label: 'Rhythm', icon: <Music className="w-4 h-4" />, accent: 'hsl(var(--accent))' },
+  { id: 'xp', label: 'XP', icon: <Trophy className="w-4 h-4" />, accent: 'hsl(var(--terminal-yellow))' },
   { id: 'assessment', label: 'Assessment', icon: <Briefcase className="w-4 h-4" />, accent: 'hsl(var(--terminal-yellow))' },
   { id: 'career', label: 'Career', icon: <Users className="w-4 h-4" />, accent: 'hsl(var(--terminal-purple))' },
 ];
