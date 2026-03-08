@@ -209,6 +209,29 @@ const Index = () => {
           </AnimatedSection>
         );
 
+      case 'dna':
+        return (
+          <AnimatedSection key="dna">
+            <ScrollReveal variant="blur">
+              <DeveloperDNA
+                languages={aiAnalysis.languages || {}}
+                scores={aiAnalysis.scores || {}}
+                personality={aiAnalysis.personality}
+                streaks={{
+                  currentStreak: aiAnalysis.currentStreak || 0,
+                  longestStreak: aiAnalysis.longestStreak || 0,
+                  peakHour: aiAnalysis.peakCodingHour,
+                }}
+                userData={{
+                  followers: userData.followers,
+                  public_repos: userData.public_repos,
+                  created_at: userData.created_at,
+                }}
+              />
+            </ScrollReveal>
+          </AnimatedSection>
+        );
+
       case 'tech':
         return (
           <AnimatedSection key="tech">
