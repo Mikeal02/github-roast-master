@@ -524,6 +524,7 @@ const Index = () => {
               {/* Action buttons */}
               <ScrollReveal variant="fadeDown" delay={0.1}>
                 <div className="flex justify-end gap-2 flex-wrap mb-6">
+                  <ThemePicker score={aiAnalysis.scores?.overall?.score || 0} />
                   <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowWrapped(true)}>
                     <Sparkles className="w-4 h-4" /> Wrapped
                   </Button>
