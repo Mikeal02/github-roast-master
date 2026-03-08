@@ -259,6 +259,7 @@ const Index = () => {
                   followers: userData.followers,
                   public_repos: userData.public_repos,
                   created_at: userData.created_at,
+                  following: userData.following,
                 }}
               />
             </ScrollReveal>
