@@ -31,6 +31,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { ResultsTabs } from '@/components/ResultsTabs';
 import { AnimatedSection, StaggerContainer, StaggerItem } from '@/components/AnimatedSection';
 import { ScrollReveal, ScrollStagger, ScrollStaggerItem } from '@/components/ScrollReveal';
+import { DeveloperDNA } from '@/components/DeveloperDNA';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
