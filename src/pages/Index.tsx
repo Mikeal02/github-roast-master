@@ -38,6 +38,8 @@ import { RoastBattle } from '@/components/RoastBattle';
 import { ThemePicker, applyTheme, getStoredTheme } from '@/components/ThemePicker';
 import { CodeRhythm } from '@/components/CodeRhythm';
 import { XPLevelSystem } from '@/components/XPLevelSystem';
+import { TimeMachine } from '@/components/TimeMachine';
+import { DeveloperGlobe } from '@/components/DeveloperGlobe';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,6 +54,7 @@ const Index = () => {
   const [isRecruiterMode, setIsRecruiterMode] = useState(false);
   const [userEvents, setUserEvents] = useState<any[]>([]);
   const [userOrgs, setUserOrgs] = useState<any[]>([]);
+  const [userRepos, setUserRepos] = useState<any[]>([]);
   const [userGists, setUserGists] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -84,6 +87,7 @@ const Index = () => {
 
       setUserData(user);
       setUserEvents(events);
+      setUserRepos(repos);
       setUserOrgs(orgs);
       setUserGists(gists);
 
@@ -464,6 +468,34 @@ const Index = () => {
                 followers={userData.followers}
                 currentStreak={aiAnalysis.currentStreak || 0}
                 languages={aiAnalysis.languages || {}}
+              />
+            </ScrollReveal>
+          </AnimatedSection>
+        );
+
+      case 'timeline':
+        return (
+          <AnimatedSection key="timeline">
+            <ScrollReveal variant="fadeUp">
+              <TimeMachine
+                repos={userRepos}
+                userData={userData}
+                languages={aiAnalysis.languages || {}}
+                totalStars={aiAnalysis.totalStars || 0}
+              />
+            </ScrollReveal>
+          </AnimatedSection>
+        );
+
+      case 'globe':
+        return (
+          <AnimatedSection key="globe">
+            <ScrollReveal variant="blur">
+              <DeveloperGlobe
+                userData={userData}
+                languages={aiAnalysis.languages || {}}
+                totalStars={aiAnalysis.totalStars || 0}
+                followers={userData.followers}
               />
             </ScrollReveal>
           </AnimatedSection>
