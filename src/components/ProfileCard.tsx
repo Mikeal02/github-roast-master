@@ -1,38 +1,54 @@
-import { MapPin, Link as LinkIcon, Calendar, Users, BookOpen, ExternalLink } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Calendar, Users, BookOpen, ExternalLink, Verified } from 'lucide-react';
 import { formatDate } from '@/lib/githubApi';
-import { motion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
+import { useRef } from 'react';
+import { AnimatedCounter } from './AnimatedCounter';
 
 export function ProfileCard({ user }: { user: any }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, amount: 0.2 });
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      ref={ref}
+      initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
+      animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
       className="score-card flex flex-col md:flex-row gap-6 items-center md:items-start gradient-border"
     >
       <div className="relative">
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
+          initial={{ scale: 0, rotate: -20 }}
+          animate={isInView ? { scale: 1, rotate: 0 } : {}}
           transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
           className="w-28 h-28 rounded-2xl overflow-hidden border-2 border-primary/30 ring-4 ring-primary/10"
         >
-          <img 
-            src={user.avatar_url} 
+          <img
+            src={user.avatar_url}
             alt={user.login}
             className="w-full h-full object-cover"
           />
         </motion.div>
         <motion.div
           initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
+          animate={isInView ? { scale: 1 } : {}}
           transition={{ delay: 0.4, type: 'spring' }}
           className="absolute -bottom-2 -right-2 bg-card border border-border rounded-xl px-2.5 py-1 text-[10px] font-mono text-primary shadow-lg"
         >
           #{user.id}
         </motion.div>
+        {user.followers >= 100 && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={isInView ? { scale: 1 } : {}}
+            transition={{ delay: 0.6, type: 'spring' }}
+            className="absolute -top-2 -left-2 p-1 rounded-lg bg-terminal-yellow/20 border border-terminal-yellow/40"
+          >
+            <Verified className="w-3.5 h-3.5 text-terminal-yellow" />
+          </motion.div>
+        )}
       </div>
-      
+
       <div className="flex-1 text-center md:text-left">
         <div className="flex items-center gap-3 justify-center md:justify-start">
           <h2 className="text-2xl font-bold text-foreground tracking-tight">
@@ -47,7 +63,7 @@ export function ProfileCard({ user }: { user: any }) {
             <ExternalLink className="w-4 h-4 text-muted-foreground" />
           </a>
         </div>
-        <a 
+        <a
           href={user.html_url}
           target="_blank"
           rel="noopener noreferrer"
@@ -55,27 +71,27 @@ export function ProfileCard({ user }: { user: any }) {
         >
           @{user.login}
         </a>
-        
+
         {user.bio && (
           <p className="text-muted-foreground mt-3 text-sm max-w-md leading-relaxed">
             {user.bio}
           </p>
         )}
-        
+
         <div className="flex flex-wrap gap-4 mt-4 justify-center md:justify-start text-sm">
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <Users className="w-4 h-4 text-secondary" />
-            <span className="text-foreground font-bold">{user.followers.toLocaleString()}</span> followers
+            <AnimatedCounter value={user.followers} className="text-foreground font-bold" /> followers
           </div>
           <div className="flex items-center gap-1.5 text-muted-foreground">
-            <span className="text-foreground font-bold">{user.following.toLocaleString()}</span> following
+            <AnimatedCounter value={user.following} className="text-foreground font-bold" /> following
           </div>
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <BookOpen className="w-4 h-4 text-secondary" />
-            <span className="text-foreground font-bold">{user.public_repos}</span> repos
+            <AnimatedCounter value={user.public_repos} className="text-foreground font-bold" /> repos
           </div>
         </div>
-        
+
         <div className="flex flex-wrap gap-4 mt-3 justify-center md:justify-start text-xs text-muted-foreground">
           {user.location && (
             <div className="flex items-center gap-1.5">
@@ -84,7 +100,7 @@ export function ProfileCard({ user }: { user: any }) {
             </div>
           )}
           {user.blog && (
-            <a 
+            <a
               href={user.blog.startsWith('http') ? user.blog : `https://${user.blog}`}
               target="_blank"
               rel="noopener noreferrer"
