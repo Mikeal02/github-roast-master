@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Star, GitFork, Code2, Clock, FileText, Archive } from 'lucide-react';
+import { Star, GitFork, Code2, Clock, FileText, Archive, Scale, HardDrive, AlertCircle, Briefcase, FileCode, Box } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
 import { AnimatedCounter } from './AnimatedCounter';
 
@@ -14,8 +14,12 @@ interface StatsGridProps {
     originalRepos?: number;
     forkedRepos?: number;
     inactiveRepos?: number;
-    avgStars?: number;
-    mostUsedLanguage?: string;
+    avgStarsPerRepo?: number;
+    forkToStarRatio?: number;
+    totalRepoSizeMB?: number;
+    totalOpenIssues?: number;
+    orgCount?: number;
+    publicGists?: number;
   };
   isRecruiterMode?: boolean;
 }
@@ -38,7 +42,7 @@ export function StatsGrid({ analysis, isRecruiterMode = false }: StatsGridProps)
   const totalRepos = analysis.totalRepos || 0;
   const totalStars = analysis.totalStars || 0;
   const totalForks = analysis.totalForks || 0;
-  const avgStars = totalRepos > 0 ? (totalStars / totalRepos) : 0;
+  const avgStars = analysis.avgStarsPerRepo ?? (totalRepos > 0 ? +(totalStars / totalRepos).toFixed(1) : 0);
 
   const languages = analysis.languages || {};
   const languageEntries = Object.entries(languages);
@@ -46,15 +50,22 @@ export function StatsGrid({ analysis, isRecruiterMode = false }: StatsGridProps)
     ? languageEntries.sort((a, b) => b[1] - a[1])[0][0]
     : 'N/A';
 
+  const originalRepos = analysis.originalRepos || 0;
+  const forkedRepos = analysis.forkedRepos || 0;
+
   const stats = [
     { label: 'Total Stars', value: totalStars, icon: <Star className="w-4 h-4" />, color: 'text-terminal-yellow', isNumeric: true },
     { label: 'Total Forks', value: totalForks, icon: <GitFork className="w-4 h-4" />, color: 'text-terminal-cyan', isNumeric: true },
     { label: 'Avg Stars/Repo', value: avgStars, icon: <Star className="w-4 h-4" />, color: 'text-terminal-purple', isNumeric: true, decimals: 1 },
+    { label: 'Fork/Star Ratio', value: analysis.forkToStarRatio ?? (totalStars > 0 ? +(totalForks/totalStars).toFixed(2) : 0), icon: <Scale className="w-4 h-4" />, color: 'text-accent', isNumeric: true, decimals: 2 },
     { label: 'Top Language', value: mostUsedLanguage, icon: <Code2 className="w-4 h-4" />, color: 'text-primary' },
-    { label: 'Activity Status', value: activityLabel, icon: <Clock className="w-4 h-4" />, color: daysSinceLastUpdate <= 30 ? 'text-terminal-green' : 'text-terminal-red', isLong: true },
     { label: 'Languages Used', value: languageEntries.length, icon: <Code2 className="w-4 h-4" />, color: 'text-terminal-purple', isNumeric: true },
+    { label: 'Original Repos', value: originalRepos, icon: <Box className="w-4 h-4" />, color: 'text-terminal-green', isNumeric: true },
+    { label: 'Forked Repos', value: forkedRepos, icon: <GitFork className="w-4 h-4" />, color: 'text-muted-foreground', isNumeric: true },
+    { label: 'Activity Status', value: activityLabel, icon: <Clock className="w-4 h-4" />, color: daysSinceLastUpdate <= 30 ? 'text-terminal-green' : 'text-terminal-red', isLong: true },
     { label: isRecruiterMode ? 'Documented Repos' : 'With Descriptions', value: `${analysis.reposWithDescription || 0}/${totalRepos}`, icon: <FileText className="w-4 h-4" />, color: 'text-secondary' },
-    { label: 'Total Repos', value: totalRepos, icon: <Archive className="w-4 h-4" />, color: 'text-muted-foreground', isNumeric: true },
+    { label: 'Total Codebase', value: analysis.totalRepoSizeMB ?? 0, icon: <HardDrive className="w-4 h-4" />, color: 'text-terminal-cyan', isNumeric: true, suffix: ' MB' },
+    { label: 'Open Issues', value: analysis.totalOpenIssues ?? 0, icon: <AlertCircle className="w-4 h-4" />, color: 'text-terminal-yellow', isNumeric: true },
   ];
 
   return (
@@ -73,7 +84,10 @@ export function StatsGrid({ analysis, isRecruiterMode = false }: StatsGridProps)
           </div>
           <div className={`font-bold font-mono text-foreground ${stat.isLong ? 'text-sm' : 'text-lg'}`}>
             {stat.isNumeric ? (
-              <AnimatedCounter value={stat.value as number} decimals={stat.decimals || 0} />
+              <>
+                <AnimatedCounter value={stat.value as number} decimals={(stat as any).decimals || 0} />
+                {(stat as any).suffix || ''}
+              </>
             ) : (
               stat.value
             )}

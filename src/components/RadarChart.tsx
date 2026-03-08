@@ -32,13 +32,17 @@ export function RadarChart({ scores, personality }: RadarChartProps) {
       { label: 'Docs', value: scores?.documentation?.score || 0 },
       { label: 'Popularity', value: scores?.popularity?.score || 0 },
       { label: 'Diversity', value: scores?.diversity?.score || 0 },
+      { label: 'Quality', value: scores?.codeQuality?.score || 0 },
+      { label: 'Collab', value: scores?.collaboration?.score || 0 },
       { label: 'Consistency', value: personality?.metrics?.consistency || 0 },
-      { label: 'Collab', value: personality?.metrics?.collaboration || 0 },
+      { label: 'Exploration', value: personality?.metrics?.exploration || 0 },
     ];
   }, [scores, personality]);
 
   const cx = 150, cy = 150, maxR = 110;
   const n = metrics.length;
+
+  const avgScore = Math.round(metrics.reduce((s, m) => s + m.value, 0) / n);
 
   const getPoint = (index: number, value: number) => {
     const angle = (Math.PI * 2 * index) / n - Math.PI / 2;
@@ -53,11 +57,18 @@ export function RadarChart({ scores, personality }: RadarChartProps) {
 
   const gridLevels = [20, 40, 60, 80, 100];
 
+  // Calculate "shape" - how balanced vs spiky
+  const maxMetric = Math.max(...metrics.map(m => m.value));
+  const minMetric = Math.min(...metrics.map(m => m.value));
+  const balance = maxMetric > 0 ? Math.round((minMetric / maxMetric) * 100) : 0;
+  const shapeLabel = balance > 70 ? 'Well-Rounded' : balance > 40 ? 'Specialized' : 'Highly Focused';
+
   return (
     <div ref={ref} className="score-card">
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
         <Radar className="w-5 h-5 text-primary" />
         <h3 className="font-semibold text-foreground">Skill Radar</h3>
+        <span className="ml-auto text-xs text-muted-foreground font-mono">{avgScore} avg</span>
       </div>
 
       <div className="flex justify-center">
@@ -139,7 +150,7 @@ export function RadarChart({ scores, personality }: RadarChartProps) {
 
           {/* Labels */}
           {metrics.map((m, i) => {
-            const p = getPoint(i, 125);
+            const p = getPoint(i, 130);
             return (
               <text
                 key={i}
@@ -148,7 +159,7 @@ export function RadarChart({ scores, personality }: RadarChartProps) {
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="hsl(var(--muted-foreground))"
-                fontSize="10"
+                fontSize="9"
                 fontFamily="'Space Grotesk', sans-serif"
                 fontWeight="500"
               >
@@ -179,6 +190,18 @@ export function RadarChart({ scores, personality }: RadarChartProps) {
             );
           })}
         </svg>
+      </div>
+
+      {/* Shape analysis */}
+      <div className="flex items-center justify-between mt-2 pt-3 border-t border-border/50">
+        <div>
+          <p className="text-xs font-medium text-foreground">{shapeLabel}</p>
+          <p className="text-[10px] text-muted-foreground">Balance: {balance}% • Range: {minMetric}–{maxMetric}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-lg font-bold font-mono text-primary">{avgScore}</p>
+          <p className="text-[10px] text-muted-foreground">Avg Score</p>
+        </div>
       </div>
     </div>
   );

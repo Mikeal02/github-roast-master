@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Zap, Star, Shield, Crown } from 'lucide-react';
+import { Trophy, Zap, Star, Shield, Crown, TrendingUp } from 'lucide-react';
 
 interface XPLevelSystemProps {
   scores: any;
@@ -9,6 +9,9 @@ interface XPLevelSystemProps {
   followers: number;
   currentStreak: number;
   languages: Record<string, number>;
+  totalForks?: number;
+  orgCount?: number;
+  publicGists?: number;
 }
 
 interface Level {
@@ -33,8 +36,8 @@ const levels: Level[] = [
   { level: 10, title: 'Mythical', minXP: 35000, icon: <Trophy className="w-4 h-4" />, color: 'hsl(var(--primary))', gradient: 'from-primary via-secondary to-accent' },
 ];
 
-export function XPLevelSystem({ scores, totalStars, totalRepos, followers, currentStreak, languages }: XPLevelSystemProps) {
-  const { totalXP, breakdown, currentLevel, nextLevel, progress } = useMemo(() => {
+export function XPLevelSystem({ scores, totalStars, totalRepos, followers, currentStreak, languages, totalForks = 0, orgCount = 0, publicGists = 0 }: XPLevelSystemProps) {
+  const { totalXP, breakdown, currentLevel, nextLevel, progress, maxXP } = useMemo(() => {
     const breakdown = [
       { label: 'Overall Score', xp: (scores?.overall?.score || 0) * 100, icon: '🎯' },
       { label: 'Stars Earned', xp: Math.min(totalStars * 2, 8000), icon: '⭐' },
@@ -44,9 +47,14 @@ export function XPLevelSystem({ scores, totalStars, totalRepos, followers, curre
       { label: 'Language Mastery', xp: Object.keys(languages).length * 200, icon: '💻' },
       { label: 'Activity Score', xp: (scores?.activity?.score || 0) * 50, icon: '⚡' },
       { label: 'Code Quality', xp: (scores?.codeQuality?.score || 0) * 40, icon: '🛡️' },
+      { label: 'Forks Received', xp: Math.min(totalForks * 3, 4000), icon: '🍴' },
+      { label: 'Collaboration', xp: (scores?.collaboration?.score || 0) * 30, icon: '🤝' },
+      { label: 'Organizations', xp: orgCount * 300, icon: '🏢' },
+      { label: 'Gist Knowledge', xp: Math.min(publicGists * 50, 1500), icon: '📝' },
     ];
 
     const totalXP = breakdown.reduce((s, b) => s + b.xp, 0);
+    const maxXP = levels[levels.length - 1].minXP;
 
     let currentLevel = levels[0];
     let nextLevel: Level | null = levels[1];
@@ -63,8 +71,8 @@ export function XPLevelSystem({ scores, totalStars, totalRepos, followers, curre
       ? ((totalXP - currentLevel.minXP) / (nextLevel.minXP - currentLevel.minXP)) * 100
       : 100;
 
-    return { totalXP, breakdown, currentLevel, nextLevel, progress };
-  }, [scores, totalStars, totalRepos, followers, currentStreak, languages]);
+    return { totalXP, breakdown, currentLevel, nextLevel, progress, maxXP };
+  }, [scores, totalStars, totalRepos, followers, currentStreak, languages, totalForks, orgCount, publicGists]);
 
   return (
     <div className="score-card">
@@ -86,7 +94,7 @@ export function XPLevelSystem({ scores, totalStars, totalRepos, followers, curre
         >
           <span className="text-2xl font-black text-primary-foreground">{currentLevel.level}</span>
         </motion.div>
-        <div>
+        <div className="flex-1">
           <motion.div
             className="text-xl font-bold text-foreground"
             initial={{ opacity: 0, x: -20 }}
@@ -97,6 +105,9 @@ export function XPLevelSystem({ scores, totalStars, totalRepos, followers, curre
           <p className="text-xs text-muted-foreground">
             Level {currentLevel.level} / 10
             {nextLevel && ` • ${(nextLevel.minXP - totalXP).toLocaleString()} XP to ${nextLevel.title}`}
+          </p>
+          <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+            {Math.round((totalXP / Math.max(maxXP, 1)) * 100)}% to max level
           </p>
         </div>
       </div>
@@ -120,22 +131,17 @@ export function XPLevelSystem({ scores, totalStars, totalRepos, followers, curre
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
             />
           </motion.div>
-          {/* Level markers */}
-          {nextLevel && levels.slice(currentLevel.level, currentLevel.level + 1).map((l) => (
-            <div
-              key={l.level}
-              className="absolute top-0 bottom-0 w-px bg-border"
-              style={{ left: '100%' }}
-            />
-          ))}
         </div>
       </div>
 
       {/* XP Breakdown */}
       <div className="space-y-2">
-        <p className="text-xs text-muted-foreground font-medium mb-2">XP Sources</p>
+        <p className="text-xs text-muted-foreground font-medium mb-2 flex items-center gap-1">
+          <TrendingUp className="w-3 h-3" /> XP Sources ({breakdown.filter(b => b.xp > 0).length} active)
+        </p>
         {breakdown
           .sort((a, b) => b.xp - a.xp)
+          .filter(b => b.xp > 0)
           .map((item, i) => (
           <motion.div
             key={item.label}
