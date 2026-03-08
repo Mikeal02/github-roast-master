@@ -38,14 +38,49 @@ serve(async (req) => {
     const now = new Date();
     const repoActivity = repos.map((r: any) => {
       const updatedAt = new Date(r.updated_at);
+      const createdAt = new Date(r.created_at);
       const daysSince = Math.floor((now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60 * 24));
-      return { name: r.name, daysSince, language: r.language, stars: r.stargazers_count, forks: r.forks_count, description: r.description };
+      return { 
+        name: r.name, daysSince, language: r.language, stars: r.stargazers_count, forks: r.forks_count, 
+        description: r.description, size: r.size || 0, created_at: r.created_at, updated_at: r.updated_at,
+        open_issues: r.open_issues_count || 0, topics: r.topics || [], hasLicense: !!r.license,
+      };
     });
     
     const mostRecentUpdate = repoActivity.length > 0 ? Math.min(...repoActivity.map((r: any) => r.daysSince)) : 999;
     const inactiveRepos = repoActivity.filter((r: any) => r.daysSince > 180).length;
     const avgRepoAge = repoActivity.length > 0 ? repoActivity.reduce((s: number, r: any) => s + r.daysSince, 0) / repoActivity.length : 0;
     
+    // === ENHANCED COMPUTED METRICS ===
+    const totalRepoSize = repos.reduce((s: number, r: any) => s + (r.size || 0), 0);
+    const avgRepoSize = repos.length > 0 ? totalRepoSize / repos.length : 0;
+    const forkToStarRatio = totalStars > 0 ? +(totalForks / totalStars).toFixed(2) : 0;
+    const avgStarsPerRepo = repos.length > 0 ? +(totalStars / repos.length).toFixed(1) : 0;
+    const reposWithLicense = repos.filter((r: any) => r.license).length;
+    const reposWithTopics = repos.filter((r: any) => r.topics && r.topics.length > 0).length;
+    const reposWithDescription = repos.filter((r: any) => r.description).length;
+    const medianStars = (() => {
+      const sorted = repos.map((r: any) => r.stargazers_count || 0).sort((a: number, b: number) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length ? (sorted.length % 2 ? sorted[mid] : +((sorted[mid - 1] + sorted[mid]) / 2).toFixed(1)) : 0;
+    })();
+    
+    // Language evolution by year
+    const languagesByYear: Record<number, Record<string, number>> = {};
+    repos.forEach((r: any) => {
+      const y = new Date(r.created_at).getFullYear();
+      if (!languagesByYear[y]) languagesByYear[y] = {};
+      if (r.language) languagesByYear[y][r.language] = (languagesByYear[y][r.language] || 0) + 1;
+    });
+    
+    // Repo size distribution
+    const sizeDistribution = {
+      tiny: repos.filter((r: any) => (r.size || 0) < 100).length,       // <100KB
+      small: repos.filter((r: any) => (r.size || 0) >= 100 && (r.size || 0) < 1000).length,   // 100KB-1MB
+      medium: repos.filter((r: any) => (r.size || 0) >= 1000 && (r.size || 0) < 10000).length, // 1MB-10MB
+      large: repos.filter((r: any) => (r.size || 0) >= 10000).length,    // 10MB+
+    };
+
     // Analyze events for activity patterns
     const eventTypes: Record<string, number> = {};
     const eventsByDay: Record<string, number> = {};
@@ -68,6 +103,21 @@ serve(async (req) => {
     
     const activeDays = Object.keys(eventsByDay).length;
     const totalEvents = events.length;
+    
+    // Enhanced event metrics
+    const weekendEvents = eventsByDayOfWeek[0] + eventsByDayOfWeek[6];
+    const weekdayEvents = totalEvents - weekendEvents;
+    const weekendRatio = totalEvents > 0 ? +(weekendEvents / totalEvents * 100).toFixed(1) : 0;
+    const eventsPerActiveDay = activeDays > 0 ? +(totalEvents / activeDays).toFixed(1) : 0;
+    
+    // Event type breakdown percentages
+    const eventTypeBreakdown = Object.entries(eventTypes)
+      .sort((a, b) => b[1] - a[1])
+      .map(([type, count]) => ({
+        type: type.replace('Event', ''),
+        count,
+        percentage: +(count / totalEvents * 100).toFixed(1),
+      }));
     
     // Calculate streaks
     const sortedDates = Object.keys(eventsByDay).sort();
@@ -130,6 +180,10 @@ serve(async (req) => {
       ? commitMessages.reduce((s: number, m: string) => s + m.length, 0) / commitMessages.length
       : 0;
     
+    // Commit message quality indicators
+    const conventionalCommits = commitMessages.filter((m: string) => /^(feat|fix|chore|docs|style|refactor|test|build|ci|perf|revert)(\(.+\))?:/.test(m)).length;
+    const conventionalCommitRatio = commitMessages.length > 0 ? +(conventionalCommits / commitMessages.length * 100).toFixed(1) : 0;
+    
     const githubSummary = {
       username: user.login,
       name: user.name || user.login,
@@ -171,11 +225,26 @@ serve(async (req) => {
       commitMessagePatterns: {
         avgLength: Math.round(avgCommitMsgLength),
         sampleMessages: commitMessages.slice(0, 10),
+        conventionalCommitRatio,
       },
       hireable: user.hireable,
       twitterUsername: user.twitter_username,
       eventsByDayOfWeek: dayNames.map((d, i) => ({ day: d, count: eventsByDayOfWeek[i] })),
       eventsByHour: eventsByHour.map((c, h) => ({ hour: h, count: c })),
+      // Enhanced metrics
+      avgStarsPerRepo,
+      medianStars,
+      forkToStarRatio,
+      avgRepoSizeKB: Math.round(avgRepoSize),
+      totalRepoSizeMB: Math.round(totalRepoSize / 1024),
+      sizeDistribution,
+      reposWithLicense,
+      reposWithTopics,
+      reposWithDescriptionCount: reposWithDescription,
+      weekendRatio,
+      eventsPerActiveDay,
+      eventTypeBreakdown,
+      languagesByYear,
     };
 
     const systemPrompt = mode === 'recruiter' 
@@ -190,12 +259,12 @@ ${JSON.stringify(githubSummary, null, 2)}
 Return ONLY valid JSON (no markdown, no code blocks) with this structure:
 {
   "scores": {
-    "activity": { "score": <0-100>, "label": "<Critical/Weak/Decent/Strong/Elite>", "explanation": "<data-backed reason>" },
-    "documentation": { "score": <0-100>, "label": "<label>", "explanation": "<reason>" },
-    "popularity": { "score": <0-100>, "label": "<label>", "explanation": "<reason>" },
-    "diversity": { "score": <0-100>, "label": "<label>", "explanation": "<reason>" },
-    "codeQuality": { "score": <0-100>, "label": "<label>", "explanation": "<reason based on commit messages, repo structure, topics>" },
-    "collaboration": { "score": <0-100>, "label": "<label>", "explanation": "<reason based on orgs, PRs, issues, forks>" },
+    "activity": { "score": <0-100>, "label": "<Critical/Weak/Decent/Strong/Elite>", "explanation": "<data-backed reason>", "subMetrics": { "recentActivity": <0-100>, "consistency": <0-100>, "eventDiversity": <0-100> } },
+    "documentation": { "score": <0-100>, "label": "<label>", "explanation": "<reason>", "subMetrics": { "readmeQuality": <0-100>, "descriptions": <0-100>, "licensing": <0-100> } },
+    "popularity": { "score": <0-100>, "label": "<label>", "explanation": "<reason>", "subMetrics": { "starGrowth": <0-100>, "forkEngagement": <0-100>, "communitySize": <0-100> } },
+    "diversity": { "score": <0-100>, "label": "<label>", "explanation": "<reason>", "subMetrics": { "languageBreadth": <0-100>, "domainRange": <0-100>, "topicVariety": <0-100> } },
+    "codeQuality": { "score": <0-100>, "label": "<label>", "explanation": "<reason based on commit messages, repo structure, topics>", "subMetrics": { "commitMessages": <0-100>, "projectStructure": <0-100>, "bestPractices": <0-100> } },
+    "collaboration": { "score": <0-100>, "label": "<label>", "explanation": "<reason based on orgs, PRs, issues, forks>", "subMetrics": { "teamwork": <0-100>, "openSource": <0-100>, "mentoring": <0-100> } },
     "overall": { "score": <0-100>, "label": "<label>", "explanation": "<comprehensive assessment>" }
   },
   "archetype": {
@@ -241,13 +310,23 @@ Return ONLY valid JSON (no markdown, no code blocks) with this structure:
     "growthAreas": ["<2-3 areas for improvement>"],
     "projectComplexityScore": <0-100>,
     "commitQualityScore": <0-100>,
-    "openSourceEngagement": "<Low/Medium/High/Very High>"
+    "openSourceEngagement": "<Low/Medium/High/Very High>",
+    "techTrend": "<description of how their tech choices have evolved over time>",
+    "architectureStyle": "<Monolith Builder / Microservices Fan / Script Kiddie / Library Author / Framework Consumer>"
   },
   "careerInsights": {
     "idealRoles": ["<3-4 job titles that would be a good fit>"],
     "teamFit": "<Solo Warrior / Small Team / Large Enterprise / Open Source Community>",
     "workStyle": "<description of their work patterns and style>",
-    "growthTrajectory": "<Rising Star / Steady Contributor / Plateaued / Declining>"
+    "growthTrajectory": "<Rising Star / Steady Contributor / Plateaued / Declining>",
+    "salaryTier": "<Entry / Mid-Market / Senior / Staff+ / Distinguished>",
+    "industryFit": ["<2-3 industries that match their profile>"]
+  },
+  "healthMetrics": {
+    "workLifeBalance": <0-100>,
+    "weekendCodingPercent": ${weekendRatio},
+    "sustainabilityScore": <0-100>,
+    "diversificationIndex": <0-100>
   }
 }
 
@@ -331,6 +410,29 @@ IMPORTANT: Return ONLY the JSON object.`;
     analysisResult.topTopics = topTopics;
     analysisResult.originalRepos = originalRepos;
     analysisResult.forkedRepos = forkedRepos;
+    
+    // Enhanced computed data
+    analysisResult.avgStarsPerRepo = avgStarsPerRepo;
+    analysisResult.medianStars = medianStars;
+    analysisResult.forkToStarRatio = forkToStarRatio;
+    analysisResult.avgRepoSizeKB = Math.round(avgRepoSize);
+    analysisResult.totalRepoSizeMB = Math.round(totalRepoSize / 1024);
+    analysisResult.sizeDistribution = sizeDistribution;
+    analysisResult.reposWithLicense = reposWithLicense;
+    analysisResult.reposWithTopics = reposWithTopics;
+    analysisResult.reposWithDescription = reposWithDescription;
+    analysisResult.totalOpenIssues = totalOpenIssues;
+    analysisResult.weekendRatio = weekendRatio;
+    analysisResult.eventsPerActiveDay = eventsPerActiveDay;
+    analysisResult.eventTypeBreakdown = eventTypeBreakdown;
+    analysisResult.languagesByYear = languagesByYear;
+    analysisResult.conventionalCommitRatio = conventionalCommitRatio;
+    analysisResult.inactiveRepos = inactiveRepos;
+    analysisResult.publicGists = publicGists;
+    analysisResult.orgCount = orgNames.length;
+    analysisResult.organizations = orgNames;
+    analysisResult.licenseCounts = licenseCounts;
+    analysisResult.starredInterests = Object.entries(starredLangCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
     
     // Top repositories with full data for deep dive
     const topRepos = repos
