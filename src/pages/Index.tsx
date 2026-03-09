@@ -725,15 +725,26 @@ const Index = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="mt-20 text-center text-xs text-muted-foreground"
+          className="mt-24 text-center text-xs text-muted-foreground pb-8"
         >
-          <div className="elite-divider mb-6" />
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <span className="w-1 h-1 rounded-full bg-primary/40" />
-            <p>Made with {isRecruiterMode ? '💼' : '🔥'} and AI magic</p>
-            <span className="w-1 h-1 rounded-full bg-primary/40" />
+          <div className="elite-divider mb-8" />
+          <div className="glass-panel-static p-6 max-w-md mx-auto">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <span className="font-semibold text-foreground text-sm">RoastMyGit</span>
+            </div>
+            <p className="text-muted-foreground/70 mb-3">
+              The internet&apos;s most comprehensive GitHub profile analyzer.
+              <br />Made with {isRecruiterMode ? '💼' : '🔥'} and AI magic.
+            </p>
+            <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground/50">
+              <span>GitHub API</span>
+              <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
+              <span>Gemini AI</span>
+              <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
+              <span>14 Analysis Tabs</span>
+            </div>
           </div>
-          <p className="text-muted-foreground/50">Powered by GitHub API + AI Models</p>
         </motion.footer>
       </div>
     </div>
