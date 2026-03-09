@@ -144,6 +144,9 @@ const Index = () => {
                   user={userData}
                   orgCount={aiAnalysis.orgCount || 0}
                   gistCount={aiAnalysis.publicGists || 0}
+                  socialAccounts={socialAccounts}
+                  totalStars={aiAnalysis.totalStars || 0}
+                  totalForks={aiAnalysis.totalForks || 0}
                 />
               </ScrollReveal>
 
