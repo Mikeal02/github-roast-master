@@ -18,30 +18,45 @@ export async function fetchGitHubUser(username: string) {
   return response.json();
 }
 
+// Fetch ALL repos with pagination (up to 300)
 export async function fetchUserRepos(username: string, perPage = 100) {
-  const response = await fetch(
-    `${GITHUB_API_BASE}/users/${username}/repos?per_page=${perPage}&sort=updated`
-  );
+  const allRepos: any[] = [];
+  const maxPages = 3;
   
-  if (!response.ok) {
-    throw new Error('Failed to fetch repositories');
+  for (let page = 1; page <= maxPages; page++) {
+    const response = await fetch(
+      `${GITHUB_API_BASE}/users/${username}/repos?per_page=${perPage}&sort=updated&page=${page}`
+    );
+    
+    if (!response.ok) {
+      if (page === 1) throw new Error('Failed to fetch repositories');
+      break;
+    }
+    
+    const repos = await response.json();
+    if (!repos.length) break;
+    allRepos.push(...repos);
+    if (repos.length < perPage) break;
   }
   
-  return response.json();
+  return allRepos;
 }
 
 export async function fetchUserEvents(username: string, perPage = 100) {
   try {
-    const response = await fetch(
-      `${GITHUB_API_BASE}/users/${username}/events/public?per_page=${perPage}`
-    );
-    
-    if (!response.ok) {
-      console.warn('Failed to fetch user events');
-      return [];
+    // Fetch multiple pages for richer activity data
+    const allEvents: any[] = [];
+    for (let page = 1; page <= 3; page++) {
+      const response = await fetch(
+        `${GITHUB_API_BASE}/users/${username}/events/public?per_page=${perPage}&page=${page}`
+      );
+      if (!response.ok) break;
+      const events = await response.json();
+      if (!events.length) break;
+      allEvents.push(...events);
+      if (events.length < perPage) break;
     }
-    
-    return response.json();
+    return allEvents;
   } catch {
     return [];
   }
@@ -50,11 +65,7 @@ export async function fetchUserEvents(username: string, perPage = 100) {
 export async function fetchUserOrgs(username: string) {
   try {
     const response = await fetch(`${GITHUB_API_BASE}/users/${username}/orgs`);
-    
-    if (!response.ok) {
-      return [];
-    }
-    
+    if (!response.ok) return [];
     return response.json();
   } catch {
     return [];
@@ -64,11 +75,7 @@ export async function fetchUserOrgs(username: string) {
 export async function fetchUserGists(username: string) {
   try {
     const response = await fetch(`${GITHUB_API_BASE}/users/${username}/gists?per_page=30`);
-    
-    if (!response.ok) {
-      return [];
-    }
-    
+    if (!response.ok) return [];
     return response.json();
   } catch {
     return [];
@@ -78,11 +85,7 @@ export async function fetchUserGists(username: string) {
 export async function fetchRepoContributors(owner: string, repo: string) {
   try {
     const response = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}/contributors?per_page=10`);
-    
-    if (!response.ok) {
-      return [];
-    }
-    
+    if (!response.ok) return [];
     return response.json();
   } catch {
     return [];
@@ -150,6 +153,28 @@ export async function checkReadmeExists(owner: string, repo: string) {
   }
 }
 
+// Fetch received events (stars, follows received)
+export async function fetchUserReceivedEvents(username: string, perPage = 100) {
+  try {
+    const response = await fetch(`${GITHUB_API_BASE}/users/${username}/received_events?per_page=${perPage}`);
+    if (!response.ok) return [];
+    return response.json();
+  } catch {
+    return [];
+  }
+}
+
+// Fetch user's social accounts
+export async function fetchUserSocialAccounts(username: string) {
+  try {
+    const response = await fetch(`${GITHUB_API_BASE}/users/${username}/social_accounts`);
+    if (!response.ok) return [];
+    return response.json();
+  } catch {
+    return [];
+  }
+}
+
 export function calculateDaysSince(dateString: string): number {
   const date = new Date(dateString);
   const now = new Date();
@@ -165,7 +190,6 @@ export function formatDate(dateString: string) {
   });
 }
 
-// Parse events to get contribution activity
 export function parseEventsToActivity(events: any[]) {
   const activityByDate: Record<string, number> = {};
   const eventTypes: Record<string, number> = {};
@@ -179,7 +203,6 @@ export function parseEventsToActivity(events: any[]) {
   return { activityByDate, eventTypes };
 }
 
-// Calculate coding streaks from events
 export function calculateCodingStreaks(events: any[]) {
   if (!events.length) return { currentStreak: 0, longestStreak: 0, totalActiveDays: 0 };
   
@@ -207,7 +230,6 @@ export function calculateCodingStreaks(events: any[]) {
   }
   longestStreak = Math.max(longestStreak, tempStreak);
   
-  // Check if current streak is still active
   const today = new Date().toISOString().split('T')[0];
   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
   
