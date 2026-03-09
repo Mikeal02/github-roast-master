@@ -100,7 +100,7 @@ export function GitHubWrapped({ username, userData, aiAnalysis, onClose }: Wrapp
                 initial={{ opacity: 0, y: 30, scale: 0.8 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ delay: 0.3 + i * 0.15, type: 'spring' }}
-                className="score-card text-center p-6"
+                className="glass-panel text-center p-6"
               >
                 <div className="flex justify-center text-primary mb-3">{stat.icon}</div>
                 <p className="text-3xl font-bold font-mono text-gradient">{stat.value}</p>
