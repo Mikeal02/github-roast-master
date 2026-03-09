@@ -43,7 +43,7 @@ import { XPLevelSystem } from '@/components/XPLevelSystem';
 import { TimeMachine } from '@/components/TimeMachine';
 import { DeveloperGlobe } from '@/components/DeveloperGlobe';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
-import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred } from '@/lib/githubApi';
+import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred, fetchUserSocialAccounts } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -58,6 +58,7 @@ const Index = () => {
   const [userOrgs, setUserOrgs] = useState<any[]>([]);
   const [userRepos, setUserRepos] = useState<any[]>([]);
   const [userGists, setUserGists] = useState<any[]>([]);
+  const [socialAccounts, setSocialAccounts] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const resultsRef = useRef<HTMLDivElement>(null);
   const [showWrapped, setShowWrapped] = useState(false);
@@ -77,13 +78,14 @@ const Index = () => {
     setActiveTab('overview');
 
     try {
-      const [user, repos, events, orgs, gists, starred] = await Promise.all([
+      const [user, repos, events, orgs, gists, starred, socials] = await Promise.all([
         fetchGitHubUser(username),
         fetchUserRepos(username, 100),
         fetchUserEvents(username, 100),
         fetchUserOrgs(username),
         fetchUserGists(username),
         fetchUserStarred(username, 30),
+        fetchUserSocialAccounts(username),
       ]);
 
       setUserData(user);
@@ -91,6 +93,7 @@ const Index = () => {
       setUserRepos(repos);
       setUserOrgs(orgs);
       setUserGists(gists);
+      setSocialAccounts(socials);
 
       toast.info('🤖 AI is performing deep analysis...');
 
@@ -141,6 +144,9 @@ const Index = () => {
                   user={userData}
                   orgCount={aiAnalysis.orgCount || 0}
                   gistCount={aiAnalysis.publicGists || 0}
+                  socialAccounts={socialAccounts}
+                  totalStars={aiAnalysis.totalStars || 0}
+                  totalForks={aiAnalysis.totalForks || 0}
                 />
               </ScrollReveal>
 
@@ -234,6 +240,10 @@ const Index = () => {
                       forkToStarRatio: aiAnalysis.forkToStarRatio,
                       totalRepoSizeMB: aiAnalysis.totalRepoSizeMB,
                       totalOpenIssues: aiAnalysis.totalOpenIssues,
+                      medianStars: aiAnalysis.medianStars,
+                      reposWithLicense: aiAnalysis.reposWithLicense,
+                      weekendRatio: aiAnalysis.weekendRatio,
+                      eventsPerActiveDay: aiAnalysis.eventsPerActiveDay,
                     }}
                     isRecruiterMode={isRecruiterMode}
                   />

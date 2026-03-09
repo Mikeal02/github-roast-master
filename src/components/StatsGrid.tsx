@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Star, GitFork, Code2, Clock, FileText, Archive, Scale, HardDrive, AlertCircle, Briefcase, FileCode, Box } from 'lucide-react';
+import { Star, GitFork, Code2, Clock, FileText, Scale, HardDrive, AlertCircle, Box, TrendingUp, Users, Percent } from 'lucide-react';
 import { motion, useInView } from 'framer-motion';
 import { AnimatedCounter } from './AnimatedCounter';
 
@@ -20,16 +20,40 @@ interface StatsGridProps {
     totalOpenIssues?: number;
     orgCount?: number;
     publicGists?: number;
+    medianStars?: number;
+    reposWithLicense?: number;
+    weekendRatio?: number;
+    eventsPerActiveDay?: number;
   };
   isRecruiterMode?: boolean;
 }
 
-const getActivityTimeLabel = (days: number): string => {
-  if (days <= 7) return 'Active within last 7 days';
-  if (days <= 30) return 'Active within last month';
-  if (days <= 90) return 'No activity in 3 months';
-  if (days <= 180) return 'No activity in 6 months';
-  return 'No activity in 6+ months';
+const getActivityTimeLabel = (days: number): { label: string; color: string } => {
+  if (days <= 7) return { label: 'Active this week', color: 'text-terminal-green' };
+  if (days <= 30) return { label: 'Active this month', color: 'text-terminal-green' };
+  if (days <= 90) return { label: 'Quiet (3 months)', color: 'text-terminal-yellow' };
+  if (days <= 180) return { label: 'Dormant (6 months)', color: 'text-accent' };
+  return { label: 'Hibernating (6m+)', color: 'text-terminal-red' };
+};
+
+const getHealthGrade = (analysis: StatsGridProps['analysis']) => {
+  let score = 0;
+  const totalRepos = analysis.totalRepos || 1;
+  
+  // Description coverage
+  score += ((analysis.reposWithDescription || 0) / totalRepos) * 25;
+  // License coverage
+  score += ((analysis.reposWithLicense || 0) / totalRepos) * 20;
+  // Recency
+  score += Math.max(0, 25 - (analysis.daysSinceLastUpdate || 0) / 4);
+  // Stars per repo
+  score += Math.min(30, (analysis.avgStarsPerRepo || 0) * 3);
+  
+  if (score >= 80) return { grade: 'A', color: 'text-terminal-green', bg: 'bg-terminal-green/10' };
+  if (score >= 60) return { grade: 'B', color: 'text-terminal-cyan', bg: 'bg-terminal-cyan/10' };
+  if (score >= 40) return { grade: 'C', color: 'text-terminal-yellow', bg: 'bg-terminal-yellow/10' };
+  if (score >= 20) return { grade: 'D', color: 'text-accent', bg: 'bg-accent/10' };
+  return { grade: 'F', color: 'text-terminal-red', bg: 'bg-terminal-red/10' };
 };
 
 export function StatsGrid({ analysis, isRecruiterMode = false }: StatsGridProps) {
@@ -37,7 +61,8 @@ export function StatsGrid({ analysis, isRecruiterMode = false }: StatsGridProps)
   const isInView = useInView(ref, { once: true, amount: 0.1 });
 
   const daysSinceLastUpdate = analysis.daysSinceLastUpdate || 0;
-  const activityLabel = getActivityTimeLabel(daysSinceLastUpdate);
+  const activityInfo = getActivityTimeLabel(daysSinceLastUpdate);
+  const health = getHealthGrade(analysis);
 
   const totalRepos = analysis.totalRepos || 0;
   const totalStars = analysis.totalStars || 0;
@@ -52,51 +77,75 @@ export function StatsGrid({ analysis, isRecruiterMode = false }: StatsGridProps)
 
   const originalRepos = analysis.originalRepos || 0;
   const forkedRepos = analysis.forkedRepos || 0;
+  const originalRatio = totalRepos > 0 ? Math.round((originalRepos / totalRepos) * 100) : 0;
 
   const stats = [
-    { label: 'Total Stars', value: totalStars, icon: <Star className="w-4 h-4" />, color: 'text-terminal-yellow', isNumeric: true },
+    { label: 'Total Stars', value: totalStars, icon: <Star className="w-4 h-4" />, color: 'text-terminal-yellow', isNumeric: true, highlight: totalStars >= 100 },
     { label: 'Total Forks', value: totalForks, icon: <GitFork className="w-4 h-4" />, color: 'text-terminal-cyan', isNumeric: true },
-    { label: 'Avg Stars/Repo', value: avgStars, icon: <Star className="w-4 h-4" />, color: 'text-terminal-purple', isNumeric: true, decimals: 1 },
-    { label: 'Fork/Star Ratio', value: analysis.forkToStarRatio ?? (totalStars > 0 ? +(totalForks/totalStars).toFixed(2) : 0), icon: <Scale className="w-4 h-4" />, color: 'text-accent', isNumeric: true, decimals: 2 },
+    { label: 'Avg Stars/Repo', value: avgStars, icon: <TrendingUp className="w-4 h-4" />, color: 'text-terminal-purple', isNumeric: true, decimals: 1 },
+    { label: 'Median Stars', value: analysis.medianStars ?? 0, icon: <Star className="w-4 h-4" />, color: 'text-accent', isNumeric: true },
+    { label: 'Fork/Star Ratio', value: analysis.forkToStarRatio ?? 0, icon: <Scale className="w-4 h-4" />, color: 'text-secondary', isNumeric: true, decimals: 2 },
     { label: 'Top Language', value: mostUsedLanguage, icon: <Code2 className="w-4 h-4" />, color: 'text-primary' },
     { label: 'Languages Used', value: languageEntries.length, icon: <Code2 className="w-4 h-4" />, color: 'text-terminal-purple', isNumeric: true },
-    { label: 'Original Repos', value: originalRepos, icon: <Box className="w-4 h-4" />, color: 'text-terminal-green', isNumeric: true },
+    { label: 'Original Repos', value: originalRepos, icon: <Box className="w-4 h-4" />, color: 'text-terminal-green', isNumeric: true, suffix: ` (${originalRatio}%)` },
     { label: 'Forked Repos', value: forkedRepos, icon: <GitFork className="w-4 h-4" />, color: 'text-muted-foreground', isNumeric: true },
-    { label: 'Activity Status', value: activityLabel, icon: <Clock className="w-4 h-4" />, color: daysSinceLastUpdate <= 30 ? 'text-terminal-green' : 'text-terminal-red', isLong: true },
-    { label: isRecruiterMode ? 'Documented Repos' : 'With Descriptions', value: `${analysis.reposWithDescription || 0}/${totalRepos}`, icon: <FileText className="w-4 h-4" />, color: 'text-secondary' },
+    { label: 'With Descriptions', value: `${analysis.reposWithDescription || 0}/${totalRepos}`, icon: <FileText className="w-4 h-4" />, color: 'text-secondary' },
     { label: 'Total Codebase', value: analysis.totalRepoSizeMB ?? 0, icon: <HardDrive className="w-4 h-4" />, color: 'text-terminal-cyan', isNumeric: true, suffix: ' MB' },
     { label: 'Open Issues', value: analysis.totalOpenIssues ?? 0, icon: <AlertCircle className="w-4 h-4" />, color: 'text-terminal-yellow', isNumeric: true },
+    { label: 'Licensed', value: `${analysis.reposWithLicense ?? 0}/${totalRepos}`, icon: <Scale className="w-4 h-4" />, color: 'text-terminal-green' },
+    { label: 'Weekend Activity', value: `${analysis.weekendRatio ?? 0}%`, icon: <Percent className="w-4 h-4" />, color: 'text-terminal-purple' },
+    { label: 'Events/Active Day', value: analysis.eventsPerActiveDay ?? 0, icon: <TrendingUp className="w-4 h-4" />, color: 'text-primary', isNumeric: true, decimals: 1 },
   ];
 
   return (
-    <div ref={ref} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      {stats.map((stat, index) => (
-        <motion.div
-          key={stat.label}
-          initial={{ opacity: 0, y: 20, scale: 0.9 }}
-          animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
-          transition={{ delay: index * 0.06, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          whileHover={{ y: -3, transition: { duration: 0.2 } }}
-          className={`score-card text-center py-3 ${stat.isLong ? 'col-span-2 sm:col-span-2' : ''}`}
-        >
-          <div className={`flex justify-center mb-2 ${stat.color}`}>
-            {stat.icon}
+    <div ref={ref} className="space-y-3">
+      {/* Health + Activity header */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={isInView ? { opacity: 1, y: 0 } : {}}
+        className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50"
+      >
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-xl ${health.bg} flex items-center justify-center`}>
+            <span className={`text-lg font-bold font-mono ${health.color}`}>{health.grade}</span>
           </div>
-          <div className={`font-bold font-mono text-foreground ${stat.isLong ? 'text-sm' : 'text-lg'}`}>
-            {stat.isNumeric ? (
-              <>
-                <AnimatedCounter value={stat.value as number} decimals={(stat as any).decimals || 0} />
-                {(stat as any).suffix || ''}
-              </>
-            ) : (
-              stat.value
-            )}
+          <div>
+            <p className="text-xs font-semibold text-foreground">Repo Health Grade</p>
+            <p className="text-[10px] text-muted-foreground">Based on docs, licenses, activity & engagement</p>
           </div>
-          <div className="text-xs text-muted-foreground">
-            {stat.label}
-          </div>
-        </motion.div>
-      ))}
+        </div>
+        <div className="text-right">
+          <p className={`text-xs font-semibold ${activityInfo.color}`}>{activityInfo.label}</p>
+          <p className="text-[10px] text-muted-foreground">{daysSinceLastUpdate}d since last update</p>
+        </div>
+      </motion.div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+        {stats.map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 15, scale: 0.95 }}
+            animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+            transition={{ delay: index * 0.04, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            whileHover={{ y: -2, transition: { duration: 0.15 } }}
+            className={`score-card text-center py-2.5 px-1.5 ${stat.highlight ? 'ring-1 ring-terminal-yellow/30' : ''}`}
+          >
+            <div className={`flex justify-center mb-1.5 ${stat.color}`}>{stat.icon}</div>
+            <div className="font-bold font-mono text-foreground text-sm">
+              {stat.isNumeric ? (
+                <>
+                  <AnimatedCounter value={stat.value as number} decimals={(stat as any).decimals || 0} />
+                  {(stat as any).suffix || ''}
+                </>
+              ) : (
+                <span className="text-xs">{stat.value}</span>
+              )}
+            </div>
+            <div className="text-[9px] text-muted-foreground leading-tight mt-0.5">{stat.label}</div>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }

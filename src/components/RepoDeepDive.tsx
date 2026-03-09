@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { GitFork, Star, Code2, ExternalLink, ChevronDown, ChevronUp, Users, Calendar, FileText, Tag } from 'lucide-react';
+import { GitFork, Star, Code2, ExternalLink, ChevronDown, ChevronUp, Users, Calendar, FileText, Tag, Heart, Clock, Globe } from 'lucide-react';
 import { fetchRepoLanguages, fetchRepoCommits, fetchRepoContributors, formatDate } from '@/lib/githubApi';
-import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Repository {
@@ -20,6 +20,10 @@ interface Repository {
   topics?: string[];
   license?: { name: string } | null;
   watchers_count?: number;
+  healthScore?: number;
+  ageDays?: number;
+  lastUpdateDays?: number;
+  hasHomepage?: boolean;
 }
 
 interface RepoDeepDiveProps {
@@ -34,7 +38,21 @@ const languageColors: Record<string, string> = {
   Kotlin: '#7F52FF', Dart: '#00B4AB', HTML: '#E34F26', CSS: '#1572B6', Shell: '#89e051',
 };
 
-function RepoDetail({ repo, username }: { repo: Repository; username: string }) {
+const getHealthColor = (score: number) => {
+  if (score >= 75) return { text: 'text-terminal-green', bg: 'bg-terminal-green/15', border: 'border-terminal-green/30' };
+  if (score >= 50) return { text: 'text-terminal-cyan', bg: 'bg-terminal-cyan/15', border: 'border-terminal-cyan/30' };
+  if (score >= 25) return { text: 'text-terminal-yellow', bg: 'bg-terminal-yellow/15', border: 'border-terminal-yellow/30' };
+  return { text: 'text-terminal-red', bg: 'bg-terminal-red/15', border: 'border-terminal-red/30' };
+};
+
+const getRecencyLabel = (days: number) => {
+  if (days <= 7) return { label: 'Active', color: 'text-terminal-green' };
+  if (days <= 30) return { label: 'Recent', color: 'text-terminal-cyan' };
+  if (days <= 180) return { label: 'Stale', color: 'text-terminal-yellow' };
+  return { label: 'Dormant', color: 'text-terminal-red' };
+};
+
+function RepoDetail({ repo, username, rank }: { repo: Repository; username: string; rank: number }) {
   const [expanded, setExpanded] = useState(false);
   const [languages, setLanguages] = useState<Record<string, number> | null>(null);
   const [commits, setCommits] = useState<any[] | null>(null);
@@ -42,10 +60,7 @@ function RepoDetail({ repo, username }: { repo: Repository; username: string }) 
   const [loading, setLoading] = useState(false);
 
   const handleExpand = async () => {
-    if (expanded) {
-      setExpanded(false);
-      return;
-    }
+    if (expanded) { setExpanded(false); return; }
     setExpanded(true);
     if (!languages) {
       setLoading(true);
@@ -62,189 +77,217 @@ function RepoDetail({ repo, username }: { repo: Repository; username: string }) 
   };
 
   const totalBytes = languages ? Object.values(languages).reduce((a, b) => a + b, 0) : 0;
+  const healthStyle = repo.healthScore !== undefined ? getHealthColor(repo.healthScore) : null;
+  const recency = repo.lastUpdateDays !== undefined ? getRecencyLabel(repo.lastUpdateDays) : null;
 
   return (
-    <div className="border border-border/50 rounded-lg overflow-hidden hover:border-primary/30 transition-colors">
-      <button
-        onClick={handleExpand}
-        className="w-full p-4 flex items-center justify-between text-left hover:bg-muted/30 transition-colors"
-      >
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <Code2 className="w-4 h-4 text-primary shrink-0" />
-            <h4 className="font-semibold text-foreground truncate">{repo.name}</h4>
-            {repo.language && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                {repo.language}
-              </span>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: rank * 0.05 }}
+      className="border border-border/50 rounded-xl overflow-hidden hover:border-primary/30 transition-all"
+    >
+      <button onClick={handleExpand}
+        className="w-full p-4 flex items-center justify-between text-left hover:bg-muted/20 transition-colors gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <span className="text-xs font-mono text-muted-foreground shrink-0 w-6">#{rank}</span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+              <Code2 className="w-4 h-4 text-primary shrink-0" />
+              <h4 className="font-semibold text-foreground truncate">{repo.name}</h4>
+              {repo.language && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: languageColors[repo.language] || '#888' }} />
+                  {repo.language}
+                </span>
+              )}
+              {recency && (
+                <span className={`text-[9px] font-medium ${recency.color}`}>{recency.label}</span>
+              )}
+            </div>
+            {repo.description && (
+              <p className="text-xs text-muted-foreground line-clamp-1">{repo.description}</p>
             )}
           </div>
-          {repo.description && (
-            <p className="text-xs text-muted-foreground line-clamp-1 ml-6">{repo.description}</p>
-          )}
         </div>
-        <div className="flex items-center gap-3 shrink-0 ml-4">
+        <div className="flex items-center gap-3 shrink-0">
+          {healthStyle && repo.healthScore !== undefined && (
+            <div className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border ${healthStyle.bg} ${healthStyle.border} ${healthStyle.text}`}>
+              <Heart className="w-2.5 h-2.5" />{repo.healthScore}
+            </div>
+          )}
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Star className="w-3 h-3 text-terminal-yellow" /> {repo.stars}
+            <Star className="w-3 h-3 text-terminal-yellow" /> {repo.stars.toLocaleString()}
           </span>
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <GitFork className="w-3 h-3 text-terminal-cyan" /> {repo.forks}
+            <GitFork className="w-3 h-3 text-terminal-cyan" /> {repo.forks.toLocaleString()}
           </span>
           {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
         </div>
       </button>
 
-      {expanded && (
-        <div className="border-t border-border/50 p-4 bg-muted/10 space-y-4">
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : (
-            <>
-              {/* Repo metadata */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {repo.created_at && (
-                  <div className="text-center p-2 bg-muted/30 rounded-lg">
-                    <Calendar className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
-                    <p className="text-xs text-muted-foreground">Created</p>
-                    <p className="text-xs font-mono text-foreground">{formatDate(repo.created_at)}</p>
-                  </div>
-                )}
-                {repo.updated_at && (
-                  <div className="text-center p-2 bg-muted/30 rounded-lg">
-                    <Calendar className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
-                    <p className="text-xs text-muted-foreground">Updated</p>
-                    <p className="text-xs font-mono text-foreground">{formatDate(repo.updated_at)}</p>
-                  </div>
-                )}
-                <div className="text-center p-2 bg-muted/30 rounded-lg">
-                  <FileText className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
-                  <p className="text-xs text-muted-foreground">Size</p>
-                  <p className="text-xs font-mono text-foreground">{repo.size ? `${(repo.size / 1024).toFixed(1)} MB` : 'N/A'}</p>
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <div className="border-t border-border/50 p-4 bg-muted/5 space-y-4">
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
-                <div className="text-center p-2 bg-muted/30 rounded-lg">
-                  <Users className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
-                  <p className="text-xs text-muted-foreground">Issues</p>
-                  <p className="text-xs font-mono text-foreground">{repo.open_issues_count ?? 0}</p>
-                </div>
-              </div>
-
-              {/* Topics */}
-              {repo.topics && repo.topics.length > 0 && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Tag className="w-3 h-3" /> Topics</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {repo.topics.map(topic => (
-                      <span key={topic} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                        {topic}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Language breakdown */}
-              {languages && totalBytes > 0 && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2">Language Breakdown</p>
-                  <div className="flex h-3 rounded-full overflow-hidden bg-muted mb-2">
-                    {Object.entries(languages).sort((a, b) => b[1] - a[1]).map(([lang, bytes]) => (
-                      <div
-                        key={lang}
-                        className="h-full"
-                        style={{
-                          width: `${(bytes / totalBytes) * 100}%`,
-                          backgroundColor: languageColors[lang] || '#888',
-                        }}
-                        title={`${lang}: ${((bytes / totalBytes) * 100).toFixed(1)}%`}
-                      />
-                    ))}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {Object.entries(languages).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([lang, bytes]) => (
-                      <span key={lang} className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: languageColors[lang] || '#888' }} />
-                        {lang} {((bytes / totalBytes) * 100).toFixed(1)}%
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Recent commits */}
-              {commits && commits.length > 0 && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2">Recent Commits ({commits.length})</p>
-                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                    {commits.slice(0, 8).map((commit: any, i: number) => (
-                      <div key={i} className="flex items-start gap-2 text-xs p-2 bg-muted/20 rounded">
-                        <span className="text-primary font-mono shrink-0">{commit.sha?.slice(0, 7)}</span>
-                        <span className="text-foreground/80 truncate flex-1">{commit.commit?.message?.split('\n')[0]}</span>
-                        <span className="text-muted-foreground shrink-0">
-                          {commit.commit?.author?.date ? formatDate(commit.commit.author.date) : ''}
-                        </span>
+              ) : (
+                <>
+                  {/* Metadata grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                    {repo.created_at && (
+                      <div className="text-center p-2 bg-muted/30 rounded-lg">
+                        <Calendar className="w-3.5 h-3.5 text-muted-foreground mx-auto mb-1" />
+                        <p className="text-[9px] text-muted-foreground">Created</p>
+                        <p className="text-[10px] font-mono text-foreground">{formatDate(repo.created_at)}</p>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Contributors */}
-              {contributors && contributors.length > 0 && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2">Top Contributors</p>
-                  <TooltipProvider>
-                    <div className="flex -space-x-2">
-                      {contributors.slice(0, 8).map((c: any) => (
-                        <Tooltip key={c.id}>
-                          <TooltipTrigger>
-                            <img
-                              src={c.avatar_url}
-                              alt={c.login}
-                              className="w-8 h-8 rounded-full border-2 border-card hover:z-10 hover:scale-110 transition-transform"
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="font-semibold">@{c.login}</p>
-                            <p className="text-xs text-muted-foreground">{c.contributions} contributions</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      ))}
+                    )}
+                    {repo.updated_at && (
+                      <div className="text-center p-2 bg-muted/30 rounded-lg">
+                        <Clock className="w-3.5 h-3.5 text-muted-foreground mx-auto mb-1" />
+                        <p className="text-[9px] text-muted-foreground">Updated</p>
+                        <p className="text-[10px] font-mono text-foreground">{formatDate(repo.updated_at)}</p>
+                      </div>
+                    )}
+                    <div className="text-center p-2 bg-muted/30 rounded-lg">
+                      <FileText className="w-3.5 h-3.5 text-muted-foreground mx-auto mb-1" />
+                      <p className="text-[9px] text-muted-foreground">Size</p>
+                      <p className="text-[10px] font-mono text-foreground">{repo.size ? `${(repo.size / 1024).toFixed(1)} MB` : 'N/A'}</p>
                     </div>
-                  </TooltipProvider>
-                </div>
-              )}
+                    <div className="text-center p-2 bg-muted/30 rounded-lg">
+                      <Users className="w-3.5 h-3.5 text-muted-foreground mx-auto mb-1" />
+                      <p className="text-[9px] text-muted-foreground">Issues</p>
+                      <p className="text-[10px] font-mono text-foreground">{repo.open_issues_count ?? 0}</p>
+                    </div>
+                    {repo.ageDays !== undefined && (
+                      <div className="text-center p-2 bg-muted/30 rounded-lg">
+                        <Globe className="w-3.5 h-3.5 text-muted-foreground mx-auto mb-1" />
+                        <p className="text-[9px] text-muted-foreground">Age</p>
+                        <p className="text-[10px] font-mono text-foreground">{Math.floor(repo.ageDays / 365)}y {Math.floor((repo.ageDays % 365) / 30)}m</p>
+                      </div>
+                    )}
+                  </div>
 
-              <a
-                href={repo.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
-              >
-                <ExternalLink className="w-3 h-3" /> View on GitHub
-              </a>
-            </>
-          )}
-        </div>
-      )}
-    </div>
+                  {/* Topics */}
+                  {repo.topics && repo.topics.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Tag className="w-3 h-3" /> Topics</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {repo.topics.map(topic => (
+                          <span key={topic} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">{topic}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Language breakdown */}
+                  {languages && totalBytes > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-2">Language Breakdown</p>
+                      <div className="flex h-3 rounded-full overflow-hidden bg-muted mb-2">
+                        {Object.entries(languages).sort((a, b) => b[1] - a[1]).map(([lang, bytes]) => (
+                          <div key={lang} className="h-full" style={{
+                            width: `${(bytes / totalBytes) * 100}%`,
+                            backgroundColor: languageColors[lang] || '#888',
+                          }} title={`${lang}: ${((bytes / totalBytes) * 100).toFixed(1)}%`} />
+                        ))}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(languages).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([lang, bytes]) => (
+                          <span key={lang} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: languageColors[lang] || '#888' }} />
+                            {lang} {((bytes / totalBytes) * 100).toFixed(1)}%
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recent commits */}
+                  {commits && commits.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-2">Recent Commits ({commits.length})</p>
+                      <div className="space-y-1 max-h-48 overflow-y-auto">
+                        {commits.slice(0, 8).map((commit: any, i: number) => (
+                          <div key={i} className="flex items-start gap-2 text-xs p-2 bg-muted/20 rounded-lg">
+                            <span className="text-primary font-mono shrink-0">{commit.sha?.slice(0, 7)}</span>
+                            <span className="text-foreground/80 truncate flex-1">{commit.commit?.message?.split('\n')[0]}</span>
+                            <span className="text-muted-foreground shrink-0 text-[10px]">
+                              {commit.commit?.author?.date ? formatDate(commit.commit.author.date) : ''}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contributors */}
+                  {contributors && contributors.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-2">Top Contributors</p>
+                      <TooltipProvider>
+                        <div className="flex -space-x-2">
+                          {contributors.slice(0, 8).map((c: any) => (
+                            <Tooltip key={c.id}>
+                              <TooltipTrigger>
+                                <img src={c.avatar_url} alt={c.login}
+                                  className="w-8 h-8 rounded-full border-2 border-card hover:z-10 hover:scale-110 transition-transform" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-semibold">@{c.login}</p>
+                                <p className="text-xs text-muted-foreground">{c.contributions} contributions</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ))}
+                        </div>
+                      </TooltipProvider>
+                    </div>
+                  )}
+
+                  <a href={repo.url} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+                    <ExternalLink className="w-3 h-3" /> View on GitHub
+                  </a>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
 export function RepoDeepDive({ repositories, username }: RepoDeepDiveProps) {
   if (!repositories || repositories.length === 0) return null;
 
+  const avgHealth = repositories.reduce((s, r) => s + (r.healthScore || 0), 0) / repositories.length;
+  const healthStyle = getHealthColor(avgHealth);
+
   return (
     <div className="score-card">
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
         <Code2 className="w-5 h-5 text-primary" />
         <h3 className="font-semibold text-foreground">Repository Deep Dive</h3>
-        <span className="ml-auto text-xs text-muted-foreground">{repositories.length} repositories</span>
+        <span className="ml-auto flex items-center gap-2">
+          <span className={`text-[10px] px-2 py-0.5 rounded-lg border ${healthStyle.bg} ${healthStyle.border} ${healthStyle.text} font-bold flex items-center gap-1`}>
+            <Heart className="w-2.5 h-2.5" /> Avg Health: {Math.round(avgHealth)}
+          </span>
+          <span className="text-xs text-muted-foreground">{repositories.length} repos</span>
+        </span>
       </div>
       <div className="space-y-2">
-        {repositories.map((repo) => (
-          <RepoDetail key={repo.name} repo={repo} username={username} />
+        {repositories.map((repo, i) => (
+          <RepoDetail key={repo.name} repo={repo} username={username} rank={i + 1} />
         ))}
       </div>
     </div>
