@@ -1,4 +1,4 @@
-import { Flame, Github, Skull, Briefcase, Sparkles, Zap, Shield, Brain } from 'lucide-react';
+import { Flame, Github, Skull, Briefcase, Sparkles, Zap, Shield, Brain, Star, Code2 } from 'lucide-react';
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { useRef } from 'react';
 
@@ -38,7 +38,7 @@ export function Header({ isRecruiterMode = false }) {
           className="relative"
         >
           <div className="relative p-5 rounded-2xl bg-card border border-border group">
-            {/* Animated ring */}
+            {/* Double animated rings */}
             <motion.div
               className="absolute inset-0 rounded-2xl"
               style={{
@@ -51,8 +51,37 @@ export function Header({ isRecruiterMode = false }) {
               animate={{ rotate: 360 }}
               transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
             />
+            <motion.div
+              className="absolute inset-[-4px] rounded-[20px] opacity-30"
+              style={{
+                background: 'conic-gradient(from 180deg, hsl(var(--accent)), hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--accent)))',
+                padding: '1px',
+                WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                WebkitMaskComposite: 'xor',
+                maskComposite: 'exclude',
+              }}
+              animate={{ rotate: -360 }}
+              transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+            />
             <Github className="w-12 h-12 text-foreground relative z-10" />
           </div>
+          
+          {/* Floating particles around logo */}
+          {[0, 1, 2, 3].map((i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1.5 h-1.5 rounded-full bg-primary/60"
+              style={{ top: '50%', left: '50%' }}
+              animate={{
+                x: [0, 35 * Math.cos((i * Math.PI * 2) / 4), 0],
+                y: [0, 35 * Math.sin((i * Math.PI * 2) / 4), 0],
+                opacity: [0, 0.8, 0],
+                scale: [0, 1, 0],
+              }}
+              transition={{ duration: 3, repeat: Infinity, delay: i * 0.75, ease: 'easeInOut' }}
+            />
+          ))}
+          
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -125,19 +154,20 @@ export function Header({ isRecruiterMode = false }) {
         className="flex items-center justify-center gap-6 mt-8 text-xs text-muted-foreground"
       >
         {[
-          { icon: <Zap className="w-3 h-3" />, color: 'bg-terminal-green', label: 'Real GitHub API' },
-          { icon: <Brain className="w-3 h-3" />, color: 'bg-terminal-cyan', label: 'AI-Powered Analysis' },
-          { icon: <Shield className="w-3 h-3" />, color: 'bg-terminal-yellow', label: isRecruiterMode ? 'Professional Insights' : 'Savage Roasts' },
+          { icon: <Zap className="w-3 h-3" />, color: 'bg-terminal-green', label: 'Real GitHub API', detail: '300+ data points' },
+          { icon: <Brain className="w-3 h-3" />, color: 'bg-terminal-cyan', label: 'AI Analysis', detail: 'Gemini-powered' },
+          { icon: <Shield className="w-3 h-3" />, color: 'bg-terminal-yellow', label: isRecruiterMode ? 'Pro Insights' : 'Savage Roasts', detail: '12 tabs' },
         ].map((item, i) => (
           <motion.span
             key={item.label}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 group cursor-default"
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6 + i * 0.1 }}
           >
             <span className={`w-2 h-2 rounded-full ${item.color} animate-pulse`} />
-            {item.label}
+            <span className="group-hover:text-foreground transition-colors">{item.label}</span>
+            <span className="text-[9px] text-muted-foreground/50 hidden sm:inline">({item.detail})</span>
           </motion.span>
         ))}
       </motion.div>
