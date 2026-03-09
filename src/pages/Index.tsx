@@ -240,6 +240,10 @@ const Index = () => {
                       forkToStarRatio: aiAnalysis.forkToStarRatio,
                       totalRepoSizeMB: aiAnalysis.totalRepoSizeMB,
                       totalOpenIssues: aiAnalysis.totalOpenIssues,
+                      medianStars: aiAnalysis.medianStars,
+                      reposWithLicense: aiAnalysis.reposWithLicense,
+                      weekendRatio: aiAnalysis.weekendRatio,
+                      eventsPerActiveDay: aiAnalysis.eventsPerActiveDay,
                     }}
                     isRecruiterMode={isRecruiterMode}
                   />
