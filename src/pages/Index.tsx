@@ -42,6 +42,7 @@ import { CodeRhythm } from '@/components/CodeRhythm';
 import { XPLevelSystem } from '@/components/XPLevelSystem';
 import { TimeMachine } from '@/components/TimeMachine';
 import { DeveloperGlobe } from '@/components/DeveloperGlobe';
+import { ImpactMetrics } from '@/components/ImpactMetrics';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred, fetchUserSocialAccounts } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
@@ -588,6 +589,22 @@ const Index = () => {
                 languages={aiAnalysis.languages || {}}
                 totalStars={aiAnalysis.totalStars || 0}
                 followers={userData.followers}
+              />
+            </ScrollReveal>
+          </AnimatedSection>
+        );
+
+      case 'impact':
+        return (
+          <AnimatedSection key="impact">
+            <ScrollReveal variant="fadeUp">
+              <ImpactMetrics
+                impactMetrics={aiAnalysis.impactMetrics}
+                healthMetrics={aiAnalysis.healthMetrics}
+                consistencyScore={aiAnalysis.consistencyScore}
+                followRatio={aiAnalysis.followRatio}
+                reposPerYear={aiAnalysis.reposPerYear}
+                starsPerYear={aiAnalysis.starsPerYear}
               />
             </ScrollReveal>
           </AnimatedSection>
