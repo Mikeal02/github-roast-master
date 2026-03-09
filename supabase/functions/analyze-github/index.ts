@@ -440,29 +440,51 @@ IMPORTANT: Return ONLY the JSON object.`;
     analysisResult.licenseCounts = licenseCounts;
     analysisResult.starredInterests = Object.entries(starredLangCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
     
-    // Top repositories with full data for deep dive
+    // Top repositories with full data and health scores
     const topRepos = repos
       .filter((r: any) => !r.fork)
       .sort((a: any, b: any) => (b.stargazers_count || 0) - (a.stargazers_count || 0))
-      .slice(0, 10)
-      .map((r: any) => ({
-        name: r.name,
-        description: r.description,
-        stars: r.stargazers_count || 0,
-        forks: r.forks_count || 0,
-        language: r.language,
-        url: r.html_url,
-        full_name: r.full_name,
-        owner: { login: r.owner?.login || user.login },
-        open_issues_count: r.open_issues_count || 0,
-        size: r.size || 0,
-        created_at: r.created_at,
-        updated_at: r.updated_at,
-        topics: r.topics || [],
-        license: r.license,
-        watchers_count: r.watchers_count || 0,
-      }));
+      .slice(0, 12)
+      .map((r: any) => {
+        const ageDays = Math.floor((now.getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24));
+        const lastUpdateDays = Math.floor((now.getTime() - new Date(r.updated_at).getTime()) / (1000 * 60 * 60 * 24));
+        // Repo health: docs + license + recency + engagement
+        let health = 0;
+        if (r.description) health += 25;
+        if (r.license) health += 20;
+        if (lastUpdateDays < 30) health += 25;
+        else if (lastUpdateDays < 90) health += 15;
+        else if (lastUpdateDays < 180) health += 5;
+        health += Math.min(30, (r.stargazers_count || 0) * 2);
+        
+        return {
+          name: r.name,
+          description: r.description,
+          stars: r.stargazers_count || 0,
+          forks: r.forks_count || 0,
+          language: r.language,
+          url: r.html_url,
+          full_name: r.full_name,
+          owner: { login: r.owner?.login || user.login },
+          open_issues_count: r.open_issues_count || 0,
+          size: r.size || 0,
+          created_at: r.created_at,
+          updated_at: r.updated_at,
+          topics: r.topics || [],
+          license: r.license,
+          watchers_count: r.watchers_count || 0,
+          ageDays,
+          lastUpdateDays,
+          healthScore: Math.min(100, health),
+          hasHomepage: !!r.homepage,
+          defaultBranch: r.default_branch || 'main',
+        };
+      });
     analysisResult.topRepositories = topRepos;
+    
+    // Aggregate repo health
+    const avgRepoHealth = topRepos.length > 0 ? Math.round(topRepos.reduce((s: number, r: any) => s + r.healthScore, 0) / topRepos.length) : 0;
+    analysisResult.avgRepoHealth = avgRepoHealth;
 
     console.log('Comprehensive analysis complete for:', user.login);
     return new Response(JSON.stringify(analysisResult), {
