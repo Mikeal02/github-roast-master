@@ -178,11 +178,11 @@ export function ImpactMetrics({ impactMetrics, healthMetrics, consistencyScore, 
           )}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 justify-items-center">
-          <MetricRing value={impact.communityImpact || 0} label="Community Impact" icon={<Heart className="w-4 h-4" />} color="hsl(var(--terminal-red))" delay={0} />
-          <MetricRing value={impact.knowledgeSharing || 0} label="Knowledge Sharing" icon={<Lightbulb className="w-4 h-4" />} color="hsl(var(--terminal-yellow))" delay={0.1} />
-          <MetricRing value={impact.innovationIndex || 0} label="Innovation Index" icon={<Zap className="w-4 h-4" />} color="hsl(var(--terminal-cyan))" delay={0.2} />
-          <MetricRing value={impact.reliabilityScore || 0} label="Reliability" icon={<Shield className="w-4 h-4" />} color="hsl(var(--terminal-green))" delay={0.3} />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 justify-items-center pb-4">
+          <MetricRing value={impact.communityImpact || 0} label="Community Impact" icon={<Heart className="w-4 h-4" />} color="hsl(var(--terminal-red))" delay={0} tooltip="Measures how much your open-source work benefits others — stars received, forks created, and community engagement across your repositories." />
+          <MetricRing value={impact.knowledgeSharing || 0} label="Knowledge Sharing" icon={<Lightbulb className="w-4 h-4" />} color="hsl(var(--terminal-yellow))" delay={0.1} tooltip="Evaluates documentation quality, gist contributions, README completeness, and how well you share knowledge through code comments and descriptions." />
+          <MetricRing value={impact.innovationIndex || 0} label="Innovation Index" icon={<Zap className="w-4 h-4" />} color="hsl(var(--terminal-cyan))" delay={0.2} tooltip="Tracks experimentation with new languages, diverse project topics, adoption of emerging technologies, and creative problem-solving patterns." />
+          <MetricRing value={impact.reliabilityScore || 0} label="Reliability" icon={<Shield className="w-4 h-4" />} color="hsl(var(--terminal-green))" delay={0.3} tooltip="Assesses consistency of contributions, project maintenance habits, issue responsiveness, and long-term commitment to active repositories." />
         </div>
       </motion.div>
 
