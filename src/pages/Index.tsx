@@ -42,6 +42,7 @@ import { CodeRhythm } from '@/components/CodeRhythm';
 import { XPLevelSystem } from '@/components/XPLevelSystem';
 import { TimeMachine } from '@/components/TimeMachine';
 import { DeveloperGlobe } from '@/components/DeveloperGlobe';
+import { ImpactMetrics } from '@/components/ImpactMetrics';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred, fetchUserSocialAccounts } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
