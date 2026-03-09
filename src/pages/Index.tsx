@@ -78,13 +78,14 @@ const Index = () => {
     setActiveTab('overview');
 
     try {
-      const [user, repos, events, orgs, gists, starred] = await Promise.all([
+      const [user, repos, events, orgs, gists, starred, socials] = await Promise.all([
         fetchGitHubUser(username),
         fetchUserRepos(username, 100),
         fetchUserEvents(username, 100),
         fetchUserOrgs(username),
         fetchUserGists(username),
         fetchUserStarred(username, 30),
+        fetchUserSocialAccounts(username),
       ]);
 
       setUserData(user);
