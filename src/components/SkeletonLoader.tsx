@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function ProfileCardSkeleton() {
   return (
-    <div className="score-card flex flex-col md:flex-row gap-6 items-center md:items-start animate-pulse">
+    <div className="glass-panel p-5 flex flex-col md:flex-row gap-6 items-center md:items-start animate-pulse">
       <div className="relative">
         <Skeleton className="w-32 h-32 rounded-full" />
         <Skeleton className="absolute -bottom-2 -right-2 h-6 w-16 rounded-full" />
@@ -23,7 +23,7 @@ export function ProfileCardSkeleton() {
 
 export function ScoreCardSkeleton() {
   return (
-    <div className="score-card animate-pulse">
+    <div className="glass-panel p-5 animate-pulse">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <Skeleton className="w-4 h-4 rounded" />
@@ -39,8 +39,8 @@ export function ScoreCardSkeleton() {
 
 export function TerminalSkeleton() {
   return (
-    <div className="terminal-box animate-pulse">
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-primary/20">
+    <div className="glass-panel p-5 animate-pulse">
+      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/30">
         <div className="flex gap-1.5">
           <Skeleton className="w-3 h-3 rounded-full" />
           <Skeleton className="w-3 h-3 rounded-full" />
@@ -61,8 +61,8 @@ export function TerminalSkeleton() {
 
 export function ChartSkeleton() {
   return (
-    <div className="score-card animate-pulse">
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
+    <div className="glass-panel p-5 animate-pulse">
+      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/30">
         <Skeleton className="w-5 h-5 rounded" />
         <Skeleton className="h-5 w-32" />
       </div>
@@ -84,7 +84,7 @@ export function ResultsSkeletonLoader() {
     <div className="space-y-6">
       <ProfileCardSkeleton />
       
-      <div className="score-card animate-pulse p-4">
+      <div className="glass-panel p-5 animate-pulse">
         <div className="flex items-center justify-between">
           <Skeleton className="h-6 w-32" />
           <Skeleton className="h-6 w-24" />
