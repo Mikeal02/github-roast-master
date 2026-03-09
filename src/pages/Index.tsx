@@ -735,13 +735,8 @@ const Index = () => {
                   </motion.div>
                 ))}
               </div>
-            </motion.div>
-                    @{name}
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
           )}
+
         </div>
 
         <motion.footer
