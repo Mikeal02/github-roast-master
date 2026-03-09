@@ -93,6 +93,7 @@ const Index = () => {
       setUserRepos(repos);
       setUserOrgs(orgs);
       setUserGists(gists);
+      setSocialAccounts(socials);
 
       toast.info('🤖 AI is performing deep analysis...');
 
