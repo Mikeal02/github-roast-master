@@ -75,7 +75,7 @@ export function XPLevelSystem({ scores, totalStars, totalRepos, followers, curre
   }, [scores, totalStars, totalRepos, followers, currentStreak, languages, totalForks, orgCount, publicGists]);
 
   return (
-    <div className="score-card">
+    <div className="glass-panel p-5">
       <div className="flex items-center gap-2 mb-5 pb-3 border-b border-border">
         <Trophy className="w-5 h-5 text-terminal-yellow" />
         <h3 className="font-semibold text-foreground">Developer XP</h3>

@@ -53,7 +53,7 @@ export function TechStackAnalysis({ languages, totalRepos, repoTopics = [], repo
   const diversityLevel = entries.length >= 8 ? 'Full-Stack Polyglot' : entries.length >= 5 ? 'Versatile Developer' : entries.length >= 3 ? 'Focused Specialist' : 'Niche Expert';
 
   return (
-    <div className="score-card">
+    <div className="glass-panel p-5">
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
         <Layers className="w-5 h-5 text-accent" />
         <h3 className="font-semibold text-foreground">Tech Stack Analysis</h3>

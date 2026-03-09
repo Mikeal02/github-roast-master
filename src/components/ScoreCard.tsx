@@ -123,7 +123,7 @@ export function ScoreCard({ title, score, icon, explanation = '', delay = 0, sub
       animate={isInView ? { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' } : {}}
       transition={{ delay: delay / 1000, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="score-card group"
+      className="glass-panel p-5 group"
       style={{
         boxShadow: isInView && animatedScore > 0 ? `0 0 40px ${getGlowColor(score)}` : undefined,
       }}

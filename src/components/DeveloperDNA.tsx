@@ -263,7 +263,7 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
   const rightPath = pathPoints('right');
 
   return (
-    <div ref={ref} className="score-card">
+    <div ref={ref} className="glass-panel p-5">
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
         <Dna className="w-5 h-5 text-accent" />
         <h3 className="font-semibold text-foreground">Developer DNA</h3>

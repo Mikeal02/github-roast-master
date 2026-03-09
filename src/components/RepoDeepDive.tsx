@@ -274,7 +274,7 @@ export function RepoDeepDive({ repositories, username }: RepoDeepDiveProps) {
   const healthStyle = getHealthColor(avgHealth);
 
   return (
-    <div className="score-card">
+    <div className="glass-panel p-5">
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
         <Code2 className="w-5 h-5 text-primary" />
         <h3 className="font-semibold text-foreground">Repository Deep Dive</h3>

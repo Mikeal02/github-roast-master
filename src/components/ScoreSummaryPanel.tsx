@@ -100,7 +100,7 @@ export function ScoreSummaryPanel({ scores }: ScoreSummaryPanelProps) {
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="score-card mb-6"
+      className="glass-panel p-5 mb-6"
       style={{ boxShadow: `0 0 60px ${gradeInfo.ring}15` }}
     >
       <div className="flex flex-col lg:flex-row items-center gap-6">

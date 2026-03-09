@@ -77,7 +77,7 @@ export function PersonalityProfile({ profile }: PersonalityProfileProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={isInView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.6 }}
-        className="terminal-box"
+        className="glass-panel p-5 font-mono text-sm"
       >
         <div className="flex items-center gap-2 mb-4 pb-3 border-b border-primary/20">
           <Brain className="w-5 h-5 text-primary" />
@@ -242,7 +242,7 @@ export function PersonalityProfile({ profile }: PersonalityProfileProps) {
 
 function MetricCard({ icon, label, value, subtext }: { icon: React.ReactNode; label: string; value: string; subtext: string }) {
   return (
-    <div className="score-card">
+    <div className="glass-panel p-4">
       <div className="flex items-center gap-2 mb-2 text-primary">
         {icon}
         <span className="text-xs text-muted-foreground">{label}</span>
@@ -259,7 +259,7 @@ function EnhancedRiskMeter({ label, value, icon, isInView }: { label: string; va
       initial={{ opacity: 0, y: 10 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.4 }}
-      className="score-card"
+      className="glass-panel p-4"
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">

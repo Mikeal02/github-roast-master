@@ -30,7 +30,7 @@ export function LanguageChart({ languages }: LanguageChartProps) {
 
   if (languageArray.length === 0 || total === 0) {
     return (
-      <div className="score-card text-center py-8">
+      <div className="glass-panel p-5 text-center py-8">
         <p className="text-muted-foreground">No language data available</p>
       </div>
     );
@@ -79,7 +79,7 @@ export function LanguageChart({ languages }: LanguageChartProps) {
   const displayName = displayLang ? displayLang[0] : '';
 
   return (
-    <div className="score-card">
+    <div className="glass-panel p-5">
       <h3 className="text-sm font-medium text-muted-foreground mb-4">
         Language Distribution
       </h3>

@@ -26,7 +26,7 @@ export function RecruiterMetric({ metric }: RecruiterMetricProps) {
   const color = getGradeColor(metric.grade);
 
   return (
-    <div className="score-card">
+    <div className="glass-panel p-5">
       <div className="flex items-center gap-2 mb-3">
         <FileText className="w-5 h-5 text-secondary" />
         <h3 className="font-semibold text-foreground">{metric.name}</h3>
