@@ -376,6 +376,11 @@ IMPORTANT: Return ONLY the JSON object.`;
     
     console.log('AI response received, length:', content?.length);
 
+    if (!content || content.trim().length === 0) {
+      console.error('AI returned empty content. Full response:', JSON.stringify(aiResponse).substring(0, 500));
+      throw new Error('AI returned empty response. Please try again.');
+    }
+
     let analysisResult;
     try {
       let jsonStr = content.trim();
@@ -388,12 +393,13 @@ IMPORTANT: Return ONLY the JSON object.`;
       if (jsonMatch) {
         analysisResult = JSON.parse(jsonMatch[0]);
       } else {
-        throw new Error('No JSON found in response');
+        console.error('No JSON found. Raw content:', content.substring(0, 500));
+        throw new Error('No JSON found in AI response');
       }
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError);
-      console.error('Raw content:', content?.substring(0, 500));
-      throw new Error('Failed to parse AI analysis');
+      console.error('Raw content (first 500 chars):', content?.substring(0, 500));
+      throw new Error('Failed to parse AI analysis. Please try again.');
     }
 
     // Augment with computed data
