@@ -699,8 +699,14 @@ const Index = () => {
               initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
               transition={{ delay: 0.6, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="terminal-box text-center py-16"
+              className="glass-panel text-center py-16 px-6 relative"
             >
+              {/* Decorative gradient orbs */}
+              <div className="absolute top-0 left-1/4 w-64 h-32 rounded-full opacity-[0.04] pointer-events-none" 
+                   style={{ background: 'radial-gradient(circle, hsl(var(--primary)), transparent)' }} />
+              <div className="absolute bottom-0 right-1/4 w-48 h-24 rounded-full opacity-[0.04] pointer-events-none"
+                   style={{ background: 'radial-gradient(circle, hsl(var(--accent)), transparent)' }} />
+
               <motion.div
                 animate={{ y: [0, -12, 0], rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
@@ -728,10 +734,11 @@ const Index = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.8 + i * 0.1 }}
-                    className="p-3 rounded-xl bg-muted/30 border border-border/50"
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    className="p-3 rounded-xl bg-muted/30 border border-border/50 cursor-default"
                   >
                     <span className="text-lg">{feat.emoji}</span>
-                    <p className="text-[10px] text-muted-foreground mt-1">{feat.label}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1 font-medium">{feat.label}</p>
                   </motion.div>
                 ))}
               </div>
@@ -746,8 +753,13 @@ const Index = () => {
           transition={{ delay: 1 }}
           className="mt-20 text-center text-xs text-muted-foreground"
         >
-          <p>Made with {isRecruiterMode ? '💼' : '🔥'} and AI magic</p>
-          <p className="mt-1">Powered by GitHub API + AI Models</p>
+          <div className="elite-divider mb-6" />
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <span className="w-1 h-1 rounded-full bg-primary/40" />
+            <p>Made with {isRecruiterMode ? '💼' : '🔥'} and AI magic</p>
+            <span className="w-1 h-1 rounded-full bg-primary/40" />
+          </div>
+          <p className="text-muted-foreground/50">Powered by GitHub API + AI Models</p>
         </motion.footer>
       </div>
     </div>
