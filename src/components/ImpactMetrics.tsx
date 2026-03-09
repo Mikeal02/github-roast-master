@@ -1,5 +1,5 @@
-import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
+import { useRef, useState } from 'react';
 import { Zap, Heart, Lightbulb, Shield, TrendingUp, Activity } from 'lucide-react';
 
 interface ImpactMetricsProps {
