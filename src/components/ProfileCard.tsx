@@ -42,7 +42,7 @@ export function ProfileCard({ user, orgCount = 0, gistCount = 0, socialAccounts 
       initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
       animate={isInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
       transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="score-card gradient-border"
+      className="glass-panel p-5 gradient-border"
     >
       {/* Top row: Avatar + Info */}
       <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
