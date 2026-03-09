@@ -30,7 +30,7 @@ export function RoastTerminal({ roasts, username }) {
       initial={{ opacity: 0, y: 40 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="terminal-box scan-line"
+      className="glass-panel p-5 font-mono text-sm scan-line"
     >
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-primary/20">
         <div className="flex gap-1.5">
