@@ -242,7 +242,7 @@ export function PersonalityProfile({ profile }: PersonalityProfileProps) {
 
 function MetricCard({ icon, label, value, subtext }: { icon: React.ReactNode; label: string; value: string; subtext: string }) {
   return (
-    <div className="score-card">
+    <div className="glass-panel p-4">
       <div className="flex items-center gap-2 mb-2 text-primary">
         {icon}
         <span className="text-xs text-muted-foreground">{label}</span>
