@@ -43,6 +43,7 @@ import { XPLevelSystem } from '@/components/XPLevelSystem';
 import { TimeMachine } from '@/components/TimeMachine';
 import { DeveloperGlobe } from '@/components/DeveloperGlobe';
 import { ImpactMetrics } from '@/components/ImpactMetrics';
+import { LandingPage } from '@/components/LandingPage';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred, fetchUserSocialAccounts } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
@@ -712,54 +713,10 @@ const Index = () => {
           )}
 
           {!userData && !isLoading && !error && (
-            <motion.div
-              initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              transition={{ delay: 0.6, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="glass-panel text-center py-16 px-6 relative"
-            >
-              {/* Decorative gradient orbs */}
-              <div className="absolute top-0 left-1/4 w-64 h-32 rounded-full opacity-[0.04] pointer-events-none" 
-                   style={{ background: 'radial-gradient(circle, hsl(var(--primary)), transparent)' }} />
-              <div className="absolute bottom-0 right-1/4 w-48 h-24 rounded-full opacity-[0.04] pointer-events-none"
-                   style={{ background: 'radial-gradient(circle, hsl(var(--accent)), transparent)' }} />
-
-              <motion.div
-                animate={{ y: [0, -12, 0], rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                className="text-6xl mb-6"
-              >
-                {isRecruiterMode ? '💼' : '🔥'}
-              </motion.div>
-              <h3 className="text-2xl font-bold text-foreground mb-3">
-                {isRecruiterMode ? 'Ready to Analyze' : 'Ready to Roast'}
-              </h3>
-              <p className="text-muted-foreground max-w-md mx-auto leading-relaxed text-sm">
-                {isRecruiterMode
-                  ? 'Enter a GitHub username above to generate a comprehensive AI-powered professional assessment with career insights, tech stack analysis, and 12+ analytical tabs.'
-                  : 'Enter a GitHub username above to unleash an AI-powered analysis with skill radar, coding DNA, personality profiling, XP leveling, and devastatingly hilarious roasts.'
-                }
-              </p>
-              <div className="grid grid-cols-3 gap-3 mt-8 max-w-sm mx-auto">
-                {[
-                  { emoji: '📊', label: '12 Analysis Tabs' },
-                  { emoji: '🧬', label: 'Developer DNA' },
-                  { emoji: '📄', label: 'PDF Reports' },
-                ].map((feat, i) => (
-                  <motion.div
-                    key={feat.label}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 + i * 0.1 }}
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    className="p-3 rounded-xl bg-muted/30 border border-border/50 cursor-default"
-                  >
-                    <span className="text-lg">{feat.emoji}</span>
-                    <p className="text-[10px] text-muted-foreground mt-1 font-medium">{feat.label}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
+            <LandingPage
+              isRecruiterMode={isRecruiterMode}
+              onTryIt={() => document.getElementById('search-input')?.focus()}
+            />
           )}
 
         </div>
@@ -768,15 +725,26 @@ const Index = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="mt-20 text-center text-xs text-muted-foreground"
+          className="mt-24 text-center text-xs text-muted-foreground pb-8"
         >
-          <div className="elite-divider mb-6" />
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <span className="w-1 h-1 rounded-full bg-primary/40" />
-            <p>Made with {isRecruiterMode ? '💼' : '🔥'} and AI magic</p>
-            <span className="w-1 h-1 rounded-full bg-primary/40" />
+          <div className="elite-divider mb-8" />
+          <div className="glass-panel-static p-6 max-w-md mx-auto">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <span className="font-semibold text-foreground text-sm">RoastMyGit</span>
+            </div>
+            <p className="text-muted-foreground/70 mb-3">
+              The internet&apos;s most comprehensive GitHub profile analyzer.
+              <br />Made with {isRecruiterMode ? '💼' : '🔥'} and AI magic.
+            </p>
+            <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground/50">
+              <span>GitHub API</span>
+              <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
+              <span>Gemini AI</span>
+              <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
+              <span>14 Analysis Tabs</span>
+            </div>
           </div>
-          <p className="text-muted-foreground/50">Powered by GitHub API + AI Models</p>
         </motion.footer>
       </div>
     </div>
