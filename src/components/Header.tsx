@@ -1,4 +1,4 @@
-import { Flame, Github, Skull, Briefcase, Sparkles, Zap, Shield, Brain, Star, Code2 } from 'lucide-react';
+import { Flame, Github, Skull, Briefcase, Sparkles, Zap, Shield, Brain } from 'lucide-react';
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { useRef } from 'react';
 
@@ -24,6 +24,9 @@ export function Header({ isRecruiterMode = false }) {
 
   return (
     <header className="text-center mb-10 relative z-10">
+      {/* Aurora background glow */}
+      <div className="aurora-glow -top-32 left-1/2 -translate-x-1/2" />
+
       <motion.div
         ref={containerRef}
         onMouseMove={handleMouseMove}
@@ -66,19 +69,22 @@ export function Header({ isRecruiterMode = false }) {
             <Github className="w-12 h-12 text-foreground relative z-10" />
           </div>
           
-          {/* Floating particles around logo */}
-          {[0, 1, 2, 3].map((i) => (
+          {/* Floating particles */}
+          {[0, 1, 2, 3, 4, 5].map((i) => (
             <motion.div
               key={i}
-              className="absolute w-1.5 h-1.5 rounded-full bg-primary/60"
-              style={{ top: '50%', left: '50%' }}
-              animate={{
-                x: [0, 35 * Math.cos((i * Math.PI * 2) / 4), 0],
-                y: [0, 35 * Math.sin((i * Math.PI * 2) / 4), 0],
-                opacity: [0, 0.8, 0],
-                scale: [0, 1, 0],
+              className="absolute w-1 h-1 rounded-full"
+              style={{ 
+                top: '50%', left: '50%',
+                background: i % 2 === 0 ? 'hsl(var(--primary))' : 'hsl(var(--accent))',
               }}
-              transition={{ duration: 3, repeat: Infinity, delay: i * 0.75, ease: 'easeInOut' }}
+              animate={{
+                x: [0, 40 * Math.cos((i * Math.PI * 2) / 6), 0],
+                y: [0, 40 * Math.sin((i * Math.PI * 2) / 6), 0],
+                opacity: [0, 0.7, 0],
+                scale: [0, 1.2, 0],
+              }}
+              transition={{ duration: 3.5, repeat: Infinity, delay: i * 0.6, ease: 'easeInOut' }}
             />
           ))}
           
@@ -165,7 +171,7 @@ export function Header({ isRecruiterMode = false }) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6 + i * 0.1 }}
           >
-            <span className={`w-2 h-2 rounded-full ${item.color} animate-pulse`} />
+            <span className={`w-2 h-2 rounded-full ${item.color} status-dot`} />
             <span className="group-hover:text-foreground transition-colors">{item.label}</span>
             <span className="text-[9px] text-muted-foreground/50 hidden sm:inline">({item.detail})</span>
           </motion.span>

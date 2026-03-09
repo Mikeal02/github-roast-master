@@ -753,8 +753,13 @@ const Index = () => {
           transition={{ delay: 1 }}
           className="mt-20 text-center text-xs text-muted-foreground"
         >
-          <p>Made with {isRecruiterMode ? '💼' : '🔥'} and AI magic</p>
-          <p className="mt-1">Powered by GitHub API + AI Models</p>
+          <div className="elite-divider mb-6" />
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <span className="w-1 h-1 rounded-full bg-primary/40" />
+            <p>Made with {isRecruiterMode ? '💼' : '🔥'} and AI magic</p>
+            <span className="w-1 h-1 rounded-full bg-primary/40" />
+          </div>
+          <p className="text-muted-foreground/50">Powered by GitHub API + AI Models</p>
         </motion.footer>
       </div>
     </div>
