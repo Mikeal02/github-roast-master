@@ -1,5 +1,5 @@
-import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
+import { useRef, useState } from 'react';
 import { Zap, Heart, Lightbulb, Shield, TrendingUp, Activity } from 'lucide-react';
 
 interface ImpactMetricsProps {
@@ -24,12 +24,15 @@ interface ImpactMetricsProps {
   starsPerYear?: number;
 }
 
-function MetricRing({ value, label, icon, color, delay = 0 }: { value: number; label: string; icon: React.ReactNode; color: string; delay?: number }) {
+function MetricRing({ value, label, icon, color, delay = 0, tooltip }: { value: number; label: string; icon: React.ReactNode; color: string; delay?: number; tooltip?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
+  const [hovered, setHovered] = useState(false);
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (value / 100) * circumference;
+
+  const grade = value >= 90 ? 'Elite' : value >= 75 ? 'Strong' : value >= 50 ? 'Decent' : value >= 25 ? 'Weak' : 'Critical';
 
   return (
     <motion.div
@@ -37,9 +40,11 @@ function MetricRing({ value, label, icon, color, delay = 0 }: { value: number; l
       initial={{ opacity: 0, y: 20 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay, duration: 0.5 }}
-      className="flex flex-col items-center gap-3"
+      className="flex flex-col items-center gap-3 relative"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      <div className="relative w-24 h-24">
+      <div className="relative w-24 h-24 cursor-pointer">
         <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
           <circle cx="48" cy="48" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth="5" />
           <motion.circle
@@ -66,6 +71,39 @@ function MetricRing({ value, label, icon, color, delay = 0 }: { value: number; l
         </div>
       </div>
       <span className="text-xs font-medium text-muted-foreground text-center">{label}</span>
+
+      {/* Animated tooltip */}
+      <AnimatePresence>
+        {hovered && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute -bottom-2 translate-y-full z-50 w-56 p-3 rounded-xl glass-panel-static border border-border/80 shadow-lg pointer-events-none"
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <span style={{ color }}>{icon}</span>
+              <span className="text-xs font-semibold text-foreground">{label}</span>
+              <span className="ml-auto text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md" style={{ color, background: `${color}15` }}>{grade}</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              {tooltip || `${label} score of ${value}/100 indicates ${grade.toLowerCase()}-level performance in this area.`}
+            </p>
+            <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: color }}
+                initial={{ width: 0 }}
+                animate={{ width: `${value}%` }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              />
+            </div>
+            {/* Arrow */}
+            <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-card border-l border-t border-border/80" />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -140,11 +178,11 @@ export function ImpactMetrics({ impactMetrics, healthMetrics, consistencyScore, 
           )}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 justify-items-center">
-          <MetricRing value={impact.communityImpact || 0} label="Community Impact" icon={<Heart className="w-4 h-4" />} color="hsl(var(--terminal-red))" delay={0} />
-          <MetricRing value={impact.knowledgeSharing || 0} label="Knowledge Sharing" icon={<Lightbulb className="w-4 h-4" />} color="hsl(var(--terminal-yellow))" delay={0.1} />
-          <MetricRing value={impact.innovationIndex || 0} label="Innovation Index" icon={<Zap className="w-4 h-4" />} color="hsl(var(--terminal-cyan))" delay={0.2} />
-          <MetricRing value={impact.reliabilityScore || 0} label="Reliability" icon={<Shield className="w-4 h-4" />} color="hsl(var(--terminal-green))" delay={0.3} />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 justify-items-center pb-4">
+          <MetricRing value={impact.communityImpact || 0} label="Community Impact" icon={<Heart className="w-4 h-4" />} color="hsl(var(--terminal-red))" delay={0} tooltip="Measures how much your open-source work benefits others — stars received, forks created, and community engagement across your repositories." />
+          <MetricRing value={impact.knowledgeSharing || 0} label="Knowledge Sharing" icon={<Lightbulb className="w-4 h-4" />} color="hsl(var(--terminal-yellow))" delay={0.1} tooltip="Evaluates documentation quality, gist contributions, README completeness, and how well you share knowledge through code comments and descriptions." />
+          <MetricRing value={impact.innovationIndex || 0} label="Innovation Index" icon={<Zap className="w-4 h-4" />} color="hsl(var(--terminal-cyan))" delay={0.2} tooltip="Tracks experimentation with new languages, diverse project topics, adoption of emerging technologies, and creative problem-solving patterns." />
+          <MetricRing value={impact.reliabilityScore || 0} label="Reliability" icon={<Shield className="w-4 h-4" />} color="hsl(var(--terminal-green))" delay={0.3} tooltip="Assesses consistency of contributions, project maintenance habits, issue responsiveness, and long-term commitment to active repositories." />
         </div>
       </motion.div>
 
