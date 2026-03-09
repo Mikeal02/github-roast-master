@@ -53,7 +53,7 @@ export function ActivityBadge({ status, finalScore, archetype = null, isRecruite
       initial={{ opacity: 0, y: 20 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5 }}
-      className="score-card"
+      className="glass-panel p-5"
       style={{ boxShadow: `0 0 40px ${config.ringColor}10` }}
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

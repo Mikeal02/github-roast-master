@@ -1,5 +1,6 @@
 import { AlertTriangle, RefreshCw, WifiOff, UserX, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
 export function ErrorDisplay({ error, onRetry }) {
   const getErrorConfig = () => {
@@ -38,24 +39,35 @@ export function ErrorDisplay({ error, onRetry }) {
   const config = getErrorConfig();
 
   return (
-    <div className="terminal-box text-center py-12">
-      <div className={`${config.color} mb-4 flex justify-center`}>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="glass-panel text-center py-12 px-6 relative overflow-hidden"
+    >
+      {/* Subtle red gradient background */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+           style={{ background: 'radial-gradient(circle at 50% 30%, hsl(var(--destructive)), transparent 70%)' }} />
+
+      <motion.div
+        className={`${config.color} mb-4 flex justify-center relative`}
+        animate={{ y: [0, -4, 0] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+      >
         {config.icon}
-      </div>
-      <h3 className="text-xl font-bold text-foreground mb-2">
+      </motion.div>
+      <h3 className="text-xl font-bold text-foreground mb-2 relative">
         {config.title}
       </h3>
-      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+      <p className="text-muted-foreground mb-6 max-w-md mx-auto text-sm relative">
         {config.message}
       </p>
       <Button
         onClick={onRetry}
-        variant="outline"
-        className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 relative"
       >
-        <RefreshCw className="w-4 h-4 mr-2" />
+        <RefreshCw className="w-4 h-4" />
         Try Again
       </Button>
-    </div>
+    </motion.div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Sun, Moon } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function ThemeToggle() {
   const [isDark, setIsDark] = useState(true);
@@ -22,24 +22,26 @@ export function ThemeToggle() {
   return (
     <motion.button
       onClick={toggle}
-      className="fixed top-4 right-4 z-50 p-2.5 rounded-xl bg-card border border-border hover:border-primary/50 transition-colors"
+      className="fixed top-4 right-4 z-50 p-2.5 rounded-xl glass-panel hover:border-primary/50 transition-all group"
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
       aria-label="Toggle theme"
     >
-      <motion.div
-        key={isDark ? 'dark' : 'light'}
-        initial={{ rotate: -90, opacity: 0 }}
-        animate={{ rotate: 0, opacity: 1 }}
-        exit={{ rotate: 90, opacity: 0 }}
-        transition={{ duration: 0.2 }}
-      >
-        {isDark ? (
-          <Sun className="w-4 h-4 text-terminal-yellow" />
-        ) : (
-          <Moon className="w-4 h-4 text-accent" />
-        )}
-      </motion.div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={isDark ? 'dark' : 'light'}
+          initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+          animate={{ rotate: 0, opacity: 1, scale: 1 }}
+          exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
+          transition={{ duration: 0.2 }}
+        >
+          {isDark ? (
+            <Sun className="w-4 h-4 text-terminal-yellow group-hover:text-terminal-yellow" />
+          ) : (
+            <Moon className="w-4 h-4 text-accent group-hover:text-accent" />
+          )}
+        </motion.div>
+      </AnimatePresence>
     </motion.button>
   );
 }
