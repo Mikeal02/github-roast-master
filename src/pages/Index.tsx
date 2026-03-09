@@ -18,6 +18,7 @@ import { ModeToggle } from '@/components/ModeToggle';
 import { RecruiterMetric } from '@/components/RecruiterMetric';
 import { PersonalityProfile } from '@/components/PersonalityProfile';
 import { ShareExport } from '@/components/ShareExport';
+import { PDFReportExport } from '@/components/PDFReportExport';
 import { CompareProfiles } from '@/components/CompareProfiles';
 import { AchievementBadges } from '@/components/AchievementBadges';
 import { ActivityHeatmap } from '@/components/ActivityHeatmap';
