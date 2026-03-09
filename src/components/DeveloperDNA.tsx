@@ -1,6 +1,6 @@
 import { useRef, useMemo, useState } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
-import { Dna, X, Filter, BarChart3, Sparkles } from 'lucide-react';
+import { Dna, X, Filter, BarChart3, Sparkles, Shield, Zap, Link2 } from 'lucide-react';
 
 interface DeveloperDNAProps {
   languages: Record<string, number>;
@@ -44,7 +44,7 @@ interface DNANode {
   id: string;
   label: string;
   value: string;
-  numericValue: number; // 0-100 for comparable analysis
+  numericValue: number;
   category: 'language' | 'score' | 'personality' | 'activity' | 'social';
   color: string;
   intensity: number;
@@ -66,6 +66,14 @@ const categoryLabels: Record<string, string> = {
   social: 'Social',
 };
 
+const categoryIcons: Record<string, typeof Dna> = {
+  language: Zap,
+  score: Shield,
+  personality: Sparkles,
+  activity: BarChart3,
+  social: Link2,
+};
+
 export function DeveloperDNA({ languages, scores, personality, streaks, userData }: DeveloperDNAProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.15 });
@@ -76,7 +84,6 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
   const nodes = useMemo(() => {
     const result: DNANode[] = [];
 
-    // Languages (top 6)
     const langEntries = Object.entries(languages || {}).sort((a, b) => b[1] - a[1]);
     const langTotal = langEntries.reduce((s, [, v]) => s + v, 0);
     langEntries.slice(0, 6).forEach(([lang, count]) => {
@@ -88,7 +95,6 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
       });
     });
 
-    // Scores
     const scoreEntries: [string, number][] = [
       ['Activity', scores?.activity?.score || 0],
       ['Documentation', scores?.documentation?.score || 0],
@@ -105,7 +111,6 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
       });
     });
 
-    // Personality traits
     if (personality) {
       if (personality.personalityType) {
         result.push({
@@ -146,7 +151,6 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
       }
     }
 
-    // Activity
     if (streaks) {
       result.push({
         id: 'act-current', label: 'Current Streak', value: `${streaks.currentStreak} days`,
@@ -172,7 +176,6 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
       });
     }
 
-    // Social
     if (userData) {
       result.push({
         id: 'soc-followers', label: 'Followers', value: userData.followers.toLocaleString(),
@@ -208,12 +211,29 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
   // Genome summary stats
   const genomeSummary = useMemo(() => {
     const avgIntensity = Math.round(nodes.reduce((s, n) => s + n.intensity, 0) / nodes.length * 100);
-    const dominantCategory = Object.entries(
-      nodes.reduce((acc, n) => { acc[n.category] = (acc[n.category] || 0) + n.intensity; return acc; }, {} as Record<string, number>)
-    ).sort((a, b) => b[1] - a[1])[0]?.[0] || 'score';
+    const categoryIntensities = nodes.reduce((acc, n) => {
+      acc[n.category] = (acc[n.category] || 0) + n.intensity;
+      return acc;
+    }, {} as Record<string, number>);
+    const dominantCategory = Object.entries(categoryIntensities).sort((a, b) => b[1] - a[1])[0]?.[0] || 'score';
     const strongTraits = nodes.filter(n => n.intensity >= 0.7).length;
     const weakTraits = nodes.filter(n => n.intensity < 0.3).length;
-    return { avgIntensity, dominantCategory, strongTraits, weakTraits, totalTraits: nodes.length };
+    
+    // Genome completeness: how many categories have strong representation
+    const categoriesWithData = new Set(nodes.map(n => n.category)).size;
+    const completeness = Math.round((categoriesWithData / 5) * 100);
+    
+    // Specialization index: how concentrated is the intensity
+    const categoryVals = Object.values(categoryIntensities);
+    const maxCatIntensity = Math.max(...categoryVals);
+    const totalIntensity = categoryVals.reduce((a, b) => a + b, 0);
+    const specialization = totalIntensity > 0 ? Math.round((maxCatIntensity / totalIntensity) * 100) : 0;
+
+    // Trait correlations
+    const scoreNodes = nodes.filter(n => n.category === 'score');
+    const avgScore = scoreNodes.length > 0 ? Math.round(scoreNodes.reduce((s, n) => s + n.numericValue, 0) / scoreNodes.length) : 0;
+
+    return { avgIntensity, dominantCategory, strongTraits, weakTraits, totalTraits: nodes.length, completeness, specialization, avgScore };
   }, [nodes]);
 
   // SVG dimensions
@@ -250,31 +270,43 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
         <span className="ml-auto text-xs text-muted-foreground">{genomeSummary.totalTraits} traits encoded</span>
       </div>
 
-      {/* Genome Summary Stats */}
+      {/* Enhanced Genome Summary */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={isInView ? { opacity: 1 } : {}}
         transition={{ delay: 0.2 }}
-        className="grid grid-cols-4 gap-2 mb-4"
+        className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4"
       >
         {[
+          { label: 'Genome Completeness', value: `${genomeSummary.completeness}%`, icon: Dna, color: 'text-accent' },
           { label: 'Avg Intensity', value: `${genomeSummary.avgIntensity}%`, icon: BarChart3, color: 'text-primary' },
-          { label: 'Strong Traits', value: genomeSummary.strongTraits, icon: Sparkles, color: 'text-terminal-green' },
-          { label: 'Weak Traits', value: genomeSummary.weakTraits, icon: Filter, color: 'text-terminal-red' },
-          { label: 'Dominant', value: categoryLabels[genomeSummary.dominantCategory], icon: Dna, color: 'text-accent' },
+          { label: 'Strong / Weak', value: `${genomeSummary.strongTraits} / ${genomeSummary.weakTraits}`, icon: Sparkles, color: 'text-terminal-green' },
+          { label: 'Specialization', value: `${genomeSummary.specialization}%`, icon: Filter, color: 'text-terminal-cyan' },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
-            className="text-center p-2 bg-muted/30 rounded-lg"
+            className="text-center p-2.5 bg-muted/30 rounded-lg border border-border/30"
             initial={{ opacity: 0, y: 10 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.3 + i * 0.08 }}
           >
-            <stat.icon className={`w-3 h-3 mx-auto mb-1 ${stat.color}`} />
+            <stat.icon className={`w-3.5 h-3.5 mx-auto mb-1 ${stat.color}`} />
             <p className={`text-sm font-bold font-mono ${stat.color}`}>{stat.value}</p>
             <p className="text-[8px] text-muted-foreground">{stat.label}</p>
           </motion.div>
         ))}
+      </motion.div>
+
+      {/* Dominant Category Highlight */}
+      <motion.div
+        initial={{ opacity: 0, x: -10 }}
+        animate={isInView ? { opacity: 1, x: 0 } : {}}
+        transition={{ delay: 0.5 }}
+        className="flex items-center gap-3 p-3 mb-4 bg-accent/5 rounded-xl border border-accent/20"
+      >
+        <span className="text-accent text-sm font-medium">Dominant Gene:</span>
+        <span className="text-foreground font-bold text-sm">{categoryLabels[genomeSummary.dominantCategory]}</span>
+        <span className="text-muted-foreground text-xs ml-auto">Avg Score: {genomeSummary.avgScore}/100</span>
       </motion.div>
 
       {/* Category Filter + Legend */}
@@ -285,21 +317,25 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
             !activeFilter ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border text-muted-foreground hover:text-foreground'
           }`}
         >
-          All
+          All ({nodes.length})
         </button>
-        {Object.entries(categoryLabels).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setActiveFilter(activeFilter === key ? null : key)}
-            className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-colors ${
-              activeFilter === key ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: `hsl(${categoryColors[key]})` }} />
-            <span>{label}</span>
-            <span className="text-[9px] opacity-60">({nodes.filter(n => n.category === key).length})</span>
-          </button>
-        ))}
+        {Object.entries(categoryLabels).map(([key, label]) => {
+          const Icon = categoryIcons[key] || Dna;
+          const count = nodes.filter(n => n.category === key).length;
+          return (
+            <button
+              key={key}
+              onClick={() => setActiveFilter(activeFilter === key ? null : key)}
+              className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-colors ${
+                activeFilter === key ? 'bg-primary/10 border-primary/30 text-primary' : 'border-border text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Icon className="w-3 h-3" />
+              <span>{label}</span>
+              <span className="text-[9px] opacity-60">({count})</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* DNA Visualization */}
@@ -347,6 +383,7 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
               const anchor = isLeft ? 'end' : 'start';
               const nodeSize = 5 + node.intensity * 6;
               const isHovered = hoveredNode === node.id;
+              const isDominant = node.intensity >= 0.7;
 
               return (
                 <motion.g key={node.id} initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : {}} transition={{ delay: 0.8 + i * 0.06, duration: 0.4 }}>
@@ -364,8 +401,8 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
                   {/* Glow on hover */}
                   {isHovered && <circle cx={nodeX} cy={y} r={nodeSize + 10} fill={`hsl(${node.color} / 0.12)`} />}
 
-                  {/* Pulse ring for strong traits */}
-                  {node.intensity >= 0.7 && (
+                  {/* Pulse ring for dominant traits */}
+                  {isDominant && (
                     <motion.circle cx={nodeX} cy={y} r={nodeSize + 4} fill="none"
                       stroke={`hsl(${node.color} / 0.3)`} strokeWidth="1"
                       animate={{ r: [nodeSize + 4, nodeSize + 10, nodeSize + 4], opacity: [0.3, 0, 0.3] }}
@@ -392,16 +429,29 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
                     className="cursor-pointer select-none"
                     onMouseEnter={() => setHoveredNode(node.id)} onMouseLeave={() => setHoveredNode(null)}
                     onClick={() => setActiveNode(activeNode?.id === node.id ? null : node)}
-                    style={{ transition: 'fill 0.2s ease' }}>
+                  >
                     {node.label}
                   </motion.text>
 
                   {/* Value on hover */}
                   {isHovered && (
                     <motion.text x={labelX} y={y + 14} textAnchor={anchor} dominantBaseline="middle"
-                      fontSize="9" fontFamily="'JetBrains Mono', monospace" fill={`hsl(${node.color})`}
-                      initial={{ opacity: 0, y: y + 8 }} animate={{ opacity: 1, y: y + 14 }}>
+                      fontSize="9" fontFamily="'Space Grotesk', sans-serif" fontWeight="400"
+                      fill={`hsl(${node.color} / 0.8)`}
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}
+                    >
                       {node.value}
+                    </motion.text>
+                  )}
+
+                  {/* Dominant badge */}
+                  {isDominant && (
+                    <motion.text x={nodeX} y={y - nodeSize - 6} textAnchor="middle" dominantBaseline="middle"
+                      fontSize="8" fontFamily="'Space Grotesk', sans-serif" fontWeight="700"
+                      fill={`hsl(${node.color})`}
+                      initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : {}} transition={{ delay: 1.5 + i * 0.05 }}
+                    >
+                      ★
                     </motion.text>
                   )}
                 </motion.g>
@@ -409,48 +459,80 @@ export function DeveloperDNA({ languages, scores, personality, streaks, userData
             })}
           </svg>
         </div>
-
-        {/* Detail panel */}
-        <AnimatePresence>
-          {activeNode && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-card border border-border rounded-xl p-4 shadow-2xl min-w-[280px] z-20"
-              style={{ boxShadow: `0 0 30px hsl(${activeNode.color} / 0.15)` }}
-            >
-              <button onClick={() => setActiveNode(null)} className="absolute top-2 right-2 p-1 rounded-lg hover:bg-muted text-muted-foreground">
-                <X className="w-3 h-3" />
-              </button>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: `hsl(${activeNode.color})` }} />
-                <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">{categoryLabels[activeNode.category]}</span>
-              </div>
-              <p className="text-lg font-bold text-foreground">{activeNode.label}</p>
-              <p className="text-sm font-mono" style={{ color: `hsl(${activeNode.color})` }}>{activeNode.value}</p>
-              
-              {/* Intensity bar */}
-              <div className="mt-3">
-                <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
-                  <span>Trait Intensity</span>
-                  <span>{Math.round(activeNode.intensity * 100)}%</span>
-                </div>
-                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <motion.div className="h-full rounded-full" style={{ backgroundColor: `hsl(${activeNode.color})` }}
-                    initial={{ width: 0 }} animate={{ width: `${activeNode.intensity * 100}%` }} transition={{ duration: 0.6 }} />
-                </div>
-              </div>
-
-              {/* Strength classification */}
-              <div className="mt-2 text-[10px]">
-                <span className="text-muted-foreground">Classification: </span>
-                <span className={activeNode.intensity >= 0.7 ? 'text-terminal-green font-semibold' : activeNode.intensity >= 0.4 ? 'text-terminal-yellow font-semibold' : 'text-terminal-red font-semibold'}>
-                  {activeNode.intensity >= 0.7 ? 'Dominant Trait' : activeNode.intensity >= 0.4 ? 'Moderate Trait' : 'Recessive Trait'}
-                </span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+
+      {/* Trait Detail Panel */}
+      <AnimatePresence>
+        {activeNode && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -10, height: 0 }}
+            className="mt-4 p-4 rounded-xl border border-border bg-muted/20"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: `hsl(${activeNode.color})` }} />
+                <h4 className="font-semibold text-foreground text-sm">{activeNode.label}</h4>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
+                  {categoryLabels[activeNode.category]}
+                </span>
+                {activeNode.intensity >= 0.7 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-terminal-green/10 text-terminal-green border border-terminal-green/20">
+                    Dominant
+                  </span>
+                )}
+                {activeNode.intensity < 0.3 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-terminal-red/10 text-terminal-red border border-terminal-red/20">
+                    Recessive
+                  </span>
+                )}
+              </div>
+              <button onClick={() => setActiveNode(null)} className="text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1">Value</p>
+                <p className="text-lg font-bold font-mono" style={{ color: `hsl(${activeNode.color})` }}>{activeNode.value}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1">Intensity</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${activeNode.intensity * 100}%`, backgroundColor: `hsl(${activeNode.color})` }} />
+                  </div>
+                  <span className="text-xs font-mono font-bold" style={{ color: `hsl(${activeNode.color})` }}>
+                    {Math.round(activeNode.intensity * 100)}%
+                  </span>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1">Percentile</p>
+                <p className="text-lg font-bold font-mono text-foreground">
+                  {activeNode.numericValue >= 90 ? 'Top 5%' : activeNode.numericValue >= 70 ? 'Top 20%' : activeNode.numericValue >= 50 ? 'Top 40%' : 'Below Avg'}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Trait Classification Legend */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={isInView ? { opacity: 1 } : {}}
+        transition={{ delay: 2 }}
+        className="mt-4 pt-3 border-t border-border/30 flex items-center justify-between text-[10px] text-muted-foreground"
+      >
+        <div className="flex gap-3">
+          <span className="flex items-center gap-1"><span className="text-terminal-green">★</span> Dominant ≥70%</span>
+          <span className="flex items-center gap-1"><span className="text-terminal-yellow">●</span> Active 30-70%</span>
+          <span className="flex items-center gap-1"><span className="text-terminal-red">○</span> Recessive &lt;30%</span>
+        </div>
+        <span>Click nodes for details</span>
+      </motion.div>
     </div>
   );
 }
