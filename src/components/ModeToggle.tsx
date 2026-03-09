@@ -9,7 +9,7 @@ export function ModeToggle({ isRecruiterMode, onToggle }: { isRecruiterMode: boo
       transition={{ delay: 0.3 }}
       className="flex items-center justify-center gap-3 mb-8 relative z-10"
     >
-      <div className="glass-panel flex p-1.5">
+      <div className="glass-panel-static flex p-1.5">
         <button
           onClick={() => onToggle(false)}
           className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${

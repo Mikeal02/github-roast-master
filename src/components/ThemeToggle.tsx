@@ -22,7 +22,7 @@ export function ThemeToggle() {
   return (
     <motion.button
       onClick={toggle}
-      className="fixed top-4 right-4 z-50 p-2.5 rounded-xl glass-panel hover:border-primary/50 transition-all group"
+      className="fixed top-4 right-4 z-50 p-2.5 rounded-xl glass-panel-static hover:border-primary/50 transition-all group"
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
       aria-label="Toggle theme"
