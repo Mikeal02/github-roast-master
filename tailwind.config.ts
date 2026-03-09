@@ -62,6 +62,8 @@ export default {
           elevated: "hsl(var(--surface-elevated))",
           sunken: "hsl(var(--surface-sunken))",
         },
+        gold: "hsl(var(--gold))",
+        platinum: "hsl(var(--platinum))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
