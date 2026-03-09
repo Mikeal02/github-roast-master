@@ -594,6 +594,22 @@ const Index = () => {
           </AnimatedSection>
         );
 
+      case 'impact':
+        return (
+          <AnimatedSection key="impact">
+            <ScrollReveal variant="fadeUp">
+              <ImpactMetrics
+                impactMetrics={aiAnalysis.impactMetrics}
+                healthMetrics={aiAnalysis.healthMetrics}
+                consistencyScore={aiAnalysis.consistencyScore}
+                followRatio={aiAnalysis.followRatio}
+                reposPerYear={aiAnalysis.reposPerYear}
+                starsPerYear={aiAnalysis.starsPerYear}
+              />
+            </ScrollReveal>
+          </AnimatedSection>
+        );
+
       default:
         return null;
     }
