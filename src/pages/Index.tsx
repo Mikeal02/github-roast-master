@@ -699,13 +699,10 @@ const Index = () => {
               initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
               transition={{ delay: 0.6, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="terminal-box text-center py-20"
+              className="terminal-box text-center py-16"
             >
               <motion.div
-                animate={{
-                  y: [0, -12, 0],
-                  rotate: [0, 5, -5, 0],
-                }}
+                animate={{ y: [0, -12, 0], rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                 className="text-6xl mb-6"
               >
@@ -714,25 +711,31 @@ const Index = () => {
               <h3 className="text-2xl font-bold text-foreground mb-3">
                 {isRecruiterMode ? 'Ready to Analyze' : 'Ready to Roast'}
               </h3>
-              <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
+              <p className="text-muted-foreground max-w-md mx-auto leading-relaxed text-sm">
                 {isRecruiterMode
-                  ? 'Enter a GitHub username to generate a comprehensive AI-powered professional assessment with career insights, tech stack analysis, and more.'
-                  : 'Enter a GitHub username to get an AI-generated roast with skill radar, coding streaks, repo deep dives, and shareable cards.'
+                  ? 'Enter a GitHub username above to generate a comprehensive AI-powered professional assessment with career insights, tech stack analysis, and 12+ analytical tabs.'
+                  : 'Enter a GitHub username above to unleash an AI-powered analysis with skill radar, coding DNA, personality profiling, XP leveling, and devastatingly hilarious roasts.'
                 }
               </p>
-              <div className="flex items-center justify-center gap-3 mt-8 text-sm text-muted-foreground">
-                <span>Try:</span>
-                {['torvalds', 'gaearon', 'tj'].map((name, i) => (
-                  <motion.button
-                    key={name}
-                    onClick={() => handleSearch(name)}
-                    className="px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-foreground font-mono text-xs transition-colors hover:text-primary border border-transparent hover:border-primary/30"
+              <div className="grid grid-cols-3 gap-3 mt-8 max-w-sm mx-auto">
+                {[
+                  { emoji: '📊', label: '12 Analysis Tabs' },
+                  { emoji: '🧬', label: 'Developer DNA' },
+                  { emoji: '📄', label: 'PDF Reports' },
+                ].map((feat, i) => (
+                  <motion.div
+                    key={feat.label}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.8 + i * 0.1 }}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
+                    className="p-3 rounded-xl bg-muted/30 border border-border/50"
                   >
+                    <span className="text-lg">{feat.emoji}</span>
+                    <p className="text-[10px] text-muted-foreground mt-1">{feat.label}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
                     @{name}
                   </motion.button>
                 ))}
