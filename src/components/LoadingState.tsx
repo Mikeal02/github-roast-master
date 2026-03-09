@@ -19,6 +19,8 @@ const funFacts = [
   '🧬 Your coding DNA is as unique as your fingerprint',
   '🎯 Top 1% of developers have 100+ stars on a single repo',
   '🌍 GitHub hosts over 200 million repositories worldwide',
+  '🚀 The first commit to Git itself was in 2005',
+  '🤖 AI can now analyze 300+ data points from a single profile',
 ];
 
 export function LoadingState() {
@@ -54,8 +56,19 @@ export function LoadingState() {
       initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
       animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
       exit={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
-      className="terminal-box text-center py-12 max-w-lg mx-auto"
+      className="glass-panel text-center py-12 px-6 max-w-lg mx-auto relative overflow-hidden"
     >
+      {/* Animated background gradient */}
+      <motion.div
+        className="absolute inset-0 opacity-[0.03]"
+        style={{
+          background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--secondary)))',
+          backgroundSize: '400% 400%',
+        }}
+        animate={{ backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+      />
+
       {/* Animated CPU with orbiting dots */}
       <div className="relative inline-block mb-8">
         <motion.div
@@ -70,7 +83,6 @@ export function LoadingState() {
             maskComposite: 'exclude',
           }}
         />
-        {/* Orbiting particles */}
         {[0, 1, 2].map((i) => (
           <motion.div
             key={i}
@@ -92,52 +104,47 @@ export function LoadingState() {
         </div>
       </div>
 
-      <h3 className="text-xl font-bold text-foreground mb-1">Deep Analysis</h3>
-      <p className="text-sm text-muted-foreground mb-6">Crunching data through AI models...</p>
+      <h3 className="text-xl font-bold text-foreground mb-1 relative">Deep Analysis</h3>
+      <p className="text-sm text-muted-foreground mb-6 relative">Crunching data through AI models...</p>
 
       {/* Progress bar */}
-      <div className="w-full h-3 bg-muted rounded-full overflow-hidden mb-2 relative">
+      <div className="w-full h-2.5 bg-muted/50 rounded-full overflow-hidden mb-2 relative">
         <motion.div
           className="h-full rounded-full relative"
           style={{
             background: 'linear-gradient(90deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--accent)))',
+            backgroundSize: '200% 100%',
           }}
           initial={{ width: '0%' }}
-          animate={{ width: `${Math.min(progress, 95)}%` }}
-          transition={{ duration: 0.3 }}
-        />
-        <motion.div
-          className="absolute inset-0 h-full"
-          style={{
-            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%)',
-            width: '30%',
+          animate={{ 
+            width: `${Math.min(progress, 95)}%`,
+            backgroundPosition: ['0% 0%', '100% 0%'],
           }}
-          animate={{ x: ['-100%', '400%'] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+          transition={{ width: { duration: 0.3 }, backgroundPosition: { duration: 2, repeat: Infinity, ease: 'linear' } }}
         />
       </div>
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 relative">
         <motion.p
           className="text-xs font-mono text-primary"
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1.5, repeat: Infinity }}
         >
-          {Math.min(Math.round(progress), 95)}% complete
+          {Math.min(Math.round(progress), 95)}%
         </motion.p>
-        <span className="text-[10px] text-muted-foreground font-mono">ETA ~{Math.max(1, 7 - Math.floor(progress / 14))}s</span>
+        <span className="text-[10px] text-muted-foreground/50 font-mono">~{Math.max(1, 7 - Math.floor(progress / 14))}s remaining</span>
       </div>
 
       {/* Steps */}
-      <div className="space-y-2 text-left mb-6">
+      <div className="space-y-1.5 text-left mb-6 relative">
         {steps.map((step, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: index <= currentStep ? 1 : 0.15, x: 0 }}
+            animate={{ opacity: index <= currentStep ? 1 : 0.12, x: 0 }}
             transition={{ delay: index * 0.15, duration: 0.4 }}
-            className={`flex items-center gap-3 text-sm px-3 py-1.5 rounded-lg ${
-              index === currentStep ? 'bg-muted/30' : ''
+            className={`flex items-center gap-3 text-sm px-3 py-1.5 rounded-lg transition-colors ${
+              index === currentStep ? 'bg-primary/5 border border-primary/10' : ''
             }`}
           >
             <motion.span
@@ -147,12 +154,12 @@ export function LoadingState() {
             >
               {step.icon}
             </motion.span>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <span className="font-mono text-xs text-foreground">{step.text}</span>
               {index === currentStep && (
                 <motion.span
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.6 }}
+                  animate={{ opacity: 0.5 }}
                   className="text-[9px] text-muted-foreground ml-2"
                 >
                   ({step.detail})
@@ -164,7 +171,7 @@ export function LoadingState() {
                 <CheckCircle2 className="w-4 h-4 text-terminal-green" />
               </motion.span>
             )}
-            {index === currentStep && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+            {index === currentStep && <Loader2 className="w-4 h-4 animate-spin text-primary flex-shrink-0" />}
           </motion.div>
         ))}
       </div>
@@ -174,7 +181,7 @@ export function LoadingState() {
         key={funFact}
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-[11px] text-muted-foreground italic px-4"
+        className="text-[11px] text-muted-foreground/60 italic px-4 relative"
       >
         {funFact}
       </motion.div>
