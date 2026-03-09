@@ -300,7 +300,7 @@ const Index = () => {
 
               {aiAnalysis.techAnalysis && (
                 <ScrollReveal variant="fadeUp" delay={0.2}>
-                  <div className="score-card">
+                  <div className="glass-panel p-5">
                     <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
                       <Shield className="w-5 h-5 text-primary" />
                       <h3 className="font-semibold text-foreground">Technical Assessment</h3>
