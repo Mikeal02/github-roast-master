@@ -82,7 +82,7 @@ export function ResultsTabs({ activeTab, onTabChange, isRecruiterMode }: Results
   return (
     <div className="sticky top-0 z-30 mb-6">
       {/* Frosted glass backdrop */}
-      <div className="glass-panel py-3 px-1 relative">
+      <div className="glass-panel-static py-3 px-1 relative">
         {/* Active tab counter */}
         <div className="absolute top-1 right-3 text-[9px] font-mono text-muted-foreground/60">
           {activeIndex + 1}/{tabs.length}

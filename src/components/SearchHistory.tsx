@@ -36,7 +36,7 @@ export function SearchHistory({ history, onSelect, onRemove, onClear }) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ delay: i * 0.03 }}
-              className="group flex items-center gap-1 glass-panel px-3 py-1.5 rounded-full text-sm hover:border-primary/30 transition-all cursor-pointer"
+              className="group flex items-center gap-1 glass-panel-static px-3 py-1.5 rounded-full text-sm hover:border-primary/30 transition-all cursor-pointer"
               onClick={() => onSelect(username)}
             >
               <span className="text-foreground hover:text-primary transition-colors font-mono text-xs">
