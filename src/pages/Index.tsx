@@ -656,6 +656,13 @@ const Index = () => {
                     isRecruiterMode={isRecruiterMode}
                     personality={aiAnalysis.personality}
                   />
+                  <PDFReportExport
+                    username={userData.login}
+                    userData={userData}
+                    aiAnalysis={aiAnalysis}
+                    isRecruiterMode={isRecruiterMode}
+                    userRepos={userRepos}
+                  />
                   <ShareExport
                     username={userData.login}
                     score={aiAnalysis.scores?.overall?.score || 0}
