@@ -56,6 +56,7 @@ export function ResultsTabs({ activeTab, onTabChange, isRecruiterMode }: Results
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const activeTabRef = useRef<HTMLButtonElement>(null);
 
   const checkScroll = () => {
     const el = scrollRef.current;
@@ -75,41 +76,87 @@ export function ResultsTabs({ activeTab, onTabChange, isRecruiterMode }: Results
     };
   }, []);
 
+  // Auto-scroll active tab into view
+  useEffect(() => {
+    if (activeTabRef.current && scrollRef.current) {
+      const container = scrollRef.current;
+      const tab = activeTabRef.current;
+      const tabLeft = tab.offsetLeft - container.offsetLeft;
+      const tabRight = tabLeft + tab.offsetWidth;
+      const scrollLeft = container.scrollLeft;
+      const visibleWidth = container.clientWidth;
+
+      if (tabLeft < scrollLeft + 40) {
+        container.scrollTo({ left: tabLeft - 40, behavior: 'smooth' });
+      } else if (tabRight > scrollLeft + visibleWidth - 40) {
+        container.scrollTo({ left: tabRight - visibleWidth + 40, behavior: 'smooth' });
+      }
+    }
+  }, [activeTab]);
+
   const scroll = (dir: number) => {
     scrollRef.current?.scrollBy({ left: dir * 200, behavior: 'smooth' });
   };
 
   const activeIndex = tabs.findIndex(t => t.id === activeTab);
+  const activeAccent = tabs[activeIndex]?.accent || 'hsl(var(--primary))';
+
+  // Keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const next = (activeIndex + 1) % tabs.length;
+      onTabChange(tabs[next].id);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prev = (activeIndex - 1 + tabs.length) % tabs.length;
+      onTabChange(tabs[prev].id);
+    }
+  };
 
   return (
-    <div className="sticky top-0 z-30 mb-6">
-      {/* Frosted glass backdrop */}
+    <div className="sticky top-0 z-30 mb-6" role="tablist" onKeyDown={handleKeyDown}>
       <div className="glass-panel-static py-3 px-1 relative">
-        {/* Active tab counter */}
-        <div className="absolute top-1 right-3 text-[9px] font-mono text-muted-foreground/60">
+        {/* Active tab counter with accent color */}
+        <div className="absolute top-1 right-3 text-[9px] font-mono text-muted-foreground/60 flex items-center gap-1.5">
+          <motion.span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ backgroundColor: activeAccent }}
+            layoutId="tabCounterDot"
+          />
           {activeIndex + 1}/{tabs.length}
         </div>
 
         {/* Scroll edge fades */}
         {canScrollLeft && (
-          <div className="absolute left-0 top-0 bottom-0 w-12 z-10 pointer-events-none rounded-l-2xl" 
-               style={{ background: 'linear-gradient(90deg, hsl(var(--card) / 0.9), transparent)' }} />
+          <div className="absolute left-0 top-0 bottom-0 w-16 z-10 pointer-events-none rounded-l-2xl" 
+               style={{ background: 'linear-gradient(90deg, hsl(var(--card) / 0.95), transparent)' }} />
         )}
         {canScrollRight && (
-          <div className="absolute right-0 top-0 bottom-0 w-12 z-10 pointer-events-none rounded-r-2xl"
-               style={{ background: 'linear-gradient(-90deg, hsl(var(--card) / 0.9), transparent)' }} />
+          <div className="absolute right-0 top-0 bottom-0 w-16 z-10 pointer-events-none rounded-r-2xl"
+               style={{ background: 'linear-gradient(-90deg, hsl(var(--card) / 0.95), transparent)' }} />
         )}
 
         {/* Scroll arrows */}
         {canScrollLeft && (
-          <button onClick={() => scroll(-1)} className="absolute left-1 top-1/2 -translate-y-1/2 z-20 p-1 rounded-full bg-muted/80 text-muted-foreground hover:text-foreground transition-colors">
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => scroll(-1)}
+            className="absolute left-1.5 top-1/2 -translate-y-1/2 z-20 p-1.5 rounded-full bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all shadow-sm"
+          >
             <ChevronLeft className="w-3.5 h-3.5" />
-          </button>
+          </motion.button>
         )}
         {canScrollRight && (
-          <button onClick={() => scroll(1)} className="absolute right-1 top-1/2 -translate-y-1/2 z-20 p-1 rounded-full bg-muted/80 text-muted-foreground hover:text-foreground transition-colors">
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => scroll(1)}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 z-20 p-1.5 rounded-full bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all shadow-sm"
+          >
             <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+          </motion.button>
         )}
 
         <div ref={scrollRef} className="flex gap-1 overflow-x-auto scrollbar-hide px-2">
@@ -118,8 +165,11 @@ export function ResultsTabs({ activeTab, onTabChange, isRecruiterMode }: Results
             return (
               <motion.button
                 key={tab.id}
+                ref={isActive ? activeTabRef : undefined}
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => onTabChange(tab.id)}
-                className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                   isActive
                     ? 'text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -138,7 +188,9 @@ export function ResultsTabs({ activeTab, onTabChange, isRecruiterMode }: Results
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
-                <span className="relative z-10">{tab.icon}</span>
+                <span className="relative z-10 transition-transform duration-200" style={isActive ? {} : {}}>
+                  {tab.icon}
+                </span>
                 <span className="relative z-10 hidden sm:inline">{tab.label}</span>
                 {isActive && (
                   <motion.div
@@ -150,6 +202,16 @@ export function ResultsTabs({ activeTab, onTabChange, isRecruiterMode }: Results
               </motion.button>
             );
           })}
+        </div>
+
+        {/* Progress indicator */}
+        <div className="mt-2 mx-2 h-0.5 rounded-full bg-muted/30 overflow-hidden">
+          <motion.div
+            className="h-full rounded-full"
+            style={{ background: `linear-gradient(90deg, hsl(var(--primary)), ${activeAccent})` }}
+            animate={{ width: `${((activeIndex + 1) / tabs.length) * 100}%` }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          />
         </div>
       </div>
     </div>

@@ -44,6 +44,7 @@ import { TimeMachine } from '@/components/TimeMachine';
 import { DeveloperGlobe } from '@/components/DeveloperGlobe';
 import { ImpactMetrics } from '@/components/ImpactMetrics';
 import { LandingPage } from '@/components/LandingPage';
+import { ScrollToTop } from '@/components/ScrollToTop';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred, fetchUserSocialAccounts } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
@@ -631,8 +632,9 @@ const Index = () => {
     <div className="min-h-screen bg-background cyber-grid">
       <AnimatedBackground />
       <ThemeToggle />
+      <ScrollToTop />
 
-      <div className="container mx-auto px-4 py-12 max-w-5xl relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 py-8 md:py-12 max-w-5xl relative z-10">
         <Header isRecruiterMode={isRecruiterMode} />
         <ModeToggle isRecruiterMode={isRecruiterMode} onToggle={handleModeToggle} />
         <SearchBar onSearch={handleSearch} isLoading={isLoading} />
@@ -707,7 +709,15 @@ const Index = () => {
               />
 
               <AnimatePresence mode="wait">
-                {renderTabContent()}
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, y: -10, filter: 'blur(6px)' }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {renderTabContent()}
+                </motion.div>
               </AnimatePresence>
             </motion.div>
           )}
