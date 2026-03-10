@@ -632,6 +632,7 @@ const Index = () => {
     <div className="min-h-screen bg-background cyber-grid">
       <AnimatedBackground />
       <ThemeToggle />
+      <ScrollToTop />
 
       <div className="container mx-auto px-4 sm:px-6 py-8 md:py-12 max-w-5xl relative z-10">
         <Header isRecruiterMode={isRecruiterMode} />
