@@ -218,6 +218,46 @@ export function DeveloperGlobe({ userData, languages, totalStars, followers }: D
             />
           ))}
 
+          {/* Connection lines between same-language hotspots */}
+          {connections.map((conn, i) => {
+            const midX = (conn.x1 + conn.x2) / 2;
+            const midY = Math.min(conn.y1, conn.y2) - 30 - Math.abs(conn.x2 - conn.x1) * 0.08;
+            const curvePath = `M${conn.x1},${conn.y1} Q${midX},${midY} ${conn.x2},${conn.y2}`;
+            return (
+              <g key={`conn-${i}`}>
+                <motion.path
+                  d={curvePath}
+                  fill="none"
+                  stroke="hsl(var(--secondary) / 0.15)"
+                  strokeWidth={1}
+                  strokeDasharray="4 3"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  transition={{ delay: 1 + i * 0.12, duration: 1.2, ease: 'easeOut' }}
+                />
+                {/* Animated particle traveling along the connection */}
+                <motion.circle
+                  r={2}
+                  fill="hsl(var(--secondary))"
+                  opacity={0.8}
+                  initial={{ offsetDistance: '0%' }}
+                  animate={{ offsetDistance: ['0%', '100%'] }}
+                  transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: 'linear', delay: 1.5 + i * 0.2 }}
+                  style={{ offsetPath: `path('${curvePath}')` } as any}
+                />
+                <motion.circle
+                  r={1.5}
+                  fill="hsl(var(--primary))"
+                  opacity={0.6}
+                  initial={{ offsetDistance: '0%' }}
+                  animate={{ offsetDistance: ['100%', '0%'] }}
+                  transition={{ duration: 4 + i * 0.3, repeat: Infinity, ease: 'linear', delay: 2 + i * 0.15 }}
+                  style={{ offsetPath: `path('${curvePath}')` } as any}
+                />
+              </g>
+            );
+          })}
+
           {/* Language hotspots */}
           {hotspots.map((spot, i) => {
             const { x, y } = project(spot.lat, spot.lng, W, H);
