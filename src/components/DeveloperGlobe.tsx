@@ -149,6 +149,30 @@ export function DeveloperGlobe({ userData, languages, totalStars, followers }: D
 
   const maxCount = Math.max(...hotspots.map((h) => h.count), 1);
 
+  // Generate connection lines between hotspots that share the same language
+  const connections = useMemo(() => {
+    const lines: { x1: number; y1: number; x2: number; y2: number; lang: string }[] = [];
+    for (let i = 0; i < hotspots.length; i++) {
+      for (let j = i + 1; j < hotspots.length; j++) {
+        if (hotspots[i].lang === hotspots[j].lang) {
+          const p1 = project(hotspots[i].lat, hotspots[i].lng, W, H);
+          const p2 = project(hotspots[j].lat, hotspots[j].lng, W, H);
+          lines.push({ x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, lang: hotspots[i].lang });
+        }
+      }
+    }
+    return lines;
+  }, [hotspots]);
+
+  // Floating particles along connections
+  const particles = useMemo(() => {
+    return connections.map((conn, i) => ({
+      ...conn,
+      id: `p-${i}`,
+      offset: Math.random(),
+    }));
+  }, [connections]);
+
   return (
     <div className="glass-panel p-5">
       <div className="flex items-center gap-2 mb-5 pb-3 border-b border-border">
@@ -193,6 +217,46 @@ export function DeveloperGlobe({ userData, languages, totalStars, followers }: D
               transition={{ delay: i * 0.05 }}
             />
           ))}
+
+          {/* Connection lines between same-language hotspots */}
+          {connections.map((conn, i) => {
+            const midX = (conn.x1 + conn.x2) / 2;
+            const midY = Math.min(conn.y1, conn.y2) - 30 - Math.abs(conn.x2 - conn.x1) * 0.08;
+            const curvePath = `M${conn.x1},${conn.y1} Q${midX},${midY} ${conn.x2},${conn.y2}`;
+            return (
+              <g key={`conn-${i}`}>
+                <motion.path
+                  d={curvePath}
+                  fill="none"
+                  stroke="hsl(var(--secondary) / 0.15)"
+                  strokeWidth={1}
+                  strokeDasharray="4 3"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  transition={{ delay: 1 + i * 0.12, duration: 1.2, ease: 'easeOut' }}
+                />
+                {/* Animated particle traveling along the connection */}
+                <motion.circle
+                  r={2}
+                  fill="hsl(var(--secondary))"
+                  opacity={0.8}
+                  initial={{ offsetDistance: '0%' }}
+                  animate={{ offsetDistance: ['0%', '100%'] }}
+                  transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: 'linear', delay: 1.5 + i * 0.2 }}
+                  style={{ offsetPath: `path('${curvePath}')` } as any}
+                />
+                <motion.circle
+                  r={1.5}
+                  fill="hsl(var(--primary))"
+                  opacity={0.6}
+                  initial={{ offsetDistance: '0%' }}
+                  animate={{ offsetDistance: ['100%', '0%'] }}
+                  transition={{ duration: 4 + i * 0.3, repeat: Infinity, ease: 'linear', delay: 2 + i * 0.15 }}
+                  style={{ offsetPath: `path('${curvePath}')` } as any}
+                />
+              </g>
+            );
+          })}
 
           {/* Language hotspots */}
           {hotspots.map((spot, i) => {
