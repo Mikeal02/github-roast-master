@@ -179,8 +179,8 @@ export function ScoreCard({ title, score, icon, explanation = '', delay = 0, sub
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={`text-xl font-bold font-mono leading-none ${getScoreColor(animatedScore)}`}>
-              {animatedScore}
+            <span className={`text-lg font-bold font-mono leading-none tabular-nums ${getScoreColor(animatedScore)}`}>
+              {String(animatedScore).padStart(2, '\u00A0')}
             </span>
             <span className="text-[7px] text-muted-foreground mt-0.5">/100</span>
           </div>

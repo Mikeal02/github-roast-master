@@ -129,7 +129,7 @@ export function ScoreSummaryPanel({ scores }: ScoreSummaryPanelProps) {
             >
               {gradeInfo.grade}
             </motion.span>
-            <span className={`text-xl font-bold font-mono leading-none ${gradeInfo.color}`}>
+            <span className={`text-xl font-bold font-mono leading-none tabular-nums ${gradeInfo.color}`}>
               {animatedScore}
             </span>
             <span className="text-[9px] text-muted-foreground">{gradeInfo.label}</span>
