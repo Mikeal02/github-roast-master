@@ -149,6 +149,30 @@ export function DeveloperGlobe({ userData, languages, totalStars, followers }: D
 
   const maxCount = Math.max(...hotspots.map((h) => h.count), 1);
 
+  // Generate connection lines between hotspots that share the same language
+  const connections = useMemo(() => {
+    const lines: { x1: number; y1: number; x2: number; y2: number; lang: string }[] = [];
+    for (let i = 0; i < hotspots.length; i++) {
+      for (let j = i + 1; j < hotspots.length; j++) {
+        if (hotspots[i].lang === hotspots[j].lang) {
+          const p1 = project(hotspots[i].lat, hotspots[i].lng, W, H);
+          const p2 = project(hotspots[j].lat, hotspots[j].lng, W, H);
+          lines.push({ x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, lang: hotspots[i].lang });
+        }
+      }
+    }
+    return lines;
+  }, [hotspots]);
+
+  // Floating particles along connections
+  const particles = useMemo(() => {
+    return connections.map((conn, i) => ({
+      ...conn,
+      id: `p-${i}`,
+      offset: Math.random(),
+    }));
+  }, [connections]);
+
   return (
     <div className="glass-panel p-5">
       <div className="flex items-center gap-2 mb-5 pb-3 border-b border-border">
