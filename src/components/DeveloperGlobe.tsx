@@ -171,19 +171,23 @@ export function DeveloperGlobe({ userData, languages, totalStars, followers }: D
           {/* Prime meridian */}
           <line x1={W / 2} y1={0} x2={W / 2} y2={H} stroke="hsl(var(--primary))" strokeWidth={0.5} opacity={0.15} strokeDasharray="4 4" />
 
-          {/* Continents */}
+          {/* Countries (accurate world map) */}
           {continentPaths.map((cont, i) => (
             <motion.path
-              key={cont.name}
+              key={cont.name + i}
               d={cont.d}
               fill="hsl(var(--muted))"
               stroke="hsl(var(--border))"
-              strokeWidth={0.8}
+              strokeWidth={0.4}
+              fillRule="evenodd"
+              vectorEffect="non-scaling-stroke"
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.7 }}
-              transition={{ delay: i * 0.05 }}
+              transition={{ delay: Math.min(i * 0.004, 0.8), duration: 0.4 }}
+              className="transition-colors hover:fill-[hsl(var(--surface-elevated))]"
             />
           ))}
+
 
           {/* Connection lines between same-language hotspots */}
           {connections.map((conn, i) => {
