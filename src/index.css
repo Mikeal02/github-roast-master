@@ -6,63 +6,63 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 220 20% 10%;
+    --background: 240 30% 97%;
+    --foreground: 240 30% 9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
+    --card-foreground: 240 30% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --popover-foreground: 240 30% 9%;
 
-    --primary: 142 72% 42%;
+    --primary: 243 75% 58%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 192 85% 40%;
+    --secondary: 200 88% 45%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 15% 92%;
-    --muted-foreground: 220 10% 45%;
+    --muted: 240 20% 92%;
+    --muted-foreground: 240 12% 42%;
 
-    --accent: 270 80% 55%;
+    --accent: 268 80% 60%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 85% 55%;
+    --destructive: 0 85% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 88%;
-    --input: 220 15% 92%;
-    --ring: 142 72% 42%;
+    --border: 240 20% 88%;
+    --input: 240 20% 92%;
+    --ring: 243 75% 58%;
 
-    --radius: 0.75rem;
+    --radius: 0.85rem;
 
-    --terminal-green: 142 72% 42%;
-    --terminal-cyan: 192 85% 40%;
-    --terminal-yellow: 45 95% 50%;
-    --terminal-red: 0 85% 55%;
-    --terminal-purple: 270 80% 55%;
+    --terminal-green: 243 75% 58%;
+    --terminal-cyan: 200 88% 45%;
+    --terminal-yellow: 38 95% 52%;
+    --terminal-red: 0 85% 58%;
+    --terminal-purple: 268 80% 60%;
 
-    --glow-green: 0 0 20px hsl(142 72% 42% / 0.15);
-    --glow-cyan: 0 0 20px hsl(192 85% 40% / 0.15);
+    --glow-green: 0 0 20px hsl(243 75% 58% / 0.18);
+    --glow-cyan: 0 0 20px hsl(200 88% 45% / 0.18);
 
-    --sidebar-background: 220 20% 97%;
-    --sidebar-foreground: 220 20% 10%;
-    --sidebar-primary: 142 72% 42%;
+    --sidebar-background: 240 30% 97%;
+    --sidebar-foreground: 240 30% 9%;
+    --sidebar-primary: 243 75% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 92%;
-    --sidebar-accent-foreground: 220 20% 10%;
-    --sidebar-border: 220 15% 88%;
-    --sidebar-ring: 142 72% 42%;
+    --sidebar-accent: 240 20% 92%;
+    --sidebar-accent-foreground: 240 30% 9%;
+    --sidebar-border: 240 20% 88%;
+    --sidebar-ring: 243 75% 58%;
 
-    --gradient-start: 142 72% 42%;
-    --gradient-end: 192 85% 40%;
-    --gradient-accent: 270 80% 55%;
-    
+    --gradient-start: 243 75% 58%;
+    --gradient-end: 200 88% 50%;
+    --gradient-accent: 268 80% 62%;
+
     --surface-elevated: 0 0% 100%;
-    --surface-sunken: 220 15% 95%;
-    
-    --gold: 45 95% 55%;
-    --platinum: 210 15% 75%;
+    --surface-sunken: 240 22% 95%;
+
+    --gold: 43 96% 56%;
+    --platinum: 230 15% 75%;
   }
 
   .dark {
