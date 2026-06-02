@@ -14,7 +14,7 @@ interface ThemeDef {
 }
 
 const themes: ThemeDef[] = [
-  { id: 'default', name: 'Default', emoji: '🎯', tier: 'Classic', preview: { bg: '#0d1117', accent: '#22c55e', text: '#e5e5e5' }, description: 'The classic green terminal look' },
+  { id: 'default', name: 'Default', emoji: '🎯', tier: 'Classic', preview: { bg: '#0a0a1a', accent: '#6366f1', text: '#e5e5e5' }, description: 'Midnight indigo elite look' },
   { id: 'cyberpunk', name: 'Cyberpunk', emoji: '🌆', tier: 'Neon City', preview: { bg: '#0a0014', accent: '#ff2d95', text: '#00fff0' }, description: 'Neon-lit dystopian future vibes' },
   { id: 'retro', name: 'Retro Terminal', emoji: '📟', tier: 'Old School', preview: { bg: '#0c1a0c', accent: '#33ff33', text: '#33ff33' }, description: 'Old-school phosphor green CRT' },
   { id: 'vaporwave', name: 'Vaporwave', emoji: '🌴', tier: 'Aesthetic', preview: { bg: '#1a0a2e', accent: '#ff71ce', text: '#b967ff' }, description: 'A E S T H E T I C retro-future' },
