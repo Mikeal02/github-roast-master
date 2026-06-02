@@ -1,6 +1,7 @@
 import { useMemo, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Globe, MapPin, Code2, Users, Star } from 'lucide-react';
+import { worldCountryPaths } from '@/lib/worldMapPaths';
 
 interface DeveloperGlobeProps {
   userData: any;
