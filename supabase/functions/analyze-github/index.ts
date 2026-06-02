@@ -471,6 +471,86 @@ CRITICAL: Return ONLY the JSON object. No markdown wrapping. Every score explana
       throw new Error('Failed to parse AI analysis. Please try again.');
     }
 
+    // === DETERMINISTIC SCORE SAFETY NET ===
+    // The AI sometimes omits or zeroes out categories. Compute robust fallback
+    // scores from the real GitHub metrics and backfill any missing/zero score.
+    const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+    const repoCount = repos.length || 1;
+    const followers = user.followers || 0;
+    const uniqueLangs = Object.keys(languageCounts).length;
+    const prEvents = (eventTypes['PullRequestEvent'] || 0) + (eventTypes['PullRequestReviewEvent'] || 0);
+    const issueEvents = eventTypes['IssuesEvent'] || 0;
+
+    const computedScores: Record<string, number> = {
+      activity: clamp(
+        Math.min(40, totalEvents * 0.5) +
+        Math.min(25, activeDays * 1.5) +
+        Math.min(20, currentStreak * 3) +
+        (mostRecentUpdate < 30 ? 15 : mostRecentUpdate < 90 ? 8 : 0)
+      ),
+      documentation: clamp(
+        (reposWithDescription / repoCount) * 45 +
+        (reposWithLicense / repoCount) * 30 +
+        (reposWithTopics / repoCount) * 25
+      ),
+      popularity: clamp(
+        Math.min(45, Math.log2(totalStars + 1) * 9) +
+        Math.min(30, Math.log2(totalForks + 1) * 8) +
+        Math.min(25, Math.log2(followers + 1) * 6)
+      ),
+      diversity: clamp(
+        Math.min(60, uniqueLangs * 12) +
+        Math.min(20, topTopics.length * 2) +
+        Math.min(20, originalRepos * 1.5)
+      ),
+      codeQuality: clamp(
+        conventionalCommitRatio * 0.4 +
+        (reposWithLicense / repoCount) * 25 +
+        (reposWithDescription / repoCount) * 20 +
+        Math.min(15, originalRepos)
+      ),
+      collaboration: clamp(
+        Math.min(35, prEvents * 5) +
+        Math.min(20, issueEvents * 4) +
+        Math.min(25, orgNames.length * 12) +
+        Math.min(20, Math.log2(totalForks + 1) * 6)
+      ),
+    };
+
+    if (!analysisResult.scores || typeof analysisResult.scores !== 'object') {
+      analysisResult.scores = {};
+    }
+    const scoreLabel = (s: number) =>
+      s >= 80 ? 'Elite' : s >= 65 ? 'Strong' : s >= 45 ? 'Decent' : s >= 25 ? 'Weak' : 'Critical';
+
+    for (const key of Object.keys(computedScores)) {
+      const existing = analysisResult.scores[key];
+      const aiScore = existing && typeof existing.score === 'number' ? existing.score : 0;
+      if (!existing || aiScore <= 0) {
+        const score = computedScores[key];
+        analysisResult.scores[key] = {
+          score,
+          label: scoreLabel(score),
+          explanation: existing?.explanation || `Computed from profile metrics.`,
+          subMetrics: existing?.subMetrics,
+        };
+      }
+    }
+
+    // Recompute overall if missing or zero
+    const catKeys = ['activity', 'documentation', 'popularity', 'diversity', 'codeQuality', 'collaboration'];
+    const overallExisting = analysisResult.scores.overall;
+    if (!overallExisting || typeof overallExisting.score !== 'number' || overallExisting.score <= 0) {
+      const avg = clamp(
+        catKeys.reduce((s, k) => s + (analysisResult.scores[k]?.score || 0), 0) / catKeys.length
+      );
+      analysisResult.scores.overall = {
+        score: avg,
+        label: scoreLabel(avg),
+        explanation: overallExisting?.explanation || `Overall score averaged across all categories.`,
+      };
+    }
+
     // === AUGMENT WITH ALL COMPUTED DATA ===
     analysisResult.languages = languageCounts;
     analysisResult.totalStars = totalStars;
