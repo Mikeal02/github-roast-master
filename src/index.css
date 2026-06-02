@@ -131,7 +131,13 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Space Grotesk', 'Inter', sans-serif;
+    font-family: 'DM Sans', 'Inter', sans-serif;
+    font-feature-settings: 'ss01', 'cv01';
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-display {
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -0.02em;
   }
 
   .font-mono {
