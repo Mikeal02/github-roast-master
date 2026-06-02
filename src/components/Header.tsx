@@ -115,6 +115,18 @@ export function Header({ isRecruiterMode = false }) {
         </motion.div>
       </motion.div>
 
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.5 }}
+        className="flex justify-center mb-5"
+      >
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold px-3 py-1 rounded-full glass-panel-static text-primary">
+          <Sparkles className="w-3 h-3" />
+          POWERED BY GEMINI AI
+        </span>
+      </motion.div>
+
       <motion.h1
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -157,7 +169,7 @@ export function Header({ isRecruiterMode = false }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="flex items-center justify-center gap-6 mt-8 text-xs text-muted-foreground"
+        className="flex items-center justify-center gap-2.5 sm:gap-3 mt-8 flex-wrap"
       >
         {[
           { icon: <Zap className="w-3 h-3" />, color: 'bg-terminal-green', label: 'Real GitHub API', detail: '300+ data points' },
@@ -166,14 +178,15 @@ export function Header({ isRecruiterMode = false }) {
         ].map((item, i) => (
           <motion.span
             key={item.label}
-            className="flex items-center gap-2 group cursor-default"
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-2 group cursor-default glass-panel-static px-3.5 py-1.5 text-xs text-muted-foreground"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 + i * 0.1 }}
+            whileHover={{ y: -2 }}
           >
             <span className={`w-2 h-2 rounded-full ${item.color} status-dot`} />
-            <span className="group-hover:text-foreground transition-colors">{item.label}</span>
-            <span className="text-[9px] text-muted-foreground/50 hidden sm:inline">({item.detail})</span>
+            <span className="font-medium group-hover:text-foreground transition-colors">{item.label}</span>
+            <span className="text-[9px] text-muted-foreground/60 hidden sm:inline">({item.detail})</span>
           </motion.span>
         ))}
       </motion.div>
