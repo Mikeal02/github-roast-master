@@ -159,7 +159,7 @@
 
   .dark .terminal-box {
     box-shadow: var(--glow-green), 0 0 0 1px hsl(var(--border));
-    background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(222 18% 7%) 100%);
+    background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(240 38% 7%) 100%);
   }
 
   .terminal-prompt {
@@ -199,7 +199,7 @@
   }
 
   .dark .score-card {
-    background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(222 18% 7%) 100%);
+    background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(240 38% 7%) 100%);
   }
 
   .dark .score-card:hover {
