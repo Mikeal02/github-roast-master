@@ -115,6 +115,18 @@ export function Header({ isRecruiterMode = false }) {
         </motion.div>
       </motion.div>
 
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.5 }}
+        className="flex justify-center mb-5"
+      >
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold px-3 py-1 rounded-full glass-panel-static text-primary">
+          <Sparkles className="w-3 h-3" />
+          POWERED BY GEMINI AI
+        </span>
+      </motion.div>
+
       <motion.h1
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
