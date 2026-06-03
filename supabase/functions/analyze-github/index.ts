@@ -478,8 +478,8 @@ CRITICAL: Return ONLY the JSON object. No markdown wrapping. Every score explana
     const repoCount = repos.length || 1;
     const followers = user.followers || 0;
     const uniqueLangs = Object.keys(languageCounts).length;
-    const prEvents = (eventTypes['PullRequestEvent'] || 0) + (eventTypes['PullRequestReviewEvent'] || 0);
-    const issueEvents = eventTypes['IssuesEvent'] || 0;
+    const prEventCount = (eventTypes['PullRequestEvent'] || 0) + (eventTypes['PullRequestReviewEvent'] || 0);
+    const issueEventCount = eventTypes['IssuesEvent'] || 0;
 
     const computedScores: Record<string, number> = {
       activity: clamp(
