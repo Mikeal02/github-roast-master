@@ -420,6 +420,7 @@ CRITICAL: Return ONLY the JSON object. No markdown wrapping. Every score explana
           { role: "user", content: userPrompt }
         ],
         temperature: mode === 'recruiter' ? 0.6 : 0.85,
+        max_tokens: 8192,
       }),
     });
 
@@ -457,13 +458,39 @@ CRITICAL: Return ONLY the JSON object. No markdown wrapping. Every score explana
       if (jsonStr.startsWith('```')) jsonStr = jsonStr.slice(3);
       if (jsonStr.endsWith('```')) jsonStr = jsonStr.slice(0, -3);
       jsonStr = jsonStr.trim();
-      
-      const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysisResult = JSON.parse(jsonMatch[0]);
-      } else {
-        console.error('No JSON found. Raw content:', content.substring(0, 500));
-        throw new Error('No JSON found in AI response');
+
+      // Slice from first opening brace
+      const start = jsonStr.indexOf('{');
+      if (start === -1) throw new Error('No JSON found in AI response');
+      jsonStr = jsonStr.slice(start);
+
+      const tryParse = (s: string) => {
+        // strip trailing commas and control chars
+        const cleaned = s.replace(/,\s*([}\]])/g, '$1').replace(/[\u0000-\u001F]/g, ' ');
+        return JSON.parse(cleaned);
+      };
+
+      try {
+        analysisResult = tryParse(jsonStr);
+      } catch {
+        // Likely truncated — auto-close open brackets/braces and retry
+        const stack: string[] = [];
+        let inStr = false, esc = false;
+        for (const ch of jsonStr) {
+          if (esc) { esc = false; continue; }
+          if (ch === '\\') { esc = true; continue; }
+          if (ch === '"') inStr = !inStr;
+          if (inStr) continue;
+          if (ch === '{') stack.push('}');
+          else if (ch === '[') stack.push(']');
+          else if (ch === '}' || ch === ']') stack.pop();
+        }
+        let repaired = jsonStr;
+        if (inStr) repaired += '"';
+        // drop trailing incomplete fragment after last complete value
+        repaired = repaired.replace(/,\s*"[^"]*"?\s*:?\s*$/, '');
+        repaired += stack.reverse().join('');
+        analysisResult = tryParse(repaired);
       }
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError);
