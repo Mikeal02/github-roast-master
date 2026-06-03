@@ -53,7 +53,7 @@ export function ScoreCard({ title, score, icon, explanation = '', delay = 0, sub
     const timer = setTimeout(() => {
       const duration = 1400;
       const steps = 70;
-      const start = animatedScore;
+      const start = 0;
       const increment = (displayScore - start) / steps;
       let current = start;
 
