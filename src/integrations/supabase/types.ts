@@ -14,7 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      search_usage: {
+        Row: {
+          first_search: string
+          ip_hash: string
+          last_search: string
+          search_count: number
+          total_tokens: number
+        }
+        Insert: {
+          first_search?: string
+          ip_hash: string
+          last_search?: string
+          search_count?: number
+          total_tokens?: number
+        }
+        Update: {
+          first_search?: string
+          ip_hash?: string
+          last_search?: string
+          search_count?: number
+          total_tokens?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
