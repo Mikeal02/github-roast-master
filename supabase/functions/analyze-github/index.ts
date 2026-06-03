@@ -510,8 +510,8 @@ CRITICAL: Return ONLY the JSON object. No markdown wrapping. Every score explana
         Math.min(15, originalRepos)
       ),
       collaboration: clamp(
-        Math.min(35, prEvents * 5) +
-        Math.min(20, issueEvents * 4) +
+        Math.min(35, prEventCount * 5) +
+        Math.min(20, issueEventCount * 4) +
         Math.min(25, orgNames.length * 12) +
         Math.min(20, Math.log2(totalForks + 1) * 6)
       ),
