@@ -42,35 +42,38 @@ export function ScoreCard({ title, score, icon, explanation = '', delay = 0, sub
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
+  const displayScore = Number.isFinite(score) ? Math.max(0, Math.min(100, Math.round(score))) : 0;
   const [animatedScore, setAnimatedScore] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    if (!isInView || hasAnimated) return;
-    setHasAnimated(true);
+    if (!isInView) return;
 
+    let interval: ReturnType<typeof setInterval> | undefined;
     const timer = setTimeout(() => {
       const duration = 1400;
       const steps = 70;
-      const increment = score / steps;
-      let current = 0;
+      const start = animatedScore;
+      const increment = (displayScore - start) / steps;
+      let current = start;
 
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         current += increment;
-        if (current >= score) {
-          setAnimatedScore(score);
+        const shouldFinish = increment >= 0 ? current >= displayScore : current <= displayScore;
+        if (shouldFinish) {
+          setAnimatedScore(displayScore);
           clearInterval(interval);
         } else {
           setAnimatedScore(Math.round(current));
         }
       }, duration / steps);
-
-      return () => clearInterval(interval);
     }, delay);
 
-    return () => clearTimeout(timer);
-  }, [isInView, score, delay, hasAnimated]);
+    return () => {
+      clearTimeout(timer);
+      if (interval) clearInterval(interval);
+    };
+  }, [isInView, displayScore, delay]);
 
   const getScoreColor = (s: number) => {
     if (s >= 70) return 'text-terminal-green';
@@ -100,9 +103,9 @@ export function ScoreCard({ title, score, icon, explanation = '', delay = 0, sub
     return 'hsl(var(--terminal-red))';
   };
 
-  const severity = getSeverityLabel(score);
-  const grade = getLetterGrade(score);
-  const percentile = getPercentile(score);
+  const severity = getSeverityLabel(displayScore);
+  const grade = getLetterGrade(displayScore);
+  const percentile = getPercentile(displayScore);
   const radius = 34;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (animatedScore / 100) * circumference;
@@ -125,7 +128,7 @@ export function ScoreCard({ title, score, icon, explanation = '', delay = 0, sub
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
       className="glass-panel p-5 group"
       style={{
-        boxShadow: isInView && animatedScore > 0 ? `0 0 40px ${getGlowColor(score)}` : undefined,
+        boxShadow: isInView && animatedScore > 0 ? `0 0 40px ${getGlowColor(displayScore)}` : undefined,
       }}
     >
       {/* Header with icon, title, and grade badge */}
@@ -203,11 +206,11 @@ export function ScoreCard({ title, score, icon, explanation = '', delay = 0, sub
       </div>
 
       {/* Progress bar */}
-      <div className="progress-bar mb-2">
+          <div className="progress-bar mb-2">
         <motion.div
-          className={`progress-bar-fill bg-gradient-to-r ${getBarGradient(score)}`}
+          className={`progress-bar-fill bg-gradient-to-r ${getBarGradient(displayScore)}`}
           initial={{ width: '0%' }}
-          animate={isInView ? { width: `${score}%` } : { width: '0%' }}
+          animate={isInView ? { width: `${displayScore}%` } : { width: '0%' }}
           transition={{ duration: 1.4, delay: delay / 1000, ease: [0.16, 1, 0.3, 1] }}
         />
       </div>
