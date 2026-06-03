@@ -478,8 +478,8 @@ CRITICAL: Return ONLY the JSON object. No markdown wrapping. Every score explana
     const repoCount = repos.length || 1;
     const followers = user.followers || 0;
     const uniqueLangs = Object.keys(languageCounts).length;
-    const prEvents = (eventTypes['PullRequestEvent'] || 0) + (eventTypes['PullRequestReviewEvent'] || 0);
-    const issueEvents = eventTypes['IssuesEvent'] || 0;
+    const prEventCount = (eventTypes['PullRequestEvent'] || 0) + (eventTypes['PullRequestReviewEvent'] || 0);
+    const issueEventCount = eventTypes['IssuesEvent'] || 0;
 
     const computedScores: Record<string, number> = {
       activity: clamp(
@@ -510,8 +510,8 @@ CRITICAL: Return ONLY the JSON object. No markdown wrapping. Every score explana
         Math.min(15, originalRepos)
       ),
       collaboration: clamp(
-        Math.min(35, prEvents * 5) +
-        Math.min(20, issueEvents * 4) +
+        Math.min(35, prEventCount * 5) +
+        Math.min(20, issueEventCount * 4) +
         Math.min(25, orgNames.length * 12) +
         Math.min(20, Math.log2(totalForks + 1) * 6)
       ),
