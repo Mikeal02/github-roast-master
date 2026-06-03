@@ -420,6 +420,7 @@ CRITICAL: Return ONLY the JSON object. No markdown wrapping. Every score explana
           { role: "user", content: userPrompt }
         ],
         temperature: mode === 'recruiter' ? 0.6 : 0.85,
+        max_tokens: 8192,
       }),
     });
 
