@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
 import { SearchBar } from '@/components/SearchBar';
 import { SearchHistory } from '@/components/SearchHistory';
+import { UsageMeter, type UsageInfo } from '@/components/UsageMeter';
 import { ProfileCard } from '@/components/ProfileCard';
 import { ScoreCard } from '@/components/ScoreCard';
 import { LanguageChart } from '@/components/LanguageChart';
