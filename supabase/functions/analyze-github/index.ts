@@ -8,11 +8,110 @@ const corsHeaders = {
 
 const FREE_SEARCH_LIMIT = 3;
 
-async function hashIp(ip: string): Promise<string> {
-  const data = new TextEncoder().encode(`roastmygit:${ip}`);
+// Salt for hashing client identifiers. Prefer a dedicated secret; fall back to a
+// deploy-stable secret so stored hashes remain consistent and resistant to
+// rainbow-table / reversal attacks. Hashes are one-way — raw IPs are never stored.
+const IP_HASH_SALT =
+  Deno.env.get('IP_HASH_SALT') ||
+  Deno.env.get('SUPABASE_JWT_SECRET') ||
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ||
+  'roastmygit-static-salt-v1';
+
+// --- IP validation helpers ---
+const IPV4_RE = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
+const IPV6_RE = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|::(ffff(:0{1,4})?:)?((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d))$/;
+
+function normalizeIp(raw: string): string | null {
+  let ip = (raw || '').trim();
+  if (!ip) return null;
+  // Strip surrounding brackets and any :port suffix (IPv4:port or [IPv6]:port)
+  if (ip.startsWith('[')) {
+    const end = ip.indexOf(']');
+    ip = end > 0 ? ip.slice(1, end) : ip.slice(1);
+  } else if (ip.includes('.') && ip.includes(':')) {
+    ip = ip.split(':')[0]; // IPv4:port
+  }
+  ip = ip.replace(/^::ffff:/i, ''); // IPv4-mapped IPv6
+  ip = ip.toLowerCase();
+  if (IPV4_RE.test(ip) || IPV6_RE.test(ip)) return ip;
+  return null;
+}
+
+// Reject private, loopback, link-local and reserved ranges — these are not real
+// public client identifiers and usually indicate spoofing or internal hops.
+function isPublicIp(ip: string): boolean {
+  if (IPV4_RE.test(ip)) {
+    const [a, b] = ip.split('.').map(Number);
+    if (a === 10) return false;
+    if (a === 127) return false;
+    if (a === 0) return false;
+    if (a === 169 && b === 254) return false;
+    if (a === 172 && b >= 16 && b <= 31) return false;
+    if (a === 192 && b === 168) return false;
+    if (a === 100 && b >= 64 && b <= 127) return false; // CGNAT
+    if (a >= 224) return false; // multicast / reserved
+    return true;
+  }
+  // IPv6
+  if (ip === '::1' || ip === '::') return false;
+  if (ip.startsWith('fe80') || ip.startsWith('fc') || ip.startsWith('fd')) return false; // link-local / ULA
+  return true;
+}
+
+/**
+ * Resolve the most trustworthy client IP. Header trust order:
+ *  1. cf-connecting-ip / true-client-ip — set by the edge/CDN, overwrites any
+ *     client-supplied value, so cannot be spoofed by the caller.
+ *  2. x-real-ip — set by the reverse proxy.
+ *  3. x-forwarded-for — a client-controllable chain; we walk it and pick the
+ *     first VALID PUBLIC address, ignoring private hops and bogus entries.
+ */
+function resolveClientIp(req: Request): { ip: string; source: string; trusted: boolean } {
+  const trustedHeaders: Array<[string, boolean]> = [
+    ['cf-connecting-ip', true],
+    ['true-client-ip', true],
+    ['x-real-ip', true],
+  ];
+  for (const [h, trusted] of trustedHeaders) {
+    const candidate = normalizeIp(req.headers.get(h) || '');
+    if (candidate && isPublicIp(candidate)) return { ip: candidate, source: h, trusted };
+  }
+
+  const xff = req.headers.get('x-forwarded-for') || '';
+  const parts = xff.split(',').map((p) => p.trim()).filter(Boolean);
+  for (const part of parts) {
+    const candidate = normalizeIp(part);
+    if (candidate && isPublicIp(candidate)) return { ip: candidate, source: 'x-forwarded-for', trusted: false };
+  }
+
+  // No usable public IP — caller is unidentifiable by IP.
+  return { ip: '', source: 'none', trusted: false };
+}
+
+function deviceFingerprint(req: Request): string {
+  const ua = req.headers.get('user-agent') || '';
+  const lang = req.headers.get('accept-language') || '';
+  const enc = req.headers.get('accept-encoding') || '';
+  const platform = req.headers.get('sec-ch-ua-platform') || '';
+  return `fp:${ua}|${lang}|${enc}|${platform}`;
+}
+
+async function sha256Hex(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input);
   const digest = await crypto.subtle.digest('SHA-256', data);
   return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
+
+// Build a stable, salted, one-way identity key for the caller. Falls back to a
+// device fingerprint when no public IP is available so the limit still applies
+// instead of granting unlimited access to an unidentifiable caller.
+async function buildClientKey(req: Request): Promise<{ key: string; source: string; trusted: boolean }> {
+  const { ip, source, trusted } = resolveClientIp(req);
+  const base = ip ? `ip:${ip}` : deviceFingerprint(req);
+  const key = await sha256Hex(`${IP_HASH_SALT}|${base}`);
+  return { key, source: ip ? source : 'fingerprint', trusted: !!ip && trusted };
+}
+
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -34,9 +133,9 @@ serve(async (req) => {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const admin = (supabaseUrl && serviceKey) ? createClient(supabaseUrl, serviceKey) : null;
 
-    const fwd = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown';
-    const clientIp = fwd.split(',')[0].trim() || 'unknown';
-    const ipHash = await hashIp(clientIp);
+    const { key: ipHash, source: ipSource, trusted: ipTrusted } = await buildClientKey(req);
+    console.log('Client identity resolved via:', ipSource, '| trusted:', ipTrusted);
+
 
     let priorCount = 0;
     let priorTokens = 0;
