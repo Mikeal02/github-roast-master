@@ -706,10 +706,29 @@ CRITICAL: Return ONLY the JSON object. No markdown wrapping. Every score explana
     analysisResult.topRepositories = topRepos;
     analysisResult.avgRepoHealth = topRepos.length > 0 ? Math.round(topRepos.reduce((s: number, r: any) => s + r.healthScore, 0) / topRepos.length) : 0;
 
-    console.log('Elite analysis complete for:', user.login, '— metrics:', Object.keys(analysisResult).length);
+    // === PERSIST USAGE & ATTACH TOKEN/LIMIT INFO ===
+    let searchesRemaining = Infinity;
+    if (admin && !isOwner) {
+      const newCount = priorCount + 1;
+      await admin.from('search_usage').upsert({
+        ip_hash: ipHash,
+        search_count: newCount,
+        total_tokens: priorTokens + tokenUsage.total,
+        last_search: new Date().toISOString(),
+      }, { onConflict: 'ip_hash' });
+      searchesRemaining = Math.max(0, FREE_SEARCH_LIMIT - newCount);
+    }
+
+    analysisResult.tokenUsage = tokenUsage;
+    analysisResult.isOwner = isOwner;
+    analysisResult.limit = FREE_SEARCH_LIMIT;
+    analysisResult.searchesRemaining = isOwner ? null : searchesRemaining;
+
+    console.log('Elite analysis complete for:', user.login, '— metrics:', Object.keys(analysisResult).length, '— tokens:', tokenUsage.total);
     return new Response(JSON.stringify(analysisResult), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
