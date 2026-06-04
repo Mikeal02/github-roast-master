@@ -1,9 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
+
+const FREE_SEARCH_LIMIT = 3;
+
+async function hashIp(ip: string): Promise<string> {
+  const data = new TextEncoder().encode(`roastmygit:${ip}`);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -11,13 +20,48 @@ serve(async (req) => {
   }
 
   try {
-    const { user, repos, events = [], orgs = [], gists = [], starred = [], mode } = await req.json();
+    const { user, repos, events = [], orgs = [], gists = [], starred = [], mode, ownerKey } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const GITHUB_API_KEY = Deno.env.get('GITHUB_API_KEY');
-    
+    const OWNER_PASSCODE = Deno.env.get('OWNER_PASSCODE');
+
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
 
-    console.log('Analyzing GitHub profile for:', user.login, 'Mode:', mode);
+    // === USAGE GATING (per-IP lifetime limit, owner bypass) ===
+    const isOwner = !!OWNER_PASSCODE && typeof ownerKey === 'string' && ownerKey === OWNER_PASSCODE;
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const admin = (supabaseUrl && serviceKey) ? createClient(supabaseUrl, serviceKey) : null;
+
+    const fwd = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown';
+    const clientIp = fwd.split(',')[0].trim() || 'unknown';
+    const ipHash = await hashIp(clientIp);
+
+    let priorCount = 0;
+    let priorTokens = 0;
+    if (admin && !isOwner) {
+      const { data: usageRow } = await admin
+        .from('search_usage')
+        .select('search_count, total_tokens')
+        .eq('ip_hash', ipHash)
+        .maybeSingle();
+      priorCount = usageRow?.search_count ?? 0;
+      priorTokens = usageRow?.total_tokens ?? 0;
+
+      if (priorCount >= FREE_SEARCH_LIMIT) {
+        return new Response(JSON.stringify({
+          error: `You've used all ${FREE_SEARCH_LIMIT} free analyses. Enter the owner passcode for unlimited access.`,
+          limitReached: true,
+          searchesRemaining: 0,
+          limit: FREE_SEARCH_LIMIT,
+        }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    console.log('Analyzing GitHub profile for:', user.login, 'Mode:', mode, 'Owner:', isOwner);
 
     // === LANGUAGE ANALYSIS ===
     const repoLanguages = repos.map((r: any) => r.language).filter(Boolean);
@@ -443,6 +487,11 @@ CRITICAL: Return ONLY the JSON object. No markdown wrapping. Every score explana
 
     const aiResponse = await response.json();
     const content = aiResponse.choices?.[0]?.message?.content;
+    const tokenUsage = {
+      prompt: aiResponse.usage?.prompt_tokens ?? 0,
+      completion: aiResponse.usage?.completion_tokens ?? 0,
+      total: aiResponse.usage?.total_tokens ?? 0,
+    };
     
     console.log('AI response received, length:', content?.length);
 
@@ -657,10 +706,29 @@ CRITICAL: Return ONLY the JSON object. No markdown wrapping. Every score explana
     analysisResult.topRepositories = topRepos;
     analysisResult.avgRepoHealth = topRepos.length > 0 ? Math.round(topRepos.reduce((s: number, r: any) => s + r.healthScore, 0) / topRepos.length) : 0;
 
-    console.log('Elite analysis complete for:', user.login, '— metrics:', Object.keys(analysisResult).length);
+    // === PERSIST USAGE & ATTACH TOKEN/LIMIT INFO ===
+    let searchesRemaining = Infinity;
+    if (admin && !isOwner) {
+      const newCount = priorCount + 1;
+      await admin.from('search_usage').upsert({
+        ip_hash: ipHash,
+        search_count: newCount,
+        total_tokens: priorTokens + tokenUsage.total,
+        last_search: new Date().toISOString(),
+      }, { onConflict: 'ip_hash' });
+      searchesRemaining = Math.max(0, FREE_SEARCH_LIMIT - newCount);
+    }
+
+    analysisResult.tokenUsage = tokenUsage;
+    analysisResult.isOwner = isOwner;
+    analysisResult.limit = FREE_SEARCH_LIMIT;
+    analysisResult.searchesRemaining = isOwner ? null : searchesRemaining;
+
+    console.log('Elite analysis complete for:', user.login, '— metrics:', Object.keys(analysisResult).length, '— tokens:', tokenUsage.total);
     return new Response(JSON.stringify(analysisResult), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
