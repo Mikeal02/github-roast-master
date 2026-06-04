@@ -487,6 +487,11 @@ CRITICAL: Return ONLY the JSON object. No markdown wrapping. Every score explana
 
     const aiResponse = await response.json();
     const content = aiResponse.choices?.[0]?.message?.content;
+    const tokenUsage = {
+      prompt: aiResponse.usage?.prompt_tokens ?? 0,
+      completion: aiResponse.usage?.completion_tokens ?? 0,
+      total: aiResponse.usage?.total_tokens ?? 0,
+    };
     
     console.log('AI response received, length:', content?.length);
 
