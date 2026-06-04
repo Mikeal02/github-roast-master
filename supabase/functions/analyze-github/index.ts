@@ -133,9 +133,9 @@ serve(async (req) => {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const admin = (supabaseUrl && serviceKey) ? createClient(supabaseUrl, serviceKey) : null;
 
-    const fwd = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown';
-    const clientIp = fwd.split(',')[0].trim() || 'unknown';
-    const ipHash = await hashIp(clientIp);
+    const { key: ipHash, source: ipSource, trusted: ipTrusted } = await buildClientKey(req);
+    console.log('Client identity resolved via:', ipSource, '| trusted:', ipTrusted);
+
 
     let priorCount = 0;
     let priorTokens = 0;
