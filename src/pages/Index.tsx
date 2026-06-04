@@ -110,12 +110,21 @@ const Index = () => {
       toast.info('🤖 AI is performing deep analysis...');
 
       const { data, error: fnError } = await supabase.functions.invoke('analyze-github', {
-        body: { user, repos, events, orgs, gists, starred, mode: isRecruiterMode ? 'recruiter' : 'roast' }
+        body: { user, repos, events, orgs, gists, starred, mode: isRecruiterMode ? 'recruiter' : 'roast', ownerKey }
       });
 
       if (fnError) {
         console.error('Edge function error:', fnError);
-        throw new Error(fnError.message || 'Failed to analyze profile');
+        // Try to surface a structured error (e.g. lifetime limit reached)
+        let parsed: any = null;
+        try {
+          const ctx = (fnError as any).context;
+          if (ctx && typeof ctx.json === 'function') parsed = await ctx.json();
+        } catch { /* ignore */ }
+        if (parsed?.limitReached) {
+          setUsageInfo({ searchesRemaining: 0, limit: parsed.limit ?? 3, isOwner: false });
+        }
+        throw new Error(parsed?.error || fnError.message || 'Failed to analyze profile');
       }
 
       if (data.error) {
@@ -123,8 +132,19 @@ const Index = () => {
       }
 
       setAiAnalysis(data);
+      setUsageInfo({
+        tokenUsage: data.tokenUsage,
+        searchesRemaining: data.searchesRemaining,
+        isOwner: data.isOwner,
+        limit: data.limit,
+      });
       addToHistory(username);
-      toast.success('✨ Comprehensive analysis complete!');
+      toast.success(
+        data.isOwner
+          ? '✨ Analysis complete (owner — unlimited)!'
+          : `✨ Analysis complete! ${data.searchesRemaining ?? 0} free searches left.`
+      );
+
     } catch (err: any) {
       console.error('Search error:', err);
       setError(err.message || 'An unexpected error occurred');
