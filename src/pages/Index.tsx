@@ -638,7 +638,9 @@ const Index = () => {
         <Header isRecruiterMode={isRecruiterMode} />
         <ModeToggle isRecruiterMode={isRecruiterMode} onToggle={handleModeToggle} />
         <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+        <UsageMeter usage={usageInfo} hasOwnerKey={hasOwnerKey} onUnlock={setOwnerKey} onLock={clearOwnerKey} />
         <SearchHistory history={history} onSelect={handleSearch} onRemove={removeFromHistory} onClear={clearHistory} />
+
 
         <div className="mt-12">
           <AnimatePresence mode="wait">
