@@ -67,12 +67,19 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const resultsRef = useRef<HTMLDivElement>(null);
   const [showWrapped, setShowWrapped] = useState(false);
+  const [usageInfo, setUsageInfo] = useState<UsageInfo | null>(null);
+  const { ownerKey, setOwnerKey, clearOwnerKey, hasOwnerKey } = useOwnerKey();
 
   useEffect(() => {
     applyTheme(getStoredTheme());
   }, []);
 
+  useEffect(() => {
+    setUsageInfo((prev) => ({ ...(prev || {}), isOwner: hasOwnerKey }));
+  }, [hasOwnerKey]);
+
   const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
+
 
   const handleSearch = async (username: string) => {
     setIsLoading(true);
