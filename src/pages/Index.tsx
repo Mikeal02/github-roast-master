@@ -65,6 +65,9 @@ const Index = () => {
   const [userRepos, setUserRepos] = useState<any[]>([]);
   const [userGists, setUserGists] = useState<any[]>([]);
   const [socialAccounts, setSocialAccounts] = useState<any[]>([]);
+  const [userStarred, setUserStarred] = useState<any[]>([]);
+  const [userFollowers, setUserFollowers] = useState<any[]>([]);
+  const [userFollowing, setUserFollowing] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const resultsRef = useRef<HTMLDivElement>(null);
   const [showWrapped, setShowWrapped] = useState(false);
