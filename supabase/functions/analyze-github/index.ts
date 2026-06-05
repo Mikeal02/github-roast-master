@@ -882,6 +882,20 @@ CRITICAL: Return ONLY the JSON object. No markdown wrapping. Every score explana
       searchesRemaining = Math.max(0, FREE_SEARCH_LIMIT - newCount);
     }
 
+    // Quota-drain spike monitoring: flag unusually expensive single analyses.
+    if (tokenUsage.total >= QUOTA_DRAIN_TOKENS) {
+      await logSecurityEvent(admin, {
+        event_type: 'quota_drain_spike',
+        severity: tokenUsage.total >= QUOTA_DRAIN_TOKENS * 2 ? 'high' : 'medium',
+        ip_hash: ipHash,
+        ip_source: ipSource,
+        detail: `High token usage in one analysis: ${tokenUsage.total} tokens`,
+        metadata: { ...tokenUsage, target: user?.login ?? null, isOwner },
+      });
+    }
+
+
+
     analysisResult.tokenUsage = tokenUsage;
     analysisResult.isOwner = isOwner;
     analysisResult.limit = FREE_SEARCH_LIMIT;
