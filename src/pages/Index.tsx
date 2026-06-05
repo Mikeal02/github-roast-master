@@ -650,6 +650,24 @@ const Index = () => {
           </AnimatedSection>
         );
 
+      case 'data':
+        return (
+          <AnimatedSection key="data">
+            <ScrollReveal variant="fadeUp">
+              <GitHubDataExplorer
+                userData={userData}
+                repos={userRepos}
+                orgs={userOrgs}
+                gists={userGists}
+                starred={userStarred}
+                socialAccounts={socialAccounts}
+                followers={userFollowers}
+                following={userFollowing}
+              />
+            </ScrollReveal>
+          </AnimatedSection>
+        );
+
       default:
         return null;
     }
