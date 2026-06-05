@@ -48,7 +48,8 @@ import { LandingPage } from '@/components/LandingPage';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { useOwnerKey } from '@/hooks/useOwnerKey';
-import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred, fetchUserSocialAccounts } from '@/lib/githubApi';
+import { GitHubDataExplorer } from '@/components/GitHubDataExplorer';
+import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred, fetchUserSocialAccounts, fetchUserFollowers, fetchUserFollowing } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -64,6 +65,9 @@ const Index = () => {
   const [userRepos, setUserRepos] = useState<any[]>([]);
   const [userGists, setUserGists] = useState<any[]>([]);
   const [socialAccounts, setSocialAccounts] = useState<any[]>([]);
+  const [userStarred, setUserStarred] = useState<any[]>([]);
+  const [userFollowers, setUserFollowers] = useState<any[]>([]);
+  const [userFollowing, setUserFollowing] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const resultsRef = useRef<HTMLDivElement>(null);
   const [showWrapped, setShowWrapped] = useState(false);
@@ -90,7 +94,7 @@ const Index = () => {
     setActiveTab('overview');
 
     try {
-      const [user, repos, events, orgs, gists, starred, socials] = await Promise.all([
+      const [user, repos, events, orgs, gists, starred, socials, followers, following] = await Promise.all([
         fetchGitHubUser(username),
         fetchUserRepos(username, 100),
         fetchUserEvents(username, 100),
@@ -98,6 +102,8 @@ const Index = () => {
         fetchUserGists(username),
         fetchUserStarred(username, 30),
         fetchUserSocialAccounts(username),
+        fetchUserFollowers(username, 50),
+        fetchUserFollowing(username, 50),
       ]);
 
       setUserData(user);
@@ -106,6 +112,9 @@ const Index = () => {
       setUserOrgs(orgs);
       setUserGists(gists);
       setSocialAccounts(socials);
+      setUserStarred(starred);
+      setUserFollowers(followers);
+      setUserFollowing(following);
 
       toast.info('🤖 AI is performing deep analysis...');
 
@@ -636,6 +645,24 @@ const Index = () => {
                 followRatio={aiAnalysis.followRatio}
                 reposPerYear={aiAnalysis.reposPerYear}
                 starsPerYear={aiAnalysis.starsPerYear}
+              />
+            </ScrollReveal>
+          </AnimatedSection>
+        );
+
+      case 'data':
+        return (
+          <AnimatedSection key="data">
+            <ScrollReveal variant="fadeUp">
+              <GitHubDataExplorer
+                userData={userData}
+                repos={userRepos}
+                orgs={userOrgs}
+                gists={userGists}
+                starred={userStarred}
+                socialAccounts={socialAccounts}
+                followers={userFollowers}
+                following={userFollowing}
               />
             </ScrollReveal>
           </AnimatedSection>

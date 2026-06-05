@@ -3,7 +3,7 @@ import { useRef, useEffect, useState } from 'react';
 import { 
   BarChart3, Brain, GitFork, Flame, Briefcase, 
   Radar, Clock, Code2, Users, Dna, Music, Trophy, Globe, Rewind,
-  ChevronLeft, ChevronRight, Zap
+  ChevronLeft, ChevronRight, Zap, Database
 } from 'lucide-react';
 
 interface Tab {
@@ -25,6 +25,7 @@ const roastTabs: Tab[] = [
   { id: 'timeline', label: 'Time Machine', icon: <Rewind className="w-4 h-4" />, accent: 'hsl(var(--secondary))' },
   { id: 'globe', label: 'World Map', icon: <Globe className="w-4 h-4" />, accent: 'hsl(var(--terminal-cyan))' },
   { id: 'impact', label: 'Impact', icon: <Zap className="w-4 h-4" />, accent: 'hsl(var(--terminal-yellow))' },
+  { id: 'data', label: 'GitHub Data', icon: <Database className="w-4 h-4" />, accent: 'hsl(var(--terminal-green))' },
   { id: 'roast', label: 'Roast', icon: <Flame className="w-4 h-4" />, accent: 'hsl(var(--destructive))' },
   { id: 'personality', label: 'Personality', icon: <Brain className="w-4 h-4" />, accent: 'hsl(var(--terminal-purple))' },
 ];
@@ -41,6 +42,7 @@ const recruiterTabs: Tab[] = [
   { id: 'timeline', label: 'Time Machine', icon: <Rewind className="w-4 h-4" />, accent: 'hsl(var(--secondary))' },
   { id: 'globe', label: 'World Map', icon: <Globe className="w-4 h-4" />, accent: 'hsl(var(--terminal-cyan))' },
   { id: 'impact', label: 'Impact', icon: <Zap className="w-4 h-4" />, accent: 'hsl(var(--terminal-yellow))' },
+  { id: 'data', label: 'GitHub Data', icon: <Database className="w-4 h-4" />, accent: 'hsl(var(--terminal-green))' },
   { id: 'assessment', label: 'Assessment', icon: <Briefcase className="w-4 h-4" />, accent: 'hsl(var(--terminal-yellow))' },
   { id: 'career', label: 'Career', icon: <Users className="w-4 h-4" />, accent: 'hsl(var(--terminal-purple))' },
 ];

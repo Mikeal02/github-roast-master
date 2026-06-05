@@ -112,6 +112,30 @@ async function buildClientKey(req: Request): Promise<{ key: string; source: stri
   return { key, source: ip ? source : 'fingerprint', trusted: !!ip && trusted };
 }
 
+// Single-search token total above which we flag a potential quota-drain spike.
+const QUOTA_DRAIN_TOKENS = 12000;
+
+// Best-effort security event logging. Never throws — monitoring must not break the
+// main request flow.
+async function logSecurityEvent(
+  admin: any,
+  evt: { event_type: string; severity?: string; ip_hash?: string; ip_source?: string; detail?: string; metadata?: Record<string, unknown> },
+) {
+  if (!admin) return;
+  try {
+    await admin.from('security_events').insert({
+      event_type: evt.event_type,
+      severity: evt.severity ?? 'low',
+      ip_hash: evt.ip_hash ?? null,
+      ip_source: evt.ip_source ?? null,
+      detail: evt.detail ?? null,
+      metadata: evt.metadata ?? {},
+    });
+  } catch (e) {
+    console.error('Failed to log security event:', e instanceof Error ? e.message : e);
+  }
+}
+
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -136,6 +160,23 @@ serve(async (req) => {
     const { key: ipHash, source: ipSource, trusted: ipTrusted } = await buildClientKey(req);
     console.log('Client identity resolved via:', ipSource, '| trusted:', ipTrusted);
 
+    // Flag callers that cannot be trusted by IP (spoofing attempts / proxy abuse /
+    // fingerprint fallback). Not necessarily malicious, but worth monitoring.
+    if (!isOwner && (ipSource === 'fingerprint' || (ipSource === 'x-forwarded-for' && !ipTrusted))) {
+      await logSecurityEvent(admin, {
+        event_type: ipSource === 'fingerprint' ? 'unidentifiable_client' : 'untrusted_ip',
+        severity: 'medium',
+        ip_hash: ipHash,
+        ip_source: ipSource,
+        detail: ipSource === 'fingerprint'
+          ? 'No valid public IP — fell back to device fingerprint'
+          : 'Client IP resolved from untrusted x-forwarded-for chain',
+        metadata: {
+          xff: req.headers.get('x-forwarded-for') || null,
+          ua: req.headers.get('user-agent') || null,
+        },
+      });
+    }
 
     let priorCount = 0;
     let priorTokens = 0;
@@ -149,6 +190,28 @@ serve(async (req) => {
       priorTokens = usageRow?.total_tokens ?? 0;
 
       if (priorCount >= FREE_SEARCH_LIMIT) {
+        // Count recent blocked attempts from this same client to detect repeated probing.
+        let repeatedBlocks = 0;
+        try {
+          const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+          const { count } = await admin
+            .from('security_events')
+            .select('id', { count: 'exact', head: true })
+            .eq('ip_hash', ipHash)
+            .eq('event_type', 'limit_blocked')
+            .gte('created_at', since);
+          repeatedBlocks = count ?? 0;
+        } catch { /* ignore */ }
+
+        await logSecurityEvent(admin, {
+          event_type: 'limit_blocked',
+          severity: repeatedBlocks >= 5 ? 'high' : 'medium',
+          ip_hash: ipHash,
+          ip_source: ipSource,
+          detail: `Blocked: free limit reached (${priorCount}/${FREE_SEARCH_LIMIT}). Repeated blocks (24h): ${repeatedBlocks + 1}`,
+          metadata: { priorCount, priorTokens, repeatedBlocks: repeatedBlocks + 1, target: user?.login ?? null },
+        });
+
         return new Response(JSON.stringify({
           error: `You've used all ${FREE_SEARCH_LIMIT} free analyses. Enter the owner passcode for unlimited access.`,
           limitReached: true,
@@ -159,6 +222,7 @@ serve(async (req) => {
         });
       }
     }
+
 
     console.log('Analyzing GitHub profile for:', user.login, 'Mode:', mode, 'Owner:', isOwner);
 
@@ -817,6 +881,20 @@ CRITICAL: Return ONLY the JSON object. No markdown wrapping. Every score explana
       }, { onConflict: 'ip_hash' });
       searchesRemaining = Math.max(0, FREE_SEARCH_LIMIT - newCount);
     }
+
+    // Quota-drain spike monitoring: flag unusually expensive single analyses.
+    if (tokenUsage.total >= QUOTA_DRAIN_TOKENS) {
+      await logSecurityEvent(admin, {
+        event_type: 'quota_drain_spike',
+        severity: tokenUsage.total >= QUOTA_DRAIN_TOKENS * 2 ? 'high' : 'medium',
+        ip_hash: ipHash,
+        ip_source: ipSource,
+        detail: `High token usage in one analysis: ${tokenUsage.total} tokens`,
+        metadata: { ...tokenUsage, target: user?.login ?? null, isOwner },
+      });
+    }
+
+
 
     analysisResult.tokenUsage = tokenUsage;
     analysisResult.isOwner = isOwner;
