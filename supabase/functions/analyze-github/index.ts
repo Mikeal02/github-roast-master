@@ -160,6 +160,23 @@ serve(async (req) => {
     const { key: ipHash, source: ipSource, trusted: ipTrusted } = await buildClientKey(req);
     console.log('Client identity resolved via:', ipSource, '| trusted:', ipTrusted);
 
+    // Flag callers that cannot be trusted by IP (spoofing attempts / proxy abuse /
+    // fingerprint fallback). Not necessarily malicious, but worth monitoring.
+    if (!isOwner && (ipSource === 'fingerprint' || (ipSource === 'x-forwarded-for' && !ipTrusted))) {
+      await logSecurityEvent(admin, {
+        event_type: ipSource === 'fingerprint' ? 'unidentifiable_client' : 'untrusted_ip',
+        severity: 'medium',
+        ip_hash: ipHash,
+        ip_source: ipSource,
+        detail: ipSource === 'fingerprint'
+          ? 'No valid public IP — fell back to device fingerprint'
+          : 'Client IP resolved from untrusted x-forwarded-for chain',
+        metadata: {
+          xff: req.headers.get('x-forwarded-for') || null,
+          ua: req.headers.get('user-agent') || null,
+        },
+      });
+    }
 
     let priorCount = 0;
     let priorTokens = 0;
@@ -173,6 +190,28 @@ serve(async (req) => {
       priorTokens = usageRow?.total_tokens ?? 0;
 
       if (priorCount >= FREE_SEARCH_LIMIT) {
+        // Count recent blocked attempts from this same client to detect repeated probing.
+        let repeatedBlocks = 0;
+        try {
+          const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+          const { count } = await admin
+            .from('security_events')
+            .select('id', { count: 'exact', head: true })
+            .eq('ip_hash', ipHash)
+            .eq('event_type', 'limit_blocked')
+            .gte('created_at', since);
+          repeatedBlocks = count ?? 0;
+        } catch { /* ignore */ }
+
+        await logSecurityEvent(admin, {
+          event_type: 'limit_blocked',
+          severity: repeatedBlocks >= 5 ? 'high' : 'medium',
+          ip_hash: ipHash,
+          ip_source: ipSource,
+          detail: `Blocked: free limit reached (${priorCount}/${FREE_SEARCH_LIMIT}). Repeated blocks (24h): ${repeatedBlocks + 1}`,
+          metadata: { priorCount, priorTokens, repeatedBlocks: repeatedBlocks + 1, target: user?.login ?? null },
+        });
+
         return new Response(JSON.stringify({
           error: `You've used all ${FREE_SEARCH_LIMIT} free analyses. Enter the owner passcode for unlimited access.`,
           limitReached: true,
@@ -183,6 +222,7 @@ serve(async (req) => {
         });
       }
     }
+
 
     console.log('Analyzing GitHub profile for:', user.login, 'Mode:', mode, 'Owner:', isOwner);
 
