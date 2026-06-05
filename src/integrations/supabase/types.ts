@@ -38,6 +38,39 @@ export type Database = {
         }
         Relationships: []
       }
+      security_events: {
+        Row: {
+          created_at: string
+          detail: string | null
+          event_type: string
+          id: string
+          ip_hash: string | null
+          ip_source: string | null
+          metadata: Json
+          severity: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          event_type: string
+          id?: string
+          ip_hash?: string | null
+          ip_source?: string | null
+          metadata?: Json
+          severity?: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          event_type?: string
+          id?: string
+          ip_hash?: string | null
+          ip_source?: string | null
+          metadata?: Json
+          severity?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
