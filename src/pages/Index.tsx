@@ -94,7 +94,7 @@ const Index = () => {
     setActiveTab('overview');
 
     try {
-      const [user, repos, events, orgs, gists, starred, socials] = await Promise.all([
+      const [user, repos, events, orgs, gists, starred, socials, followers, following] = await Promise.all([
         fetchGitHubUser(username),
         fetchUserRepos(username, 100),
         fetchUserEvents(username, 100),
@@ -102,6 +102,8 @@ const Index = () => {
         fetchUserGists(username),
         fetchUserStarred(username, 30),
         fetchUserSocialAccounts(username),
+        fetchUserFollowers(username, 50),
+        fetchUserFollowing(username, 50),
       ]);
 
       setUserData(user);
@@ -110,6 +112,9 @@ const Index = () => {
       setUserOrgs(orgs);
       setUserGists(gists);
       setSocialAccounts(socials);
+      setUserStarred(starred);
+      setUserFollowers(followers);
+      setUserFollowing(following);
 
       toast.info('🤖 AI is performing deep analysis...');
 
