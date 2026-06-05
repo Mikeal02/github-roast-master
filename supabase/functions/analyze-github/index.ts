@@ -112,6 +112,30 @@ async function buildClientKey(req: Request): Promise<{ key: string; source: stri
   return { key, source: ip ? source : 'fingerprint', trusted: !!ip && trusted };
 }
 
+// Single-search token total above which we flag a potential quota-drain spike.
+const QUOTA_DRAIN_TOKENS = 12000;
+
+// Best-effort security event logging. Never throws — monitoring must not break the
+// main request flow.
+async function logSecurityEvent(
+  admin: any,
+  evt: { event_type: string; severity?: string; ip_hash?: string; ip_source?: string; detail?: string; metadata?: Record<string, unknown> },
+) {
+  if (!admin) return;
+  try {
+    await admin.from('security_events').insert({
+      event_type: evt.event_type,
+      severity: evt.severity ?? 'low',
+      ip_hash: evt.ip_hash ?? null,
+      ip_source: evt.ip_source ?? null,
+      detail: evt.detail ?? null,
+      metadata: evt.metadata ?? {},
+    });
+  } catch (e) {
+    console.error('Failed to log security event:', e instanceof Error ? e.message : e);
+  }
+}
+
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
