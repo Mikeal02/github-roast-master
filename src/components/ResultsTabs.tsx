@@ -3,7 +3,7 @@ import { useRef, useEffect, useState } from 'react';
 import { 
   BarChart3, Brain, GitFork, Flame, Briefcase, 
   Radar, Clock, Code2, Users, Dna, Music, Trophy, Globe, Rewind,
-  ChevronLeft, ChevronRight, Zap
+  ChevronLeft, ChevronRight, Zap, Database
 } from 'lucide-react';
 
 interface Tab {
