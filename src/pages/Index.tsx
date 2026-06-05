@@ -48,7 +48,8 @@ import { LandingPage } from '@/components/LandingPage';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { useOwnerKey } from '@/hooks/useOwnerKey';
-import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred, fetchUserSocialAccounts } from '@/lib/githubApi';
+import { GitHubDataExplorer } from '@/components/GitHubDataExplorer';
+import { fetchGitHubUser, fetchUserRepos, fetchUserEvents, fetchUserOrgs, fetchUserGists, fetchUserStarred, fetchUserSocialAccounts, fetchUserFollowers, fetchUserFollowing } from '@/lib/githubApi';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
