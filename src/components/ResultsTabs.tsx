@@ -25,6 +25,7 @@ const roastTabs: Tab[] = [
   { id: 'timeline', label: 'Time Machine', icon: <Rewind className="w-4 h-4" />, accent: 'hsl(var(--secondary))' },
   { id: 'globe', label: 'World Map', icon: <Globe className="w-4 h-4" />, accent: 'hsl(var(--terminal-cyan))' },
   { id: 'impact', label: 'Impact', icon: <Zap className="w-4 h-4" />, accent: 'hsl(var(--terminal-yellow))' },
+  { id: 'data', label: 'GitHub Data', icon: <Database className="w-4 h-4" />, accent: 'hsl(var(--terminal-green))' },
   { id: 'roast', label: 'Roast', icon: <Flame className="w-4 h-4" />, accent: 'hsl(var(--destructive))' },
   { id: 'personality', label: 'Personality', icon: <Brain className="w-4 h-4" />, accent: 'hsl(var(--terminal-purple))' },
 ];
