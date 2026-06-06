@@ -3,8 +3,13 @@ import { motion } from 'framer-motion';
 import {
   User, MapPin, Building2, Link as LinkIcon, Mail, Twitter, Calendar, Users,
   GitFork, Star, Code2, FileText, BookMarked, Boxes, ChevronDown, ChevronUp,
-  ExternalLink, Hash, Scale, Eye, AlertCircle, Globe, Database,
+  ExternalLink, Hash, Scale, Eye, AlertCircle, Globe, Database, Download, FileJson, Sheet,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 
 interface Props {
   userData: any;
