@@ -3,8 +3,13 @@ import { motion } from 'framer-motion';
 import {
   User, MapPin, Building2, Link as LinkIcon, Mail, Twitter, Calendar, Users,
   GitFork, Star, Code2, FileText, BookMarked, Boxes, ChevronDown, ChevronUp,
-  ExternalLink, Hash, Scale, Eye, AlertCircle, Globe, Database,
+  ExternalLink, Hash, Scale, Eye, AlertCircle, Globe, Database, Download, FileJson, Sheet,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 
 interface Props {
   userData: any;
@@ -58,6 +63,62 @@ const socialIcon = (provider: string) => {
 export function GitHubDataExplorer({ userData, repos, orgs, gists, starred, socialAccounts, followers, following }: Props) {
   if (!userData) return null;
 
+  const triggerDownload = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportJSON = () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      profile: userData,
+      socialAccounts: socialAccounts || [],
+      organizations: orgs || [],
+      followers: followers || [],
+      following: following || [],
+      gists: gists || [],
+      starred: starred || [],
+      repositories: repos || [],
+    };
+    triggerDownload(JSON.stringify(payload, null, 2), `github-${userData.login}-data.json`, 'application/json');
+    toast.success('Exported complete data as JSON');
+  };
+
+  const toCSV = (rows: Record<string, any>[]) => {
+    if (!rows.length) return '';
+    const headerSet = new Set<string>();
+    rows.forEach((r) => Object.keys(r).forEach((k) => headerSet.add(k)));
+    const headers = Array.from(headerSet);
+    const esc = (v: any) => {
+      if (v === null || v === undefined) return '';
+      const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    return [headers.join(','), ...rows.map((r) => headers.map((h) => esc(r[h])).join(','))].join('\n');
+  };
+
+  const exportCSV = () => {
+    const sections: string[] = [];
+    const push = (title: string, rows: any[]) => {
+      if (rows?.length) sections.push(`# ${title}\n${toCSV(rows)}`);
+    };
+    push('Profile', [userData]);
+    push('Social Accounts', socialAccounts);
+    push('Organizations', orgs);
+    push('Followers', followers);
+    push('Following', following);
+    push('Gists', gists);
+    push('Starred', starred);
+    push('Repositories', repos);
+    triggerDownload(sections.join('\n\n'), `github-${userData.login}-data.csv`, 'text/csv');
+    toast.success('Exported complete data as CSV');
+  };
+
   return (
     <div className="space-y-4">
       <div className="glass-panel p-5 flex items-center gap-3">
@@ -66,6 +127,21 @@ export function GitHubDataExplorer({ userData, repos, orgs, gists, starred, soci
           <h2 className="font-semibold text-foreground">Complete GitHub Data</h2>
           <p className="text-xs text-muted-foreground">Every field returned by the GitHub public API for @{userData.login}.</p>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="ml-auto gap-2">
+              <Download className="w-4 h-4" /> Export
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem onClick={exportJSON} className="gap-2 cursor-pointer">
+              <FileJson className="w-4 h-4" /> Download JSON
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportCSV} className="gap-2 cursor-pointer">
+              <Sheet className="w-4 h-4" /> Download CSV
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Full profile */}
