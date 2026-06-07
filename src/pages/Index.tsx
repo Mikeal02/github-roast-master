@@ -46,6 +46,7 @@ import { DeveloperGlobe } from '@/components/DeveloperGlobe';
 import { ImpactMetrics } from '@/components/ImpactMetrics';
 import { LandingPage } from '@/components/LandingPage';
 import { ScrollToTop } from '@/components/ScrollToTop';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { useOwnerKey } from '@/hooks/useOwnerKey';
 import { GitHubDataExplorer } from '@/components/GitHubDataExplorer';
