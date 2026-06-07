@@ -313,6 +313,17 @@ export function PDFReportExport({ username, userData, aiAnalysis, isRecruiterMod
         { key: 'collaboration', label: 'Collaboration' },
       ];
 
+      // Radar chart visualizing the six category scores at a glance.
+      checkNewPage(80);
+      drawRadarChart(
+        pageWidth / 2, y + 38, 30,
+        scoreCategories.map((cat) => ({
+          label: cat.label,
+          value: aiAnalysis.scores?.[cat.key]?.score || 0,
+        })),
+      );
+      y += 84;
+
       scoreCategories.forEach(cat => {
         const score = aiAnalysis.scores?.[cat.key]?.score || 0;
         drawProgressBar(cat.label, score, getScoreColor(score));
