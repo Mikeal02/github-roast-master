@@ -356,8 +356,51 @@ export function PDFReportExport({ username, userData, aiAnalysis, isRecruiterMod
       drawSectionTitle('Language Distribution', '💻');
 
       const langEntries = Object.entries(aiAnalysis.languages || {}).sort((a: any, b: any) => b[1] - a[1]);
-      const langTotal = langEntries.reduce((s, [, v]) => s + (v as number), 0);
+      const langTotal = langEntries.reduce((s, [, v]) => s + (v as number), 0) || 1;
 
+      if (langEntries.length) {
+        // Donut chart of the top languages with a side legend.
+        const topLangs = langEntries.slice(0, 8);
+        const donutCx = margin + 32;
+        const donutCy = y + 34;
+        drawDonutChart(
+          donutCx, donutCy, 28, 16,
+          topLangs.map(([lang, count], i) => ({
+            label: lang,
+            value: count as number,
+            color: chartPalette[i % chartPalette.length],
+          })),
+        );
+        // Center total label.
+        doc.setTextColor(...colors.white);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${langEntries.length}`, donutCx, donutCy - 1, { align: 'center' });
+        doc.setTextColor(...colors.muted);
+        doc.setFontSize(6);
+        doc.setFont('helvetica', 'normal');
+        doc.text('languages', donutCx, donutCy + 3.5, { align: 'center' });
+
+        // Legend.
+        let ly = y + 6;
+        const legendX = margin + 72;
+        topLangs.forEach(([lang, count], i) => {
+          const pct = Math.round(((count as number) / langTotal) * 100);
+          doc.setFillColor(...chartPalette[i % chartPalette.length]);
+          doc.roundedRect(legendX, ly - 2.6, 3, 3, 0.6, 0.6, 'F');
+          doc.setTextColor(...colors.white);
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${lang}`, legendX + 5, ly);
+          doc.setTextColor(...colors.muted);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`${pct}%`, margin + contentWidth - 4, ly, { align: 'right' });
+          ly += 7;
+        });
+        y = Math.max(donutCy + 32, ly) + 4;
+      }
+
+      // Detailed bars for the full language list.
       langEntries.slice(0, 12).forEach(([lang, count]) => {
         const pct = Math.round(((count as number) / langTotal) * 100);
         drawProgressBar(lang, pct, colors.cyan);
