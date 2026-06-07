@@ -114,6 +114,108 @@ export function PDFReportExport({ username, userData, aiAnalysis, isRecruiterMod
         return colors.accent;
       };
 
+      // Palette used to color chart slices/series consistently.
+      const chartPalette: [number, number, number][] = [
+        colors.primary, colors.accent, colors.cyan, colors.green,
+        colors.yellow, [168, 85, 247], [236, 72, 153], [59, 130, 246],
+        [14, 165, 233], [234, 179, 8], [16, 185, 129], [249, 115, 22],
+      ];
+
+      const withOpacity = (opacity: number, fn: () => void) => {
+        // @ts-ignore - GState exists at runtime in jsPDF
+        doc.setGState(new (doc as any).GState({ opacity }));
+        fn();
+        // @ts-ignore
+        doc.setGState(new (doc as any).GState({ opacity: 1 }));
+      };
+
+      const polyPoints = (
+        cx: number, cy: number, n: number, radii: number[], offset = -Math.PI / 2,
+      ): [number, number][] =>
+        Array.from({ length: n }, (_, i) => {
+          const a = offset + (i * 2 * Math.PI) / n;
+          return [cx + Math.cos(a) * radii[i], cy + Math.sin(a) * radii[i]] as [number, number];
+        });
+
+      const strokePolygon = (pts: [number, number][], color: [number, number, number], w = 0.4) => {
+        doc.setDrawColor(...color);
+        doc.setLineWidth(w);
+        for (let i = 0; i < pts.length; i++) {
+          const [x1, y1] = pts[i];
+          const [x2, y2] = pts[(i + 1) % pts.length];
+          doc.line(x1, y1, x2, y2);
+        }
+      };
+
+      const fillPolygon = (pts: [number, number][], color: [number, number, number]) => {
+        doc.setFillColor(...color);
+        for (let i = 1; i < pts.length - 1; i++) {
+          doc.triangle(pts[0][0], pts[0][1], pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], 'F');
+        }
+      };
+
+      // Radar / spider chart for the score categories.
+      const drawRadarChart = (
+        cx: number, cy: number, radius: number,
+        series: { label: string; value: number }[],
+      ) => {
+        const n = series.length;
+        // Grid rings.
+        [0.25, 0.5, 0.75, 1].forEach((ring) => {
+          strokePolygon(polyPoints(cx, cy, n, Array(n).fill(radius * ring)), colors.border, 0.25);
+        });
+        // Axes + labels.
+        const outer = polyPoints(cx, cy, n, Array(n).fill(radius));
+        outer.forEach(([x, y], i) => {
+          doc.setDrawColor(...colors.border);
+          doc.setLineWidth(0.25);
+          doc.line(cx, cy, x, y);
+          doc.setTextColor(...colors.muted);
+          doc.setFontSize(6.5);
+          doc.setFont('helvetica', 'normal');
+          const lx = cx + Math.cos(-Math.PI / 2 + (i * 2 * Math.PI) / n) * (radius + 6);
+          const ly = cy + Math.sin(-Math.PI / 2 + (i * 2 * Math.PI) / n) * (radius + 6);
+          const align = Math.abs(lx - cx) < 2 ? 'center' : lx < cx ? 'right' : 'left';
+          doc.text(series[i].label, lx, ly + 1, { align: align as any });
+        });
+        // Data polygon.
+        const dataPts = polyPoints(cx, cy, n, series.map((s) => radius * Math.max(0, Math.min(100, s.value)) / 100));
+        withOpacity(0.35, () => fillPolygon(dataPts, colors.primary));
+        strokePolygon(dataPts, colors.primary, 0.7);
+        dataPts.forEach(([x, y]) => { doc.setFillColor(...colors.primary); doc.circle(x, y, 0.9, 'F'); });
+      };
+
+      // Donut chart for language distribution; returns a simple legend list.
+      const drawDonutChart = (
+        cx: number, cy: number, rOuter: number, rInner: number,
+        slices: { label: string; value: number; color: [number, number, number] }[],
+      ) => {
+        const total = slices.reduce((s, v) => s + v.value, 0) || 1;
+        let angle = -Math.PI / 2;
+        slices.forEach((slice) => {
+          const sweep = (slice.value / total) * 2 * Math.PI;
+          const steps = Math.max(2, Math.ceil(sweep / 0.15));
+          const da = sweep / steps;
+          doc.setFillColor(...slice.color);
+          for (let i = 0; i < steps; i++) {
+            const a0 = angle + i * da;
+            const a1 = angle + (i + 1) * da;
+            doc.triangle(
+              cx, cy,
+              cx + Math.cos(a0) * rOuter, cy + Math.sin(a0) * rOuter,
+              cx + Math.cos(a1) * rOuter, cy + Math.sin(a1) * rOuter,
+              'F',
+            );
+          }
+          angle += sweep;
+        });
+        // Punch the donut hole.
+        doc.setFillColor(...colors.bg);
+        doc.circle(cx, cy, rInner, 'F');
+      };
+
+
+
       // ===== COVER PAGE =====
       drawBg();
 
@@ -211,6 +313,17 @@ export function PDFReportExport({ username, userData, aiAnalysis, isRecruiterMod
         { key: 'collaboration', label: 'Collaboration' },
       ];
 
+      // Radar chart visualizing the six category scores at a glance.
+      checkNewPage(80);
+      drawRadarChart(
+        pageWidth / 2, y + 38, 30,
+        scoreCategories.map((cat) => ({
+          label: cat.label,
+          value: aiAnalysis.scores?.[cat.key]?.score || 0,
+        })),
+      );
+      y += 84;
+
       scoreCategories.forEach(cat => {
         const score = aiAnalysis.scores?.[cat.key]?.score || 0;
         drawProgressBar(cat.label, score, getScoreColor(score));
@@ -243,8 +356,51 @@ export function PDFReportExport({ username, userData, aiAnalysis, isRecruiterMod
       drawSectionTitle('Language Distribution', '💻');
 
       const langEntries = Object.entries(aiAnalysis.languages || {}).sort((a: any, b: any) => b[1] - a[1]);
-      const langTotal = langEntries.reduce((s, [, v]) => s + (v as number), 0);
+      const langTotal = langEntries.reduce((s, [, v]) => s + (v as number), 0) || 1;
 
+      if (langEntries.length) {
+        // Donut chart of the top languages with a side legend.
+        const topLangs = langEntries.slice(0, 8);
+        const donutCx = margin + 32;
+        const donutCy = y + 34;
+        drawDonutChart(
+          donutCx, donutCy, 28, 16,
+          topLangs.map(([lang, count], i) => ({
+            label: lang,
+            value: count as number,
+            color: chartPalette[i % chartPalette.length],
+          })),
+        );
+        // Center total label.
+        doc.setTextColor(...colors.white);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${langEntries.length}`, donutCx, donutCy - 1, { align: 'center' });
+        doc.setTextColor(...colors.muted);
+        doc.setFontSize(6);
+        doc.setFont('helvetica', 'normal');
+        doc.text('languages', donutCx, donutCy + 3.5, { align: 'center' });
+
+        // Legend.
+        let ly = y + 6;
+        const legendX = margin + 72;
+        topLangs.forEach(([lang, count], i) => {
+          const pct = Math.round(((count as number) / langTotal) * 100);
+          doc.setFillColor(...chartPalette[i % chartPalette.length]);
+          doc.roundedRect(legendX, ly - 2.6, 3, 3, 0.6, 0.6, 'F');
+          doc.setTextColor(...colors.white);
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${lang}`, legendX + 5, ly);
+          doc.setTextColor(...colors.muted);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`${pct}%`, margin + contentWidth - 4, ly, { align: 'right' });
+          ly += 7;
+        });
+        y = Math.max(donutCy + 32, ly) + 4;
+      }
+
+      // Detailed bars for the full language list.
       langEntries.slice(0, 12).forEach(([lang, count]) => {
         const pct = Math.round(((count as number) / langTotal) * 100);
         drawProgressBar(lang, pct, colors.cyan);
@@ -444,21 +600,36 @@ export function PDFReportExport({ username, userData, aiAnalysis, isRecruiterMod
         }
       }
 
-      // ===== ROAST LINES / ASSESSMENT =====
+      // ===== FULL ROAST / ASSESSMENT =====
       if (aiAnalysis.roastLines?.length) {
-        checkNewPage(30);
-        y += 6;
-        drawSectionTitle(isRecruiterMode ? 'Assessment Notes' : 'Roast Lines', isRecruiterMode ? '📋' : '🔥');
+        doc.addPage();
+        drawBg();
+        y = margin;
+        drawSectionTitle(
+          isRecruiterMode ? 'Full Assessment' : 'The Complete Roast',
+          isRecruiterMode ? '📋' : '🔥',
+        );
 
-        aiAnalysis.roastLines.slice(0, 8).forEach((line: string) => {
-          checkNewPage(10);
+        // Render every roast line — the complete roast text, nothing truncated.
+        aiAnalysis.roastLines.forEach((line: string, i: number) => {
+          const wrapped = doc.splitTextToSize(`${line}`, contentWidth - 12);
+          checkNewPage(wrapped.length * 4 + 8);
+          // Numbered marker chip.
+          doc.setFillColor(...colors.card);
+          doc.circle(margin + 4, y - 1, 3, 'F');
+          doc.setTextColor(...(isRecruiterMode ? colors.primary : colors.accent));
+          doc.setFontSize(7);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${i + 1}`, margin + 4, y + 0.6, { align: 'center' });
+          // Roast text.
           doc.setTextColor(...colors.white);
-          doc.setFontSize(7.5);
-          const lines = doc.splitTextToSize(`${isRecruiterMode ? '▸' : '🔥'} ${line}`, contentWidth - 10);
-          doc.text(lines, margin + 4, y);
-          y += lines.length * 4 + 3;
+          doc.setFontSize(8.5);
+          doc.setFont('helvetica', 'normal');
+          doc.text(wrapped, margin + 11, y);
+          y += wrapped.length * 4.4 + 5;
         });
       }
+
 
       // ===== FOOTER on last page =====
       doc.setTextColor(...colors.muted);
