@@ -114,6 +114,108 @@ export function PDFReportExport({ username, userData, aiAnalysis, isRecruiterMod
         return colors.accent;
       };
 
+      // Palette used to color chart slices/series consistently.
+      const chartPalette: [number, number, number][] = [
+        colors.primary, colors.accent, colors.cyan, colors.green,
+        colors.yellow, [168, 85, 247], [236, 72, 153], [59, 130, 246],
+        [14, 165, 233], [234, 179, 8], [16, 185, 129], [249, 115, 22],
+      ];
+
+      const withOpacity = (opacity: number, fn: () => void) => {
+        // @ts-ignore - GState exists at runtime in jsPDF
+        doc.setGState(new (doc as any).GState({ opacity }));
+        fn();
+        // @ts-ignore
+        doc.setGState(new (doc as any).GState({ opacity: 1 }));
+      };
+
+      const polyPoints = (
+        cx: number, cy: number, n: number, radii: number[], offset = -Math.PI / 2,
+      ): [number, number][] =>
+        Array.from({ length: n }, (_, i) => {
+          const a = offset + (i * 2 * Math.PI) / n;
+          return [cx + Math.cos(a) * radii[i], cy + Math.sin(a) * radii[i]] as [number, number];
+        });
+
+      const strokePolygon = (pts: [number, number][], color: [number, number, number], w = 0.4) => {
+        doc.setDrawColor(...color);
+        doc.setLineWidth(w);
+        for (let i = 0; i < pts.length; i++) {
+          const [x1, y1] = pts[i];
+          const [x2, y2] = pts[(i + 1) % pts.length];
+          doc.line(x1, y1, x2, y2);
+        }
+      };
+
+      const fillPolygon = (pts: [number, number][], color: [number, number, number]) => {
+        doc.setFillColor(...color);
+        for (let i = 1; i < pts.length - 1; i++) {
+          doc.triangle(pts[0][0], pts[0][1], pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], 'F');
+        }
+      };
+
+      // Radar / spider chart for the score categories.
+      const drawRadarChart = (
+        cx: number, cy: number, radius: number,
+        series: { label: string; value: number }[],
+      ) => {
+        const n = series.length;
+        // Grid rings.
+        [0.25, 0.5, 0.75, 1].forEach((ring) => {
+          strokePolygon(polyPoints(cx, cy, n, Array(n).fill(radius * ring)), colors.border, 0.25);
+        });
+        // Axes + labels.
+        const outer = polyPoints(cx, cy, n, Array(n).fill(radius));
+        outer.forEach(([x, y], i) => {
+          doc.setDrawColor(...colors.border);
+          doc.setLineWidth(0.25);
+          doc.line(cx, cy, x, y);
+          doc.setTextColor(...colors.muted);
+          doc.setFontSize(6.5);
+          doc.setFont('helvetica', 'normal');
+          const lx = cx + Math.cos(-Math.PI / 2 + (i * 2 * Math.PI) / n) * (radius + 6);
+          const ly = cy + Math.sin(-Math.PI / 2 + (i * 2 * Math.PI) / n) * (radius + 6);
+          const align = Math.abs(lx - cx) < 2 ? 'center' : lx < cx ? 'right' : 'left';
+          doc.text(series[i].label, lx, ly + 1, { align: align as any });
+        });
+        // Data polygon.
+        const dataPts = polyPoints(cx, cy, n, series.map((s) => radius * Math.max(0, Math.min(100, s.value)) / 100));
+        withOpacity(0.35, () => fillPolygon(dataPts, colors.primary));
+        strokePolygon(dataPts, colors.primary, 0.7);
+        dataPts.forEach(([x, y]) => { doc.setFillColor(...colors.primary); doc.circle(x, y, 0.9, 'F'); });
+      };
+
+      // Donut chart for language distribution; returns a simple legend list.
+      const drawDonutChart = (
+        cx: number, cy: number, rOuter: number, rInner: number,
+        slices: { label: string; value: number; color: [number, number, number] }[],
+      ) => {
+        const total = slices.reduce((s, v) => s + v.value, 0) || 1;
+        let angle = -Math.PI / 2;
+        slices.forEach((slice) => {
+          const sweep = (slice.value / total) * 2 * Math.PI;
+          const steps = Math.max(2, Math.ceil(sweep / 0.15));
+          const da = sweep / steps;
+          doc.setFillColor(...slice.color);
+          for (let i = 0; i < steps; i++) {
+            const a0 = angle + i * da;
+            const a1 = angle + (i + 1) * da;
+            doc.triangle(
+              cx, cy,
+              cx + Math.cos(a0) * rOuter, cy + Math.sin(a0) * rOuter,
+              cx + Math.cos(a1) * rOuter, cy + Math.sin(a1) * rOuter,
+              'F',
+            );
+          }
+          angle += sweep;
+        });
+        // Punch the donut hole.
+        doc.setFillColor(...colors.bg);
+        doc.circle(cx, cy, rInner, 'F');
+      };
+
+
+
       // ===== COVER PAGE =====
       drawBg();
 
