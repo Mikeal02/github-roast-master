@@ -26,7 +26,5 @@ class MockObserver {
   unobserve() {}
   disconnect() {}
 }
-// @ts-expect-error test shim
-window.ResizeObserver = MockObserver;
-// @ts-expect-error test shim
-window.IntersectionObserver = MockObserver;
+(window as unknown as Record<string, unknown>).ResizeObserver = MockObserver;
+(window as unknown as Record<string, unknown>).IntersectionObserver = MockObserver;
