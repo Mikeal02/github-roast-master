@@ -600,21 +600,36 @@ export function PDFReportExport({ username, userData, aiAnalysis, isRecruiterMod
         }
       }
 
-      // ===== ROAST LINES / ASSESSMENT =====
+      // ===== FULL ROAST / ASSESSMENT =====
       if (aiAnalysis.roastLines?.length) {
-        checkNewPage(30);
-        y += 6;
-        drawSectionTitle(isRecruiterMode ? 'Assessment Notes' : 'Roast Lines', isRecruiterMode ? '📋' : '🔥');
+        doc.addPage();
+        drawBg();
+        y = margin;
+        drawSectionTitle(
+          isRecruiterMode ? 'Full Assessment' : 'The Complete Roast',
+          isRecruiterMode ? '📋' : '🔥',
+        );
 
-        aiAnalysis.roastLines.slice(0, 8).forEach((line: string) => {
-          checkNewPage(10);
+        // Render every roast line — the complete roast text, nothing truncated.
+        aiAnalysis.roastLines.forEach((line: string, i: number) => {
+          const wrapped = doc.splitTextToSize(`${line}`, contentWidth - 12);
+          checkNewPage(wrapped.length * 4 + 8);
+          // Numbered marker chip.
+          doc.setFillColor(...colors.card);
+          doc.circle(margin + 4, y - 1, 3, 'F');
+          doc.setTextColor(...(isRecruiterMode ? colors.primary : colors.accent));
+          doc.setFontSize(7);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${i + 1}`, margin + 4, y + 0.6, { align: 'center' });
+          // Roast text.
           doc.setTextColor(...colors.white);
-          doc.setFontSize(7.5);
-          const lines = doc.splitTextToSize(`${isRecruiterMode ? '▸' : '🔥'} ${line}`, contentWidth - 10);
-          doc.text(lines, margin + 4, y);
-          y += lines.length * 4 + 3;
+          doc.setFontSize(8.5);
+          doc.setFont('helvetica', 'normal');
+          doc.text(wrapped, margin + 11, y);
+          y += wrapped.length * 4.4 + 5;
         });
       }
+
 
       // ===== FOOTER on last page =====
       doc.setTextColor(...colors.muted);
