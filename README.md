@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="README-assets/logo.png" width="70" alt="Roast My Git Logo"/>
+  <img src="public/favicon.png" width="80" alt="Roast My Git Logo"/>
   <br/>
   🔥 Roast My Git
 </h1>
@@ -155,13 +155,13 @@ Because everyone deserves to be roasted equally.
 
 ## 🏠 Landing Page
 
-![Landing Page](public/roastmygit.netlify.app_.png)
+![Landing Page](public/Homepage.png)
 
 ---
 
 ## 🔍 GitHub Profile Search
 
-![Search Profile](public/SearchProfile.png)
+![Search Profile](public/Profile.png)
 
 ---
 
@@ -248,7 +248,7 @@ Beautiful UI Output
 ## Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/github-roast-master.git
+git clone https://github.com/<yourusername>/github-roast-master.git
 
 cd github-roast-master
 ```
@@ -302,7 +302,7 @@ Enter a GitHub username.
 Click:
 
 ```text
-🔥 Roast Me
+🔥 Analyze
 ```
 
 ### Step 3
@@ -331,21 +331,21 @@ https://roastmygit.netlify.app/
 
 ## Roasting
 
-- [ ] Multi-Level Roast Modes
-- [ ] Savage Mode
-- [ ] Corporate Recruiter Mode
+- [x] Multi-Level Roast Modes
+- [x] Savage Mode
+- [x] Corporate Recruiter Mode
 - [ ] Senior Engineer Mode
 
 ## Analytics
 
-- [ ] Repository Health Score
-- [ ] Developer Evolution Timeline
-- [ ] GitHub Achievement System
+- [x] Repository Health Score
+- [x] Developer Evolution Timeline
+- [x] GitHub Achievement System
 
 ## Social
 
-- [ ] Shareable Roast Cards
-- [ ] Roast Battles
+- [x] Shareable Roast Cards
+- [x] Roast Battles
 - [ ] Leaderboards
 
 ---
