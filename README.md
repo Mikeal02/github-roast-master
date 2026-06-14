@@ -24,10 +24,6 @@
 
 ---
 
-<p align="center">
-  <img src="README-assets/banner.png" width="100%" alt="Roast My Git Banner"/>
-</p>
-
 > **Every GitHub profile tells a story.**
 >
 > Some tell stories of clean architecture, discipline, and engineering excellence.
