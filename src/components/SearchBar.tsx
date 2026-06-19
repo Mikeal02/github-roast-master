@@ -86,7 +86,7 @@ export function SearchBar({ onSearch, isLoading }: { onSearch: (username: string
         </div>
 
         {/* Input row */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary font-mono text-sm">
               ./analyze
@@ -102,13 +102,13 @@ export function SearchBar({ onSearch, isLoading }: { onSearch: (username: string
               onFocus={() => { setIsFocused(true); setShowSuggestions(username.length > 0); }}
               onBlur={() => { setIsFocused(false); setTimeout(() => setShowSuggestions(false), 200); }}
               placeholder={placeholder}
-              className="pl-[5.5rem] pr-16 h-12 bg-background/50 border-border focus:border-primary font-mono text-foreground placeholder:text-muted-foreground/50 rounded-xl"
+              className="pl-[5.5rem] pr-4 sm:pr-16 h-12 bg-background/50 border-border focus:border-primary font-mono text-foreground placeholder:text-muted-foreground/50 rounded-xl"
               disabled={isLoading}
               autoComplete="off"
             />
             {/* Keyboard shortcut hint */}
             {!isFocused && !username && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[10px] text-muted-foreground/40">
+             <div className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 items-center gap-1 text-[10px] text-muted-foreground/40">
                 <kbd className="px-1.5 py-0.5 rounded bg-muted/50 border border-border/50 font-mono">⌘K</kbd>
               </div>
             )}
@@ -141,10 +141,10 @@ export function SearchBar({ onSearch, isLoading }: { onSearch: (username: string
             </AnimatePresence>
           </div>
           <Button
-            type="submit"
-            disabled={isLoading || !username.trim()}
-            className="h-12 px-6 bg-primary text-primary-foreground hover:bg-primary/90 font-mono rounded-xl font-semibold gap-2 relative overflow-hidden group"
-          >
+  type="submit"
+  disabled={isLoading || !username.trim()}
+  className="h-12 self-start sm:w-auto px-6 bg-primary text-primary-foreground hover:bg-primary/90 font-mono rounded-xl font-semibold gap-2 relative overflow-hidden group"
+>
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (

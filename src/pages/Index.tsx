@@ -242,7 +242,7 @@ const Index = () => {
               <ScrollReveal variant="scaleUp">
                 <ScoreSummaryPanel scores={aiAnalysis.scores || {}} />
               </ScrollReveal>
-              <ScrollStagger className="grid grid-cols-2 md:grid-cols-3 gap-4" staggerDelay={0.1}>
+              <ScrollStagger className="grid grid-cols-1 md:grid-cols-3 gap-4" staggerDelay={0.1}>
                 <ScrollStaggerItem variant="scaleUp">
                   <ScoreCard title="Activity" score={aiAnalysis.scores?.activity?.score || 0} icon={<Activity className="w-4 h-4" />} explanation={aiAnalysis.scores?.activity?.explanation} subMetrics={aiAnalysis.scores?.activity?.subMetrics} delay={0} />
                 </ScrollStaggerItem>
@@ -726,7 +726,7 @@ const Index = () => {
             >
               {/* Action buttons */}
               <ScrollReveal variant="fadeDown" delay={0.1}>
-                <div className="flex justify-end gap-2 flex-wrap mb-6">
+              <div className="flex flex-wrap justify-center sm:justify-end gap-2 mb-6">
                   <ThemePicker score={aiAnalysis.scores?.overall?.score || 0} />
                   <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowWrapped(true)}>
                     <Sparkles className="w-4 h-4" /> Wrapped

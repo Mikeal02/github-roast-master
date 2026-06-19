@@ -78,7 +78,18 @@ export function UsageMeter({ usage, hasOwnerKey, onUnlock, onLock }: UsageMeterP
             {isOwner ? 'Owner mode' : 'Unlock'}
           </button>
         </DialogTrigger>
-        <DialogContent className="glass-panel border-border max-w-sm">
+        <DialogContent className="
+    glass-panel
+    border-border
+    max-w-sm
+    w-[95vw]
+    sm:w-full
+    fixed
+    left-1/2
+    top-1/2
+    -translate-x-1/2
+    -translate-y-1/2
+">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-mono">
               <Crown className="w-4 h-4 text-primary" /> Owner Access
@@ -96,7 +107,7 @@ export function UsageMeter({ usage, hasOwnerKey, onUnlock, onLock }: UsageMeterP
             className="font-mono"
             autoComplete="off"
           />
-          <DialogFooter className="gap-2 sm:gap-2">
+         <DialogFooter className="flex-col sm:flex-row gap-2">
             {hasOwnerKey && (
               <Button variant="outline" onClick={() => { onLock(); setOpen(false); }} className="font-mono">
                 <Lock className="w-3.5 h-3.5 mr-1.5" /> Lock

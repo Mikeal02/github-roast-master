@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Palette, Check, Sparkles, X } from 'lucide-react';
 
-export type ThemeId = 'default' | 'cyberpunk' | 'retro' | 'vaporwave' | 'neon' | 'aurora' | 'midnight' | 'sunset' | 'matrix' | 'arctic';
+export type ThemeId = 'default' |'obsidian' | 'roseQuartz' | 'neon' | 'aurora' | 'emerald' | 'graphite' | 'arctic';
 
 interface ThemeDef {
   id: ThemeId;
@@ -15,61 +15,107 @@ interface ThemeDef {
 
 const themes: ThemeDef[] = [
   { id: 'default', name: 'Default', emoji: '🎯', tier: 'Classic', preview: { bg: '#0a0a1a', accent: '#6366f1', text: '#e5e5e5' }, description: 'Midnight indigo elite look' },
-  { id: 'cyberpunk', name: 'Cyberpunk', emoji: '🌆', tier: 'Neon City', preview: { bg: '#0a0014', accent: '#ff2d95', text: '#00fff0' }, description: 'Neon-lit dystopian future vibes' },
-  { id: 'retro', name: 'Retro Terminal', emoji: '📟', tier: 'Old School', preview: { bg: '#0c1a0c', accent: '#33ff33', text: '#33ff33' }, description: 'Old-school phosphor green CRT' },
-  { id: 'vaporwave', name: 'Vaporwave', emoji: '🌴', tier: 'Aesthetic', preview: { bg: '#1a0a2e', accent: '#ff71ce', text: '#b967ff' }, description: 'A E S T H E T I C retro-future' },
+  {
+    id: 'obsidian',
+    name: 'Obsidian Blue',
+    emoji: '🧊',
+    tier: 'Professional',
+    preview: { bg: '#070A12', accent: '#4DA3FF', text: '#C7D2FE' },
+    description: 'Deep slate interface with icy blue precision'
+  },
+  {
+    id: 'roseQuartz',
+    name: 'Rose Quartz',
+    emoji: '🌸',
+    tier: 'Elegant',
+    preview: { bg: '#120A10', accent: '#F472B6', text: '#FCE7F3' },
+    description: 'Soft rose glow with calming lavender tones'
+  },
+
   { id: 'neon', name: 'Neon Blaze', emoji: '⚡', tier: 'Electric', preview: { bg: '#050510', accent: '#facc15', text: '#f97316' }, description: 'High-voltage electric energy' },
   { id: 'aurora', name: 'Aurora Borealis', emoji: '🌌', tier: 'Celestial', preview: { bg: '#020b18', accent: '#38bdf8', text: '#6ee7b7' }, description: 'Northern lights dancing in code' },
-  { id: 'midnight', name: 'Midnight Rose', emoji: '🥀', tier: 'Elegant', preview: { bg: '#0f0a14', accent: '#e11d48', text: '#fda4af' }, description: 'Deep crimson romance in the dark' },
-  { id: 'sunset', name: 'Solar Flare', emoji: '🌅', tier: 'Cosmic', preview: { bg: '#0c0a08', accent: '#f59e0b', text: '#ef4444' }, description: 'Blazing sunset over the horizon' },
-  { id: 'matrix', name: 'Matrix Rain', emoji: '💊', tier: 'Hacker', preview: { bg: '#000800', accent: '#00ff41', text: '#008f11' }, description: 'Follow the white rabbit' },
+  {
+    id: 'emerald',
+    name: 'Emerald Depth',
+    emoji: '🌊',
+    tier: 'Oceanic',
+    preview: { bg: '#061416', accent: '#10B981', text: '#A7F3D0' },
+    description: 'Deep ocean intelligence with emerald glow'
+  },
+
+  {
+    id: 'graphite',
+    name: 'Graphite Minimal',
+    emoji: '⚫',
+    tier: 'Minimal',
+    preview: { bg: '#0B0D10', accent: '#A1A1AA', text: '#E5E7EB' },
+    description: 'Clean monochrome interface with soft contrast'
+  }
+  ,
   { id: 'arctic', name: 'Arctic Frost', emoji: '❄️', tier: 'Frozen', preview: { bg: '#080c14', accent: '#7dd3fc', text: '#e0f2fe' }, description: 'Crystal clear icy precision' },
 ];
 
 const themeVars: Record<ThemeId, Record<string, string>> = {
   default: {},
-  cyberpunk: {
-    '--background': '280 100% 3%', '--foreground': '180 100% 94%',
-    '--card': '280 60% 7%', '--card-foreground': '180 100% 94%',
-    '--primary': '330 100% 60%', '--primary-foreground': '280 100% 3%',
-    '--secondary': '180 100% 50%', '--secondary-foreground': '280 100% 3%',
-    '--muted': '280 40% 12%', '--muted-foreground': '180 50% 55%',
-    '--accent': '180 100% 50%', '--accent-foreground': '280 100% 3%',
-    '--border': '280 40% 18%', '--input': '280 40% 12%', '--ring': '330 100% 60%',
-    '--terminal-green': '180 100% 50%', '--terminal-cyan': '180 100% 50%',
-    '--terminal-yellow': '50 100% 60%', '--terminal-red': '330 100% 60%', '--terminal-purple': '280 100% 70%',
-    '--gradient-start': '330 100% 60%', '--gradient-end': '180 100% 50%', '--gradient-accent': '280 100% 70%',
-    '--surface-elevated': '280 50% 10%', '--surface-sunken': '280 80% 2%',
-    '--destructive': '330 100% 55%', '--destructive-foreground': '0 0% 100%',
-  },
-  retro: {
-    '--background': '120 40% 4%', '--foreground': '120 100% 70%',
-    '--card': '120 30% 7%', '--card-foreground': '120 100% 70%',
-    '--primary': '120 100% 45%', '--primary-foreground': '120 40% 4%',
-    '--secondary': '120 80% 35%', '--secondary-foreground': '120 40% 4%',
-    '--muted': '120 20% 12%', '--muted-foreground': '120 60% 40%',
-    '--accent': '120 100% 50%', '--accent-foreground': '120 40% 4%',
-    '--border': '120 30% 16%', '--input': '120 20% 12%', '--ring': '120 100% 45%',
-    '--terminal-green': '120 100% 50%', '--terminal-cyan': '120 80% 45%',
-    '--terminal-yellow': '80 100% 50%', '--terminal-red': '0 80% 50%', '--terminal-purple': '120 60% 55%',
-    '--gradient-start': '120 100% 45%', '--gradient-end': '120 80% 35%', '--gradient-accent': '80 100% 50%',
-    '--surface-elevated': '120 25% 9%', '--surface-sunken': '120 40% 3%',
-    '--destructive': '0 80% 50%', '--destructive-foreground': '120 100% 70%',
-  },
-  vaporwave: {
-    '--background': '270 60% 8%', '--foreground': '300 100% 90%',
-    '--card': '270 45% 12%', '--card-foreground': '300 100% 90%',
-    '--primary': '320 100% 72%', '--primary-foreground': '270 60% 8%',
-    '--secondary': '270 100% 72%', '--secondary-foreground': '270 60% 8%',
-    '--muted': '270 30% 18%', '--muted-foreground': '300 40% 55%',
-    '--accent': '270 100% 72%', '--accent-foreground': '270 60% 8%',
-    '--border': '270 35% 22%', '--input': '270 30% 18%', '--ring': '320 100% 72%',
-    '--terminal-green': '160 100% 50%', '--terminal-cyan': '190 100% 60%',
-    '--terminal-yellow': '50 100% 70%', '--terminal-red': '340 100% 65%', '--terminal-purple': '270 100% 72%',
-    '--gradient-start': '320 100% 72%', '--gradient-end': '270 100% 72%', '--gradient-accent': '190 100% 60%',
-    '--surface-elevated': '270 40% 14%', '--surface-sunken': '270 55% 6%',
-    '--destructive': '340 100% 60%', '--destructive-foreground': '0 0% 100%',
-  },
+  obsidian: {
+  '--background': '220 40% 5%',
+  '--foreground': '220 30% 92%',
+  '--card': '220 30% 8%',
+  '--card-foreground': '220 30% 92%',
+  '--primary': '210 100% 65%',
+  '--primary-foreground': '220 40% 5%',
+  '--secondary': '215 60% 50%',
+  '--secondary-foreground': '220 40% 5%',
+  '--muted': '220 20% 14%',
+  '--muted-foreground': '220 15% 65%',
+  '--accent': '210 100% 65%',
+  '--accent-foreground': '220 40% 5%',
+  '--border': '220 25% 18%',
+  '--input': '220 20% 14%',
+  '--ring': '210 100% 65%',
+  '--terminal-green': '160 80% 50%',
+  '--terminal-cyan': '190 90% 55%',
+  '--terminal-yellow': '45 90% 60%',
+  '--terminal-red': '0 80% 55%',
+  '--terminal-purple': '260 80% 65%',
+  '--gradient-start': '210 100% 65%',
+  '--gradient-end': '220 60% 50%',
+  '--gradient-accent': '190 90% 55%',
+  '--surface-elevated': '220 25% 10%',
+  '--surface-sunken': '220 35% 3%',
+  '--destructive': '0 80% 55%',
+  '--destructive-foreground': '0 0% 100%',
+},
+
+roseQuartz: {
+  '--background': '330 25% 6%',
+  '--foreground': '340 60% 92%',
+  '--card': '330 20% 10%',
+  '--card-foreground': '340 60% 92%',
+  '--primary': '330 90% 70%',
+  '--primary-foreground': '330 25% 6%',
+  '--secondary': '300 60% 60%',
+  '--secondary-foreground': '330 25% 6%',
+  '--muted': '330 15% 14%',
+  '--muted-foreground': '330 20% 70%',
+  '--accent': '300 70% 65%',
+  '--accent-foreground': '330 25% 6%',
+  '--border': '330 20% 18%',
+  '--input': '330 15% 14%',
+  '--ring': '330 90% 70%',
+  '--terminal-green': '150 70% 55%',
+  '--terminal-cyan': '190 70% 60%',
+  '--terminal-yellow': '45 90% 60%',
+  '--terminal-red': '0 80% 60%',
+  '--terminal-purple': '280 80% 70%',
+  '--gradient-start': '330 90% 70%',
+  '--gradient-end': '300 70% 65%',
+  '--gradient-accent': '280 80% 70%',
+  '--surface-elevated': '330 18% 12%',
+  '--surface-sunken': '330 25% 4%',
+  '--destructive': '0 80% 60%',
+  '--destructive-foreground': '0 0% 100%',
+},
   neon: {
     '--background': '240 60% 3%', '--foreground': '45 100% 90%',
     '--card': '240 40% 7%', '--card-foreground': '45 100% 90%',
@@ -98,47 +144,44 @@ const themeVars: Record<ThemeId, Record<string, string>> = {
     '--surface-elevated': '210 50% 11%', '--surface-sunken': '210 70% 3%',
     '--destructive': '350 80% 55%', '--destructive-foreground': '0 0% 100%',
   },
-  midnight: {
-    '--background': '280 30% 5%', '--foreground': '350 100% 90%',
-    '--card': '280 25% 9%', '--card-foreground': '350 100% 90%',
-    '--primary': '347 77% 50%', '--primary-foreground': '0 0% 100%',
-    '--secondary': '330 80% 60%', '--secondary-foreground': '280 30% 5%',
-    '--muted': '280 20% 14%', '--muted-foreground': '350 30% 55%',
-    '--accent': '330 80% 60%', '--accent-foreground': '280 30% 5%',
-    '--border': '280 25% 18%', '--input': '280 20% 14%', '--ring': '347 77% 50%',
-    '--terminal-green': '160 70% 45%', '--terminal-cyan': '190 80% 50%',
-    '--terminal-yellow': '45 90% 55%', '--terminal-red': '347 77% 50%', '--terminal-purple': '280 80% 65%',
-    '--gradient-start': '347 77% 50%', '--gradient-end': '330 80% 60%', '--gradient-accent': '280 80% 65%',
-    '--surface-elevated': '280 22% 11%', '--surface-sunken': '280 30% 3%',
-    '--destructive': '347 77% 50%', '--destructive-foreground': '0 0% 100%',
+  emerald: {
+    '--background': '180 40% 5%',
+    '--foreground': '160 60% 92%',
+    '--card': '180 30% 8%',
+    '--card-foreground': '160 60% 92%',
+    '--primary': '160 80% 45%',
+    '--primary-foreground': '180 40% 5%',
+    '--secondary': '175 60% 40%',
+    '--secondary-foreground': '180 40% 5%',
+    '--muted': '180 20% 12%',
+    '--muted-foreground': '160 25% 60%',
+    '--accent': '160 80% 45%',
+    '--accent-foreground': '180 40% 5%',
+    '--border': '180 25% 18%',
+    '--input': '180 20% 12%',
+    '--ring': '160 80% 45%',
+    '--surface-elevated': '180 30% 10%',
+    '--surface-sunken': '180 40% 3%',
   },
-  sunset: {
-    '--background': '20 40% 4%', '--foreground': '40 100% 92%',
-    '--card': '20 30% 8%', '--card-foreground': '40 100% 92%',
-    '--primary': '38 92% 50%', '--primary-foreground': '20 40% 4%',
-    '--secondary': '0 84% 60%', '--secondary-foreground': '0 0% 100%',
-    '--muted': '20 20% 14%', '--muted-foreground': '30 40% 50%',
-    '--accent': '0 84% 60%', '--accent-foreground': '0 0% 100%',
-    '--border': '20 25% 18%', '--input': '20 20% 14%', '--ring': '38 92% 50%',
-    '--terminal-green': '80 80% 45%', '--terminal-cyan': '190 70% 50%',
-    '--terminal-yellow': '38 92% 50%', '--terminal-red': '0 84% 60%', '--terminal-purple': '280 70% 60%',
-    '--gradient-start': '38 92% 50%', '--gradient-end': '0 84% 60%', '--gradient-accent': '280 70% 60%',
-    '--surface-elevated': '20 25% 10%', '--surface-sunken': '20 35% 3%',
-    '--destructive': '0 84% 55%', '--destructive-foreground': '0 0% 100%',
-  },
-  matrix: {
-    '--background': '120 100% 1%', '--foreground': '120 100% 60%',
-    '--card': '120 50% 4%', '--card-foreground': '120 100% 60%',
-    '--primary': '120 100% 40%', '--primary-foreground': '120 100% 1%',
-    '--secondary': '120 70% 30%', '--secondary-foreground': '120 100% 1%',
-    '--muted': '120 30% 8%', '--muted-foreground': '120 50% 35%',
-    '--accent': '120 100% 40%', '--accent-foreground': '120 100% 1%',
-    '--border': '120 30% 12%', '--input': '120 30% 8%', '--ring': '120 100% 40%',
-    '--terminal-green': '120 100% 50%', '--terminal-cyan': '140 100% 40%',
-    '--terminal-yellow': '90 100% 45%', '--terminal-red': '0 80% 45%', '--terminal-purple': '140 60% 50%',
-    '--gradient-start': '120 100% 40%', '--gradient-end': '140 100% 35%', '--gradient-accent': '90 100% 45%',
-    '--surface-elevated': '120 40% 5%', '--surface-sunken': '120 80% 1%',
-    '--destructive': '0 80% 45%', '--destructive-foreground': '120 100% 60%',
+  
+  graphite: {
+    '--background': '220 10% 5%',
+    '--foreground': '220 10% 92%',
+    '--card': '220 10% 8%',
+    '--card-foreground': '220 10% 92%',
+    '--primary': '220 10% 70%',
+    '--primary-foreground': '220 10% 5%',
+    '--secondary': '220 5% 55%',
+    '--secondary-foreground': '220 10% 5%',
+    '--muted': '220 10% 12%',
+    '--muted-foreground': '220 5% 60%',
+    '--accent': '220 10% 70%',
+    '--accent-foreground': '220 10% 5%',
+    '--border': '220 10% 15%',
+    '--input': '220 10% 12%',
+    '--ring': '220 10% 70%',
+    '--surface-elevated': '220 10% 10%',
+    '--surface-sunken': '220 10% 3%',
   },
   arctic: {
     '--background': '215 50% 5%', '--foreground': '200 80% 92%',
@@ -218,7 +261,7 @@ export function ThemePicker({ score }: ThemePickerProps) {
               onClick={() => setOpen(false)}
             />
             <motion.div
-              className="relative w-full max-w-lg max-h-[80vh] bg-card border border-border rounded-2xl p-6 shadow-2xl overflow-hidden flex flex-col"
+              className="relative w-[calc(100vw-2rem)] max-w-lg max-h-[80vh] bg-card border border-border rounded-2xl p-6 shadow-2xl overflow-hidden flex flex-col"
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
@@ -236,7 +279,7 @@ export function ThemePicker({ score }: ThemePickerProps) {
                 </button>
               </div>
 
-              <div className="space-y-2 overflow-y-auto flex-1 pr-1">
+              <div className="space-y-2 overflow-y-auto overflow-x-hidden flex-1 pr-1">
                 {themes.map((theme, i) => {
                   const isActive = active === theme.id;
                   return (

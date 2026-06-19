@@ -71,7 +71,7 @@ export function ActivityBadge({ status, finalScore, archetype = null, isRecruite
             </div>
             <div className="text-xs text-muted-foreground flex items-center gap-2">
               {isRecruiterMode ? 'Engagement Level' : 'Developer Status'}
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted border border-border font-mono">
+              <span className="text-[10px] px-2 py-0.5 rounded-md bg-muted border border-border font-mono">
                 {percentile}
               </span>
             </div>

@@ -100,10 +100,10 @@ export function ScoreSummaryPanel({ scores }: ScoreSummaryPanelProps) {
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="glass-panel p-5 mb-6"
+      className="glass-panel p-5 mb-6 w-full"
       style={{ boxShadow: `0 0 60px ${gradeInfo.ring}15` }}
     >
-      <div className="flex flex-col lg:flex-row items-center gap-6">
+      <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 w-full">
         {/* Big score ring */}
         <div className="relative w-[160px] h-[160px] flex-shrink-0">
           <svg className="w-[160px] h-[160px] -rotate-90" viewBox="0 0 160 160">
@@ -144,7 +144,7 @@ export function ScoreSummaryPanel({ scores }: ScoreSummaryPanelProps) {
         </div>
 
         {/* Score breakdown bars with benchmark comparison */}
-        <div className="flex-1 w-full space-y-2">
+        <div className="flex-1 w-full space-y-2 min-w-0">
           <div className="flex items-center gap-2 mb-3">
             <Trophy className={`w-5 h-5 ${gradeInfo.color}`} />
             <h3 className="font-semibold text-foreground text-lg">Overall Score</h3>
@@ -158,13 +158,15 @@ export function ScoreSummaryPanel({ scores }: ScoreSummaryPanelProps) {
             return (
               <motion.div
                 key={cat.key}
-                className="flex items-center gap-3"
+                className="flex items-center gap-3 w-full min-w-0"
                 initial={{ opacity: 0, x: -20 }}
                 animate={isInView ? { opacity: 1, x: 0 } : {}}
                 transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
               >
                 <span className="text-[10px] mr-0.5">{cat.emoji}</span>
-                <span className="text-xs text-muted-foreground w-16 text-right truncate">{cat.label}</span>
+                <span className="text-xs text-muted-foreground min-w-[90px] sm:min-w-[70px] shrink-0 text-right truncate">
+  {cat.label}
+</span>
                 <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden relative">
                   <motion.div
                     className="h-full rounded-full"
