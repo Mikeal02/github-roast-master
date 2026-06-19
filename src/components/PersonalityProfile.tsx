@@ -1,3 +1,4 @@
+
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { Brain, Zap, AlertTriangle, BookOpen, Lightbulb, Sparkles, Target, TrendingUp, Heart, Shield } from 'lucide-react';
@@ -92,7 +93,7 @@ export function PersonalityProfile({ profile }: PersonalityProfileProps) {
           transition={{ delay: 0.2, duration: 0.5 }}
           className="bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 rounded-xl p-5 mb-6 border border-primary/20"
         >
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <motion.span
               className="text-5xl"
               animate={{ rotate: [0, 5, -5, 0] }}
@@ -182,17 +183,19 @@ export function PersonalityProfile({ profile }: PersonalityProfileProps) {
                 <TrendingUp className="w-4 h-4 text-terminal-green" />
                 <h4 className="text-sm font-semibold text-foreground">Wellness Summary</h4>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="text-center p-2 bg-background/50 rounded-lg">
+              <div className="grid grid-cols-3 gap-3 min-w-0">
+                <div className="text-center p-2 bg-background/50 rounded-lg min-w-0 overflow-hidden">
                   <p className={`text-lg font-bold font-mono ${wellnessScore >= 60 ? 'text-terminal-green' : 'text-terminal-yellow'}`}>{wellnessScore}</p>
                   <p className="text-[9px] text-muted-foreground">Overall</p>
                 </div>
-                <div className="text-center p-2 bg-background/50 rounded-lg">
-                  <p className="text-lg font-bold font-mono text-primary">{dominantTrait}</p>
+                <div className="text-center p-2 bg-background/50 rounded-lg min-w-0 overflow-hidden">
+                <p className="text-lg font-bold font-mono text-primary break-words whitespace-normal leading-tight">
+  {dominantTrait}
+</p>
                   <p className="text-[9px] text-muted-foreground">Dominant Trait</p>
                 </div>
-                <div className="text-center p-2 bg-background/50 rounded-lg">
-                  <p className={`text-lg font-bold font-mono ${(profile.burnoutRisk || 0) > 50 ? 'text-terminal-red' : 'text-terminal-green'}`}>
+                <div className="text-center p-2 bg-background/50 rounded-lg min-w-0 overflow-hidden">
+                <p className={`text-lg font-bold font-mono break-words whitespace-normal leading-tight ${(profile.burnoutRisk || 0) > 50 ? 'text-terminal-red' : 'text-terminal-green'}`}>
                     {(profile.burnoutRisk || 0) > 50 ? 'At Risk' : 'Healthy'}
                   </p>
                   <p className="text-[9px] text-muted-foreground">Status</p>
@@ -261,12 +264,16 @@ function EnhancedRiskMeter({ label, value, icon, isInView }: { label: string; va
       transition={{ duration: 0.4 }}
       className="glass-panel p-4"
     >
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-2 min-w-0 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           <span className="text-muted-foreground">{icon}</span>
-          <span className="text-xs text-muted-foreground">{label}</span>
+          <span className="text-xs text-muted-foreground truncate">
+  {label}
+</span>
         </div>
-        <span className={`text-lg font-bold font-mono ${getRiskColor(value)}`}>{value}%</span>
+        <span className={`text-lg font-bold font-mono whitespace-nowrap shrink-0 ${getRiskColor(value)}`}>
+  {value}%
+</span>
       </div>
       <div className="h-2.5 bg-muted rounded-full overflow-hidden">
         <motion.div
@@ -276,9 +283,11 @@ function EnhancedRiskMeter({ label, value, icon, isInView }: { label: string; va
           transition={{ duration: 1, delay: 0.3 }}
         />
       </div>
-      <div className="flex justify-between mt-1">
-        <span className="text-[10px] text-muted-foreground">{getRiskLabel(value)}</span>
-        <span className={`text-[10px] font-medium ${getRiskColor(value)}`}>
+      <div className="flex justify-between mt-1 gap-2 min-w-0">
+      <span className="text-[10px] text-muted-foreground truncate">
+  {getRiskLabel(value)}
+</span>
+<span className={`text-[10px] font-medium whitespace-nowrap shrink-0 ${getRiskColor(value)}`}>
           {value <= 30 ? '✓ Safe' : value <= 60 ? '⚠ Monitor' : '✕ Action needed'}
         </span>
       </div>

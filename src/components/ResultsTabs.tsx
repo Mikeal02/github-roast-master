@@ -60,6 +60,16 @@ export function ResultsTabs({ activeTab, onTabChange, isRecruiterMode }: Results
   const [canScrollRight, setCanScrollRight] = useState(false);
   const activeTabRef = useRef<HTMLButtonElement>(null);
 
+useEffect(() => {
+  if (activeTabRef?.current && scrollRef?.current) {
+    activeTabRef.current.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
+  }
+}, [activeTab]);
+
   const checkScroll = () => {
     const el = scrollRef.current;
     if (!el) return;
